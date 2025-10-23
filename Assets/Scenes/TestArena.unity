@@ -399,7 +399,7 @@ MonoBehaviour:
   maxHeight: 20
   minHeight: 0.5
   maxReverseSpeed: 20
-  dragAmount: 0.5
+  dragAmount: 2
   autoLevelSpeed: 2
   visualModel: {fileID: 755738915}
   bankAmount: 25
@@ -837,10 +837,10 @@ MonoBehaviour:
   distance: 10
   height: 5
   smoothSpeed: 5
-  rotationSmoothing: 3
+  rotationSmoothing: 0.8
   lookDownAngle: 10
   verticalHeightOffset: -0.05
-  verticalTiltAmount: 0.5
+  verticalTiltAmount: 1.5
   verticalSmoothing: 3
   fieldOfView: 75
 --- !u!1 &998158369

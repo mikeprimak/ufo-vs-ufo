@@ -42,8 +42,8 @@ public class UFOController : MonoBehaviour
     public float maxReverseSpeed = 20f;
 
     [Header("Physics")]
-    [Tooltip("Natural momentum drag (lower = more momentum)")]
-    public float dragAmount = 0.5f;
+    [Tooltip("Natural momentum drag (higher = stops faster, lower = more gliding)")]
+    public float dragAmount = 2f;
 
     [Tooltip("How quickly the UFO levels out when not pitching")]
     public float autoLevelSpeed = 2f;
@@ -99,6 +99,10 @@ public class UFOController : MonoBehaviour
 
         // Use Continuous collision detection to prevent phasing through walls at high speed
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+        // Enable interpolation to smooth movement between FixedUpdate calls
+        // This prevents jittery visuals when camera follows in LateUpdate
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
     void Update()

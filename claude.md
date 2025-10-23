@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 3
+**Update Count:** 4
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -44,7 +44,7 @@ Assets/
 - Max Reverse Speed: 20 (2.5x original)
 - Turn Speed: 180
 - Vertical Speed: 8
-- Drag Amount: 0.5 (low for momentum)
+- Drag Amount: 2 (increased for quicker stopping)
 - Auto Level Speed: 2
 - Visual Model: UFO_Visual (for banking and pitch effects)
 - Bank Amount: 25°
@@ -66,6 +66,8 @@ Assets/
 - Pitch only applies when horizontal speed > 5 units/sec (no tilt when hovering vertically)
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
+- Interpolation enabled to prevent jittery visuals
+- Continuous collision detection prevents phasing through walls
 
 ### UFOCollision.cs
 **Current Inspector Values (Wall Settings):**
@@ -114,16 +116,20 @@ Assets/
 - Distance: 10
 - Height: 5
 - Smooth Speed: 5
-- Rotation Smoothing: 3
+- Rotation Smoothing: 0.8 (tight tracking for aiming)
+- Look Down Angle: 10° (base downward tilt)
 - Field of View: 75° (N64-style wide FOV)
 - Vertical Height Offset: -0.2 (camera drops when ascending)
-- Vertical Tilt Amount: 1.5° (camera tilts with vertical movement)
+- Vertical Tilt Amount: 1.5 (camera tilts with vertical movement)
 - Vertical Smoothing: 3
 
 **Features:**
-- Tracks UFO rotation (camera rotates with turns)
-- Dynamic vertical adjustment (drops/tilts when ascending/descending)
-- Smooth following and rotation
+- Tight rotation tracking for forward-firing weapon aiming (0.5-1.0 recommended)
+- Tracks UFO physics rotation only (not visual banking from UFO_Visual)
+- Keeps horizon level for consistent aiming
+- Dynamic vertical tilt: ascending = camera tilts up, descending = camera tilts down
+- Smooth position following with retained smoothing for comfort
+- Designed for center-screen aiming and forward-firing weapons
 
 ## Scene Setup (TestArena)
 

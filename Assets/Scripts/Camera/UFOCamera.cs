@@ -1,8 +1,10 @@
 using UnityEngine;
 
 /// <summary>
-/// Third-person camera that follows the UFO with smooth movement
+/// Third-person camera that follows the UFO with tight rotation tracking
 /// Wide FOV for arcade-style visibility similar to N64 games
+/// Camera tracks UFO's physics rotation (not visual banking) for consistent aiming
+/// Rotation Smoothing: 0.5-1.0 recommended for forward-firing weapons
 /// </summary>
 public class UFOCamera : MonoBehaviour
 {
@@ -17,12 +19,12 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("Height above the UFO")]
     public float height = 5f;
 
-    [Tooltip("How smoothly the camera follows (lower = smoother)")]
+    [Tooltip("How smoothly the camera follows position (lower = smoother, higher = tighter)")]
     public float smoothSpeed = 5f;
 
     [Header("Camera Rotation")]
-    [Tooltip("How smoothly the camera rotates to follow UFO direction")]
-    public float rotationSmoothing = 3f;
+    [Tooltip("How tightly camera tracks UFO rotation (higher = tighter, lower = smoother). 0.5-1.0 recommended for aiming.")]
+    public float rotationSmoothing = 0.8f;
 
     [Tooltip("Tilt angle when looking at the UFO")]
     public float lookDownAngle = 10f;
@@ -31,8 +33,8 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("How much camera drops when UFO ascends (negative = drops down)")]
     public float verticalHeightOffset = -0.2f;
 
-    [Tooltip("Additional tilt up when ascending (positive = tilt up)")]
-    public float verticalTiltAmount = 1.5f;
+    [Tooltip("Camera pitch adjustment for vertical movement (degrees per unit of velocity). Positive = tilts up when ascending.")]
+    public float verticalTiltAmount = 3f;
 
     [Tooltip("How smoothly vertical adjustments happen")]
     public float verticalSmoothing = 3f;
@@ -86,9 +88,10 @@ public class UFOCamera : MonoBehaviour
         currentVerticalOffset = Mathf.Lerp(currentVerticalOffset, targetVerticalOffset, verticalSmoothing * Time.deltaTime);
 
         // Calculate dynamic tilt based on vertical movement
-        // When ascending: tilt up to see what's above
-        // When descending: tilt down to see what's below
-        float targetVerticalTilt = verticalVelocity * verticalTiltAmount;
+        // When ascending (positive velocity): tilt camera UP (negative pitch angle)
+        // When descending (negative velocity): tilt camera DOWN (positive pitch angle)
+        // Negate to invert: ascending should reduce the lookDownAngle
+        float targetVerticalTilt = -verticalVelocity * verticalTiltAmount;
         currentVerticalTilt = Mathf.Lerp(currentVerticalTilt, targetVerticalTilt, verticalSmoothing * Time.deltaTime);
 
         // Calculate desired position behind and above the UFO
@@ -99,18 +102,20 @@ public class UFOCamera : MonoBehaviour
         // Smoothly move camera to desired position
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
 
-        // Camera rotation matches UFO's Y rotation (yaw) for tight turn tracking
-        // Extract only the Y rotation from the target to avoid rolling with the UFO
+        // Camera tracks UFO's physics rotation (not visual banking from UFO_Visual)
+        // Extract only the Y rotation (yaw) from the target to keep horizon level
         Vector3 targetEuler = target.eulerAngles;
         Quaternion targetYawRotation = Quaternion.Euler(0, targetEuler.y, 0);
 
-        // Calculate look direction: rotate the "forward" direction by UFO's yaw, then tilt down slightly
-        // Apply dynamic vertical tilt based on ascending/descending
+        // Calculate camera rotation: match UFO's yaw, add downward tilt + vertical movement tilt
+        // This keeps the UFO visible while maintaining aiming direction
         Vector3 lookDirection = targetYawRotation * Vector3.forward;
         Quaternion targetRotation = Quaternion.LookRotation(lookDirection) * Quaternion.Euler(lookDownAngle + currentVerticalTilt, 0, 0);
 
-        // Smoothly rotate camera to match UFO's yaw and vertical movement
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothing * Time.deltaTime);
+        // Tighter rotation tracking for better aiming (higher value = more responsive)
+        // Uses higher smoothing multiplier for near-instant rotation response
+        float rotationSpeed = rotationSmoothing * 10f * Time.deltaTime;
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed);
     }
 
     // Helper method to adjust camera settings at runtime
