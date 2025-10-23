@@ -58,6 +58,15 @@ public class UFOController : MonoBehaviour
     [Tooltip("How quickly the UFO banks")]
     public float bankSpeed = 3f;
 
+    [Tooltip("How much the UFO pitches when ascending/descending (degrees)")]
+    public float visualPitchAmount = 30f;
+
+    [Tooltip("How quickly the UFO pitches visually")]
+    public float visualPitchSpeed = 3f;
+
+    [Tooltip("Minimum forward speed required for pitch tilt")]
+    public float minSpeedForPitch = 5f;
+
     // Components
     private Rigidbody rb;
 
@@ -72,6 +81,7 @@ public class UFOController : MonoBehaviour
 
     // Visual feedback
     private float currentBankAngle;
+    private float currentPitchAngle;
 
     void Start()
     {
@@ -90,7 +100,7 @@ public class UFOController : MonoBehaviour
         GetInput();
 
         // Apply visual feedback
-        ApplyBanking();
+        ApplyBankingAndPitch();
     }
 
     void FixedUpdate()
@@ -233,10 +243,10 @@ public class UFOController : MonoBehaviour
         }
     }
 
-    void ApplyBanking()
+    void ApplyBankingAndPitch()
     {
-        // Only apply banking if we have a separate visual model assigned
-        // If no visual model, skip banking to avoid interfering with physics rotation
+        // Only apply tilting if we have a separate visual model assigned
+        // If no visual model, skip to avoid interfering with physics rotation
         if (visualModel == null)
             return;
 
@@ -246,8 +256,28 @@ public class UFOController : MonoBehaviour
         // Smoothly interpolate to target bank angle
         currentBankAngle = Mathf.Lerp(currentBankAngle, targetBankAngle, bankSpeed * Time.deltaTime);
 
-        // Apply banking to visual model (only Z axis roll)
-        visualModel.localRotation = Quaternion.Euler(0, 0, currentBankAngle);
+        // Calculate target pitch angle based on vertical input and forward speed
+        float targetPitchAngle = 0f;
+
+        // Only pitch if moving forward at minimum speed
+        float horizontalSpeed = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
+        if (horizontalSpeed >= minSpeedForPitch)
+        {
+            // Ascending = nose up (positive pitch), Descending = nose down (negative pitch)
+            targetPitchAngle = -verticalInput * visualPitchAmount;
+
+            // Debug logging
+            if (Mathf.Abs(verticalInput) > 0.1f)
+            {
+                Debug.Log($"Pitch Active - Speed: {horizontalSpeed:F1}, VertInput: {verticalInput:F2}, TargetPitch: {targetPitchAngle:F1}°");
+            }
+        }
+
+        // Smoothly interpolate to target pitch angle
+        currentPitchAngle = Mathf.Lerp(currentPitchAngle, targetPitchAngle, visualPitchSpeed * Time.deltaTime);
+
+        // Apply both banking (Z-axis roll) and pitch (X-axis rotation) to visual model
+        visualModel.localRotation = Quaternion.Euler(currentPitchAngle, 0, currentBankAngle);
     }
 
     void AutoLevel()

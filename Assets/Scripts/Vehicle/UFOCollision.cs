@@ -85,16 +85,22 @@ public class UFOCollision : MonoBehaviour
             isBouncing = true;
             bounceEndTime = Time.time + 1f; // Max 1 second bounce duration
 
-            // Get the EXACT OPPOSITE of current travel direction
+            // Get collision normal (perpendicular to the wall surface)
+            Vector3 collisionNormal = collision.contacts[0].normal;
+
+            // Get current velocity
             Vector3 currentVelocity = rb.velocity;
-            currentVelocity.y = 0; // Keep horizontal only
-            Vector3 bounceDirection = -currentVelocity.normalized; // Opposite of travel direction
+            currentVelocity.y = 0; // Keep horizontal only for flat bounces
+
+            // Calculate reflection using physics: V' = V - 2(V·N)N
+            // This creates natural deflection along walls at shallow angles
+            Vector3 bounceDirection = Vector3.Reflect(currentVelocity.normalized, collisionNormal);
 
             // Stop current velocity
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero; // Stop any rotation
 
-            // Bounce back in exact opposite direction of travel
+            // Apply bounce force in reflected direction
             rb.AddForce(bounceDirection * bounceForce, ForceMode.VelocityChange);
 
             // Visual feedback - flash briefly

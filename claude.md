@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 1
+**Update Count:** 2
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -46,9 +46,12 @@ Assets/
 - Vertical Speed: 8
 - Drag Amount: 0.5 (low for momentum)
 - Auto Level Speed: 2
-- Visual Model: UFO_Visual (for banking effect)
+- Visual Model: UFO_Visual (for banking and pitch effects)
 - Bank Amount: 25°
 - Bank Speed: 3
+- Visual Pitch Amount: 30°
+- Visual Pitch Speed: 3
+- Min Speed For Pitch: 5
 
 **Controls:**
 - A / Controller Button 0 → Accelerate
@@ -59,6 +62,8 @@ Assets/
 - Arcade physics: tight turns, instant brake, momentum-based movement
 - Auto-leveling prevents tilting from impacts
 - Banking effect when turning (visual only, applied to UFO_Visual child)
+- Pitch effect when ascending/descending while moving forward (nose tilts up/down)
+- Pitch only applies when horizontal speed > 5 units/sec (no tilt when hovering vertically)
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 
@@ -71,7 +76,9 @@ Assets/
 - Ufo Renderer: UFO_Body (optional, for red flash)
 
 **Features:**
-- Bounces UFO in exact opposite direction of travel
+- Uses physics reflection for natural bounces (Vector3.Reflect)
+- High angle hits (90°) → bounces mostly straight back
+- Shallow angle hits (10-30°) → deflects along wall naturally
 - Locks rotation during bounce (UFO stays facing same direction)
 - Bounce ends when velocity < 0.5 or after 1 second
 - Brief red flash on impact (100ms)

@@ -404,6 +404,9 @@ MonoBehaviour:
   visualModel: {fileID: 755738915}
   bankAmount: 25
   bankSpeed: 3
+  visualPitchAmount: 45
+  visualPitchSpeed: 3
+  minSpeedForPitch: 5
 --- !u!114 &451632578
 MonoBehaviour:
   m_ObjectHideFlags: 0
