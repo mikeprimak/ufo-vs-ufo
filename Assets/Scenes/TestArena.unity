@@ -389,17 +389,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b10f5ca4c774547ab789a9a08979ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 15
-  acceleration: 30
+  maxSpeed: 30
+  acceleration: 60
   deceleration: 20
-  brakeForce: 40
+  brakeForce: 80
   turnSpeed: 180
   pitchSpeed: 100
   verticalSpeed: 8
   maxHeight: 20
   minHeight: 0.5
-  maxReverseSpeed: 8
-  dragAmount: 2
+  maxReverseSpeed: 20
+  dragAmount: 0.5
   autoLevelSpeed: 2
   visualModel: {fileID: 755738915}
   bankAmount: 25
@@ -433,10 +433,6 @@ MonoBehaviour:
   minImpactSpeed: 3
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
-  visualModel: {fileID: 755738915}
-  wobbleAmount: 45
-  wobbleSpeed: 15
-  wobbleDuration: 0.5
 --- !u!1 &731441728
 GameObject:
   m_ObjectHideFlags: 0
