@@ -83,6 +83,10 @@ public class UFOController : MonoBehaviour
     private float currentBankAngle;
     private float currentPitchAngle;
 
+    // Floor bounce control
+    private bool disableVerticalControl;
+    private float verticalControlReenableTime;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -92,6 +96,9 @@ public class UFOController : MonoBehaviour
         rb.angularDrag = 3f;
         rb.useGravity = false; // UFO hovers, no gravity
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        // Use Continuous collision detection to prevent phasing through walls at high speed
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
     }
 
     void Update()
@@ -210,12 +217,32 @@ public class UFOController : MonoBehaviour
 
     void HandleVerticalMovement()
     {
+        // Check if vertical control is temporarily disabled (after floor bounce)
+        if (disableVerticalControl)
+        {
+            if (Time.time >= verticalControlReenableTime)
+            {
+                disableVerticalControl = false;
+            }
+            else
+            {
+                return; // Skip vertical movement while disabled
+            }
+        }
+
         if (Mathf.Abs(verticalInput) > 0.1f)
         {
             // Simple up/down movement
             Vector3 verticalMove = Vector3.up * verticalInput * verticalSpeed;
             rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
         }
+    }
+
+    // Public method for UFOCollision to disable vertical control temporarily
+    public void DisableVerticalControl(float duration)
+    {
+        disableVerticalControl = true;
+        verticalControlReenableTime = Time.time + duration;
     }
 
     void EnforceHeightLimits()

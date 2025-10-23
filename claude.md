@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 2
+**Update Count:** 3
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -68,20 +68,42 @@ Assets/
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 
 ### UFOCollision.cs
-**Current Inspector Values:**
-- Bounce Force: 20 (user preference, default was 4000)
-- Min Impact Speed: 3
-- Stun Duration: 0.3 (not used)
+**Current Inspector Values (Wall Settings):**
+- Wall Bounce Force: 20
+- Min Wall Impact Speed: 3
+
+**Current Inspector Values (Floor Settings):**
+- Heavy Crash Threshold: 10 (vertical speed)
+- Light Floor Bounce: 2
+- Heavy Floor Bounce: 8
+- Floor Slide Retention: 0.7 (keeps 70% horizontal momentum)
+- Floor Angle Threshold: 45° (surfaces steeper than this are walls)
+
+**Visual Feedback:**
 - Flash Color: Red
 - Ufo Renderer: UFO_Body (optional, for red flash)
 
-**Features:**
+**Wall Collision Features:**
 - Uses physics reflection for natural bounces (Vector3.Reflect)
 - High angle hits (90°) → bounces mostly straight back
 - Shallow angle hits (10-30°) → deflects along wall naturally
 - Locks rotation during bounce (UFO stays facing same direction)
 - Bounce ends when velocity < 0.5 or after 1 second
 - Brief red flash on impact (100ms)
+- Continuous collision detection prevents phasing through walls at high speed
+
+**Floor Collision Features:**
+- Angle-based behavior (0° = straight down, 90° = horizontal scrape)
+- **Steep descent (< 30°):**
+  - Light touch: Dead stop with tiny bounce
+  - Heavy crash (>10 speed): Bounce up + red flash + brief stun
+- **Medium angle (30-60°):**
+  - Keeps 70% horizontal momentum, bounces up to continue flying
+  - Heavy crashes get stronger bounce + red flash
+- **Shallow scrape (>60°):**
+  - Keeps 90% horizontal momentum, minimal bounce
+  - No flash, smooth glide along floor
+- Temporarily disables vertical input (0.3s) after floor bounce to prevent control fighting
 - Player retains acceleration/turning control throughout
 
 **Important:** Wobble feature was attempted but removed due to conflicts with banking
@@ -121,6 +143,8 @@ Wall_North, Wall_South, Wall_East, Wall_West (Cubes with Box Colliders)
 
 ### Physics Materials:
 - **UFO_Bouncy**: Dynamic/Static Friction = 0, Bounciness = 0.5, applied to UFO and walls
+- **Floor_Material**: Dynamic/Static Friction = 0, Bounciness = 0, applied to ArenaFloor
+  - Separate material allows different collision behavior for floor vs walls
 
 ### Important Notes:
 - UFO_Visual must be assigned to BOTH UFOController and UFOCollision (if using visual features)

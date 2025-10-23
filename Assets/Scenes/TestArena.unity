@@ -431,9 +431,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bounceForce: 20
-  stunDuration: 0.3
-  minImpactSpeed: 3
+  wallBounceForce: 20
+  minWallImpactSpeed: 3
+  heavyCrashThreshold: 10
+  lightFloorBounce: 2
+  heavyFloorBounce: 8
+  floorSlideRetention: 0.7
+  floorAngleThreshold: 45
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &731441728
@@ -1180,7 +1184,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1787822687}
-  m_Material: {fileID: 13400000, guid: 2461b1b6ecfee094a9692be9df82d589, type: 2}
+  m_Material: {fileID: 13400000, guid: 9f67330152ab1ec4e94af26a31b0aef2, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
