@@ -407,6 +407,10 @@ MonoBehaviour:
   visualPitchAmount: 45
   visualPitchSpeed: 3
   minSpeedForPitch: 5
+  barrelRollDistance: 18
+  barrelRollDuration: 0.5
+  barrelRollCooldown: 0.1
+  barrelRollBufferWindow: 0.2
 --- !u!114 &451632578
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 4
+**Update Count:** 5
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -52,11 +52,17 @@ Assets/
 - Visual Pitch Amount: 30°
 - Visual Pitch Speed: 3
 - Min Speed For Pitch: 5
+- Barrel Roll Distance: 18
+- Barrel Roll Duration: 0.5s
+- Barrel Roll Cooldown: 0 (no cooldown)
+- Barrel Roll Buffer Window: 0.2s
 
 **Controls:**
 - A / Controller Button 0 → Accelerate
 - D / Controller Button 1 → Brake/Reverse
 - Arrow Keys / Left Stick → Turn left/right, Ascend/Descend
+- Q / RB (Button 5) → Barrel roll right
+- E / LB (Button 4) → Barrel roll left
 
 **Features:**
 - Arcade physics: tight turns, instant brake, momentum-based movement
@@ -64,6 +70,13 @@ Assets/
 - Banking effect when turning (visual only, applied to UFO_Visual child)
 - Pitch effect when ascending/descending while moving forward (nose tilts up/down)
 - Pitch only applies when horizontal speed > 5 units/sec (no tilt when hovering vertically)
+- **Barrel roll dodge mechanic**: Fast lateral dash with 360° roll animation
+  - Primary evasion mechanic for dodging projectiles
+  - Maintains forward momentum, adds lateral velocity
+  - No cooldown - can be chained back-to-back
+  - Input buffering: Queue next roll 0.2s before current finishes
+  - Full control during roll (can accelerate, turn, ascend/descend)
+  - Movement-based evasion (no invincibility frames)
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 - Interpolation enabled to prevent jittery visuals

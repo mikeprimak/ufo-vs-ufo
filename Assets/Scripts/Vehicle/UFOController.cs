@@ -67,6 +67,19 @@ public class UFOController : MonoBehaviour
     [Tooltip("Minimum forward speed required for pitch tilt")]
     public float minSpeedForPitch = 5f;
 
+    [Header("Barrel Roll Settings")]
+    [Tooltip("Lateral dodge distance (in units, ~18 = 3 UFO widths)")]
+    public float barrelRollDistance = 18f;
+
+    [Tooltip("How long the barrel roll takes (seconds)")]
+    public float barrelRollDuration = 0.5f;
+
+    [Tooltip("Cooldown between barrel rolls (seconds, 0 = no cooldown)")]
+    public float barrelRollCooldown = 0f;
+
+    [Tooltip("How early you can buffer the next barrel roll (seconds before current one ends)")]
+    public float barrelRollBufferWindow = 0.2f;
+
     // Components
     private Rigidbody rb;
 
@@ -86,6 +99,15 @@ public class UFOController : MonoBehaviour
     // Floor bounce control
     private bool disableVerticalControl;
     private float verticalControlReenableTime;
+
+    // Barrel roll state
+    private bool isBarrelRolling;
+    private float barrelRollEndTime;
+    private float barrelRollCooldownEndTime;
+    private float barrelRollDirection; // 1 = right, -1 = left
+    private float barrelRollStartTime;
+    private bool hasBufferedRoll; // Is there a queued roll?
+    private float bufferedRollDirection; // Direction of queued roll
 
     void Start()
     {
@@ -122,6 +144,9 @@ public class UFOController : MonoBehaviour
         HandleVerticalMovement();
         EnforceHeightLimits();
 
+        // Handle barrel roll physics
+        HandleBarrelRoll();
+
         // Keep UFO level (prevent tilting from impacts)
         AutoLevel();
     }
@@ -145,6 +170,27 @@ public class UFOController : MonoBehaviour
 
         // Arrow keys for vertical movement (Up/Down) + Controller Left Stick Y-axis
         verticalInput = Input.GetAxis("Vertical");
+
+        // Barrel roll input (shoulder bumpers)
+        bool wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
+        bool wantsRightRoll = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+
+        if (wantsLeftRoll || wantsRightRoll)
+        {
+            float desiredDirection = wantsLeftRoll ? -1f : 1f;
+
+            // If not currently rolling and off cooldown, start immediately
+            if (!isBarrelRolling && Time.time >= barrelRollCooldownEndTime)
+            {
+                StartBarrelRoll(desiredDirection);
+            }
+            // If currently rolling and within buffer window, queue the next roll
+            else if (isBarrelRolling && Time.time >= (barrelRollEndTime - barrelRollBufferWindow))
+            {
+                hasBufferedRoll = true;
+                bufferedRollDirection = desiredDirection;
+            }
+        }
     }
 
     void HandleMovement()
@@ -281,6 +327,23 @@ public class UFOController : MonoBehaviour
         if (visualModel == null)
             return;
 
+        // If barrel rolling, override with barrel roll animation
+        if (isBarrelRolling)
+        {
+            // Calculate barrel roll progress (0 to 1)
+            float progress = (Time.time - barrelRollStartTime) / barrelRollDuration;
+            progress = Mathf.Clamp01(progress);
+
+            // Calculate 360 degree roll based on progress
+            // Negate direction to match visual roll with movement direction
+            float rollAngle = progress * 360f * -barrelRollDirection;
+
+            // Apply pure roll animation (Z-axis rotation)
+            visualModel.localRotation = Quaternion.Euler(0, 0, rollAngle);
+            return;
+        }
+
+        // Normal banking and pitch (when not barrel rolling)
         // Calculate target bank angle based on turn input
         float targetBankAngle = -turnInput * bankAmount;
 
@@ -329,4 +392,50 @@ public class UFOController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, levelRotation, autoLevelSpeed * Time.fixedDeltaTime);
         }
     }
+
+    void StartBarrelRoll(float direction)
+    {
+        isBarrelRolling = true;
+        barrelRollDirection = direction;
+        barrelRollStartTime = Time.time;
+        barrelRollEndTime = Time.time + barrelRollDuration;
+        barrelRollCooldownEndTime = barrelRollEndTime + barrelRollCooldown;
+    }
+
+    void HandleBarrelRoll()
+    {
+        if (!isBarrelRolling)
+            return;
+
+        // Check if barrel roll is complete
+        if (Time.time >= barrelRollEndTime)
+        {
+            isBarrelRolling = false;
+
+            // If there's a buffered roll, start it immediately
+            if (hasBufferedRoll)
+            {
+                hasBufferedRoll = false;
+                StartBarrelRoll(bufferedRollDirection);
+            }
+            return;
+        }
+
+        // Apply lateral dodge force
+        // Calculate impulse needed to travel barrelRollDistance over duration
+        float dodgeSpeed = barrelRollDistance / barrelRollDuration;
+
+        // Get the UFO's right vector (local X-axis) for lateral movement
+        Vector3 dodgeDirection = transform.right * barrelRollDirection;
+
+        // Apply continuous force during the roll to maintain dodge speed
+        // Use velocity change mode for immediate response
+        Vector3 lateralVelocity = dodgeDirection * dodgeSpeed;
+        Vector3 currentLateralVelocity = Vector3.Project(rb.velocity, transform.right);
+        Vector3 neededVelocity = lateralVelocity - currentLateralVelocity;
+
+        // Apply strong force for fast, snappy dodge movement
+        rb.AddForce(neededVelocity * 15f, ForceMode.Acceleration);
+    }
 }
+
