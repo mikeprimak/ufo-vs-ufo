@@ -34,7 +34,7 @@ public class UFOCamera : MonoBehaviour
     public float verticalHeightOffset = -0.2f;
 
     [Tooltip("Camera pitch adjustment for vertical movement (degrees per unit of velocity). Positive = tilts up when ascending.")]
-    public float verticalTiltAmount = 3f;
+    public float verticalTiltAmount = 0.5f;
 
     [Tooltip("How smoothly vertical adjustments happen")]
     public float verticalSmoothing = 3f;

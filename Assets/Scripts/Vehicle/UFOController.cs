@@ -31,6 +31,12 @@ public class UFOController : MonoBehaviour
     [Tooltip("Speed of ascending/descending")]
     public float verticalSpeed = 8f;
 
+    [Tooltip("Vertical speed multiplier when moving ONLY up/down (no horizontal movement)")]
+    public float pureVerticalSpeedMultiplier = 3f;
+
+    [Tooltip("Horizontal speed threshold below which pure vertical boost applies")]
+    public float pureVerticalThreshold = 10f;
+
     [Tooltip("Maximum height above ground")]
     public float maxHeight = 20f;
 
@@ -282,8 +288,26 @@ public class UFOController : MonoBehaviour
 
         if (Mathf.Abs(verticalInput) > 0.1f)
         {
-            // Simple up/down movement
-            Vector3 verticalMove = Vector3.up * verticalInput * verticalSpeed;
+            // Calculate forward/backward speed (ignore lateral barrel roll movement)
+            // Project velocity onto forward direction to get only forward/back speed
+            float forwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
+            forwardSpeed = Mathf.Abs(forwardSpeed);
+
+            // Apply smooth gradient for speed boost based on forward speed
+            // Barrel roll lateral movement doesn't count toward threshold
+            // At 0 forward speed: full multiplier
+            // At threshold forward speed: no multiplier (1x)
+            float speedMultiplier = 1f;
+            if (forwardSpeed < pureVerticalThreshold)
+            {
+                // Lerp from full multiplier to 1x based on forward speed
+                float t = forwardSpeed / pureVerticalThreshold; // 0 to 1
+                speedMultiplier = Mathf.Lerp(pureVerticalSpeedMultiplier, 1f, t);
+            }
+
+            // Apply vertical movement with gradient multiplier
+            float effectiveVerticalSpeed = verticalSpeed * speedMultiplier;
+            Vector3 verticalMove = Vector3.up * verticalInput * effectiveVerticalSpeed;
             rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
         }
     }

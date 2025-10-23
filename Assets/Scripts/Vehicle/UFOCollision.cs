@@ -166,12 +166,15 @@ public class UFOCollision : MonoBehaviour
         if (impactAngle < 30f)
         {
             // STEEP DESCENT (nearly straight down)
-            // Dead stop or small bounce depending on crash severity
+            // Check if there's any horizontal movement
+            bool hasHorizontalMovement = horizontalSpeed > 0.5f;
+
+            // Stop all velocity
             rb.velocity = Vector3.zero;
 
-            if (isHeavyCrash)
+            if (isHeavyCrash && hasHorizontalMovement)
             {
-                // Heavy crash: bounce up with force
+                // Heavy crash with movement: bounce up with force
                 rb.AddForce(Vector3.up * heavyFloorBounce, ForceMode.VelocityChange);
                 StartFlash();
 
@@ -180,11 +183,12 @@ public class UFOCollision : MonoBehaviour
                 isBouncing = true;
                 bounceEndTime = Time.time + 0.5f;
             }
-            else
+            else if (hasHorizontalMovement)
             {
-                // Light touch: small bounce to prevent sticking
+                // Light touch with movement: small bounce to prevent sticking
                 rb.AddForce(Vector3.up * lightFloorBounce, ForceMode.VelocityChange);
             }
+            // else: Pure vertical landing with no horizontal movement = no bounce (dead stop)
         }
         else if (impactAngle >= 30f && impactAngle < 60f)
         {

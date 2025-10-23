@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 5
+**Update Count:** 6
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -43,7 +43,9 @@ Assets/
 - Brake Force: 80 (2x original)
 - Max Reverse Speed: 20 (2.5x original)
 - Turn Speed: 180
-- Vertical Speed: 8
+- Vertical Speed: 8 (24 when moving only vertically)
+- Pure Vertical Speed Multiplier: 3x
+- Pure Vertical Threshold: 10 (forward/back speed threshold)
 - Drag Amount: 2 (increased for quicker stopping)
 - Auto Level Speed: 2
 - Visual Model: UFO_Visual (for banking and pitch effects)
@@ -70,6 +72,12 @@ Assets/
 - Banking effect when turning (visual only, applied to UFO_Visual child)
 - Pitch effect when ascending/descending while moving forward (nose tilts up/down)
 - Pitch only applies when horizontal speed > 5 units/sec (no tilt when hovering vertically)
+- **Fast vertical movement**: 3x speed boost when moving only up/down
+  - Normal vertical speed: 8 units/sec
+  - Pure vertical speed: 24 units/sec (no forward/backward movement)
+  - Smooth gradient transition based on forward speed (threshold: 10 units/sec)
+  - Barrel roll lateral movement doesn't cancel vertical speed boost
+  - Allows high-speed vertical repositioning and barrel roll dodging simultaneously
 - **Barrel roll dodge mechanic**: Fast lateral dash with 360° roll animation
   - Primary evasion mechanic for dodging projectiles
   - Maintains forward momentum, adds lateral velocity
@@ -77,6 +85,7 @@ Assets/
   - Input buffering: Queue next roll 0.2s before current finishes
   - Full control during roll (can accelerate, turn, ascend/descend)
   - Movement-based evasion (no invincibility frames)
+  - Compatible with fast vertical movement (can dodge while climbing/descending)
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 - Interpolation enabled to prevent jittery visuals
@@ -110,8 +119,9 @@ Assets/
 **Floor Collision Features:**
 - Angle-based behavior (0° = straight down, 90° = horizontal scrape)
 - **Steep descent (< 30°):**
-  - Light touch: Dead stop with tiny bounce
-  - Heavy crash (>10 speed): Bounce up + red flash + brief stun
+  - Pure vertical landing (no horizontal movement): Dead stop, no bounce
+  - Light touch with movement: Small bounce to prevent sticking
+  - Heavy crash with movement (>10 speed): Bounce up + red flash + brief stun
 - **Medium angle (30-60°):**
   - Keeps 70% horizontal momentum, bounces up to continue flying
   - Heavy crashes get stronger bounce + red flash
@@ -133,7 +143,7 @@ Assets/
 - Look Down Angle: 10° (base downward tilt)
 - Field of View: 75° (N64-style wide FOV)
 - Vertical Height Offset: -0.2 (camera drops when ascending)
-- Vertical Tilt Amount: 1.5 (camera tilts with vertical movement)
+- Vertical Tilt Amount: 0.5 (reduced for more horizontal camera during vertical movement)
 - Vertical Smoothing: 3
 
 **Features:**

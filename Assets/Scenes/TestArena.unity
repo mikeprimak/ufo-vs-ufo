@@ -396,6 +396,8 @@ MonoBehaviour:
   turnSpeed: 180
   pitchSpeed: 100
   verticalSpeed: 8
+  pureVerticalSpeedMultiplier: 3
+  pureVerticalThreshold: 10
   maxHeight: 20
   minHeight: 0.5
   maxReverseSpeed: 20
@@ -844,7 +846,7 @@ MonoBehaviour:
   rotationSmoothing: 0.8
   lookDownAngle: 10
   verticalHeightOffset: -0.05
-  verticalTiltAmount: 1.5
+  verticalTiltAmount: 0.5
   verticalSmoothing: 3
   fieldOfView: 75
 --- !u!1 &998158369
