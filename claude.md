@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-23
-**Update Count:** 6
+**Update Count:** 11
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -58,6 +58,12 @@ Assets/
 - Barrel Roll Duration: 0.5s
 - Barrel Roll Cooldown: 0 (no cooldown)
 - Barrel Roll Buffer Window: 0.2s
+- Combo Rolls Required: 3
+- Combo Time Window: 2s
+- Combo Speed Boost: 1.5x
+- Combo Boost Duration: 3s
+- Combo Boost Fade In Time: 0.3s
+- Combo Boost Fade Out Time: 0.5s
 
 **Controls:**
 - A / Controller Button 0 → Accelerate
@@ -72,12 +78,13 @@ Assets/
 - Banking effect when turning (visual only, applied to UFO_Visual child)
 - Pitch effect when ascending/descending while moving forward (nose tilts up/down)
 - Pitch only applies when horizontal speed > 5 units/sec (no tilt when hovering vertically)
-- **Fast vertical movement**: 3x speed boost when moving only up/down
+- **Fast vertical movement**: 3x speed boost when moving only up/down OR during barrel rolls
   - Normal vertical speed: 8 units/sec
   - Pure vertical speed: 24 units/sec (no forward/backward movement)
   - Smooth gradient transition based on forward speed (threshold: 10 units/sec)
+  - **Barrel roll vertical boost**: Full 3x speed multiplier during barrel rolls regardless of forward speed
+  - Allows aggressive evasive climbs/dives while barrel rolling forward
   - Barrel roll lateral movement doesn't cancel vertical speed boost
-  - Allows high-speed vertical repositioning and barrel roll dodging simultaneously
 - **Barrel roll dodge mechanic**: Fast lateral dash with 360° roll animation
   - Primary evasion mechanic for dodging projectiles
   - Maintains forward momentum, adds lateral velocity
@@ -86,6 +93,13 @@ Assets/
   - Full control during roll (can accelerate, turn, ascend/descend)
   - Movement-based evasion (no invincibility frames)
   - Compatible with fast vertical movement (can dodge while climbing/descending)
+  - **Combo system**: 3 barrel rolls within 2 seconds triggers speed boost
+    - Any combination of left/right rolls counts toward combo
+    - Activates 1.5x speed boost for 3 seconds (max speed 45, acceleration 90)
+    - **Smooth transitions**: 0.3s fade-in, 0.5s fade-out for gradual acceleration/deceleration
+    - No sudden speed changes - multiplier lerps smoothly between 1.0x and 1.5x
+    - Combo counter resets after successful boost or timeout
+    - Debug messages show combo progress in console
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 - Interpolation enabled to prevent jittery visuals
@@ -145,6 +159,10 @@ Assets/
 - Vertical Height Offset: -0.2 (camera drops when ascending)
 - Vertical Tilt Amount: 0.5 (reduced for more horizontal camera during vertical movement)
 - Vertical Smoothing: 3
+- Reverse Distance: 15 (camera pulls back when reversing)
+- Reverse FOV: 90° (wider FOV when reversing)
+- Reverse Speed Threshold: -1 (triggers reverse camera mode)
+- Reverse Camera Smoothing: 3 (transition speed)
 
 **Features:**
 - Tight rotation tracking for forward-firing weapon aiming (0.5-1.0 recommended)
@@ -153,6 +171,10 @@ Assets/
 - Dynamic vertical tilt: ascending = camera tilts up, descending = camera tilts down
 - Smooth position following with retained smoothing for comfort
 - Designed for center-screen aiming and forward-firing weapons
+- **Dynamic reverse camera**: When UFO reverses, camera pulls back and widens FOV for better visibility
+  - Prevents UFO from approaching bottom edge of screen
+  - Smooth transitions between normal and reverse camera states
+  - Automatically detects reverse movement based on velocity
 
 ## Scene Setup (TestArena)
 

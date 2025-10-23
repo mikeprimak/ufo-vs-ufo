@@ -86,6 +86,25 @@ public class UFOController : MonoBehaviour
     [Tooltip("How early you can buffer the next barrel roll (seconds before current one ends)")]
     public float barrelRollBufferWindow = 0.2f;
 
+    [Header("Barrel Roll Combo Settings")]
+    [Tooltip("Number of consecutive barrel rolls needed for combo boost")]
+    public int comboRollsRequired = 3;
+
+    [Tooltip("Time window to complete combo chain (seconds)")]
+    public float comboTimeWindow = 2f;
+
+    [Tooltip("Speed boost multiplier when combo is triggered")]
+    public float comboSpeedBoost = 1.5f;
+
+    [Tooltip("Duration of the combo speed boost (seconds)")]
+    public float comboBoostDuration = 3f;
+
+    [Tooltip("Fade in time for combo boost (seconds)")]
+    public float comboBoostFadeInTime = 0.3f;
+
+    [Tooltip("Fade out time for combo boost (seconds)")]
+    public float comboBoostFadeOutTime = 0.5f;
+
     // Components
     private Rigidbody rb;
 
@@ -115,6 +134,14 @@ public class UFOController : MonoBehaviour
     private bool hasBufferedRoll; // Is there a queued roll?
     private float bufferedRollDirection; // Direction of queued roll
 
+    // Combo system
+    private int consecutiveBarrelRolls;
+    private float lastBarrelRollTime;
+    private bool isComboBoostActive;
+    private float comboBoostEndTime;
+    private float comboBoostStartTime;
+    private float currentComboMultiplier; // Smoothly lerps between 1.0 and comboSpeedBoost
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -131,6 +158,9 @@ public class UFOController : MonoBehaviour
         // Enable interpolation to smooth movement between FixedUpdate calls
         // This prevents jittery visuals when camera follows in LateUpdate
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // Initialize combo multiplier
+        currentComboMultiplier = 1f;
     }
 
     void Update()
@@ -144,6 +174,50 @@ public class UFOController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Handle combo boost fade in/out
+        if (isComboBoostActive)
+        {
+            float timeSinceStart = Time.time - comboBoostStartTime;
+            float timeUntilEnd = comboBoostEndTime - Time.time;
+
+            if (timeSinceStart < comboBoostFadeInTime)
+            {
+                // Fade in: lerp from 1.0 to comboSpeedBoost
+                float fadeInProgress = timeSinceStart / comboBoostFadeInTime;
+                currentComboMultiplier = Mathf.Lerp(1f, comboSpeedBoost, fadeInProgress);
+            }
+            else if (timeUntilEnd <= comboBoostFadeOutTime)
+            {
+                // Fade out: lerp from comboSpeedBoost back to 1.0
+                float fadeOutProgress = timeUntilEnd / comboBoostFadeOutTime;
+                currentComboMultiplier = Mathf.Lerp(1f, comboSpeedBoost, fadeOutProgress);
+            }
+            else
+            {
+                // Full boost active
+                currentComboMultiplier = comboSpeedBoost;
+            }
+
+            // Check if combo boost completely expired
+            if (Time.time >= comboBoostEndTime)
+            {
+                isComboBoostActive = false;
+                currentComboMultiplier = 1f;
+                Debug.Log("Combo boost ended!");
+            }
+        }
+        else
+        {
+            // Not boosting, ensure multiplier is at base level
+            currentComboMultiplier = 1f;
+        }
+
+        // Reset combo chain if too much time passed since last barrel roll
+        if (consecutiveBarrelRolls > 0 && Time.time - lastBarrelRollTime > comboTimeWindow)
+        {
+            consecutiveBarrelRolls = 0;
+        }
+
         // Apply movement and rotation
         HandleMovement();
         HandleRotation();
@@ -204,6 +278,10 @@ public class UFOController : MonoBehaviour
         // Get current forward speed (positive = forward, negative = backward)
         currentForwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
 
+        // Calculate effective max speed (with smooth combo boost multiplier)
+        float effectiveMaxSpeed = maxSpeed * currentComboMultiplier;
+        float effectiveAcceleration = acceleration * currentComboMultiplier;
+
         if (accelerateInput && brakeInput)
         {
             // Both keys pressed - do nothing (maintain momentum)
@@ -212,17 +290,17 @@ public class UFOController : MonoBehaviour
         else if (accelerateInput)
         {
             // A pressed - accelerate forward
-            if (currentForwardSpeed < maxSpeed)
+            if (currentForwardSpeed < effectiveMaxSpeed)
             {
-                rb.AddForce(transform.forward * acceleration, ForceMode.Acceleration);
+                rb.AddForce(transform.forward * effectiveAcceleration, ForceMode.Acceleration);
             }
 
-            // Clamp to max forward speed
-            if (currentForwardSpeed > maxSpeed)
+            // Clamp to max forward speed (effective max with boost)
+            if (currentForwardSpeed > effectiveMaxSpeed)
             {
                 Vector3 horizontalVelocity = rb.velocity;
                 horizontalVelocity.y = 0;
-                rb.velocity = transform.forward * maxSpeed + Vector3.up * rb.velocity.y;
+                rb.velocity = transform.forward * effectiveMaxSpeed + Vector3.up * rb.velocity.y;
             }
         }
         else if (brakeInput)
@@ -295,10 +373,17 @@ public class UFOController : MonoBehaviour
 
             // Apply smooth gradient for speed boost based on forward speed
             // Barrel roll lateral movement doesn't count toward threshold
+            // SPECIAL: During barrel roll, always apply full 3x multiplier for fast evasive climbs/dives
             // At 0 forward speed: full multiplier
             // At threshold forward speed: no multiplier (1x)
             float speedMultiplier = 1f;
-            if (forwardSpeed < pureVerticalThreshold)
+
+            if (isBarrelRolling)
+            {
+                // Full speed boost during barrel roll for aggressive vertical maneuvers
+                speedMultiplier = pureVerticalSpeedMultiplier;
+            }
+            else if (forwardSpeed < pureVerticalThreshold)
             {
                 // Lerp from full multiplier to 1x based on forward speed
                 float t = forwardSpeed / pureVerticalThreshold; // 0 to 1
@@ -424,6 +509,33 @@ public class UFOController : MonoBehaviour
         barrelRollStartTime = Time.time;
         barrelRollEndTime = Time.time + barrelRollDuration;
         barrelRollCooldownEndTime = barrelRollEndTime + barrelRollCooldown;
+
+        // Track combo chain
+        // Check if this roll is within the combo time window
+        if (Time.time - lastBarrelRollTime <= comboTimeWindow)
+        {
+            consecutiveBarrelRolls++;
+            Debug.Log($"Barrel roll combo: {consecutiveBarrelRolls}/{comboRollsRequired}");
+        }
+        else
+        {
+            // Too much time passed, reset chain
+            consecutiveBarrelRolls = 1;
+        }
+
+        lastBarrelRollTime = Time.time;
+
+        // Check if combo is complete
+        if (consecutiveBarrelRolls >= comboRollsRequired && !isComboBoostActive)
+        {
+            // Activate combo boost!
+            isComboBoostActive = true;
+            comboBoostStartTime = Time.time;
+            comboBoostEndTime = Time.time + comboBoostDuration;
+            consecutiveBarrelRolls = 0; // Reset counter after triggering
+
+            Debug.Log($"COMBO BOOST ACTIVATED! Speed x{comboSpeedBoost} for {comboBoostDuration} seconds (fade in: {comboBoostFadeInTime}s, fade out: {comboBoostFadeOutTime}s)!");
+        }
     }
 
     void HandleBarrelRoll()

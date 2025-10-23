@@ -43,11 +43,26 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("Wide FOV for arcade feel (N64-style)")]
     public float fieldOfView = 75f;
 
+    [Header("Reverse Camera Settings")]
+    [Tooltip("Camera distance when reversing (larger = pulls back further)")]
+    public float reverseDistance = 15f;
+
+    [Tooltip("FOV when reversing (wider for better visibility)")]
+    public float reverseFOV = 90f;
+
+    [Tooltip("Forward speed threshold to trigger reverse camera (negative = reversing)")]
+    public float reverseSpeedThreshold = -1f;
+
+    [Tooltip("How smoothly reverse camera transitions happen")]
+    public float reverseCameraSmoothing = 3f;
+
     private Camera cam;
     private Vector3 currentVelocity;
     private Rigidbody targetRigidbody;
     private float currentVerticalOffset;
     private float currentVerticalTilt;
+    private float currentDistance;
+    private float currentFOV;
 
     void Start()
     {
@@ -56,7 +71,11 @@ public class UFOCamera : MonoBehaviour
         if (cam != null)
         {
             cam.fieldOfView = fieldOfView;
+            currentFOV = fieldOfView;
         }
+
+        // Initialize current distance to normal distance
+        currentDistance = distance;
 
         if (target == null)
         {
@@ -74,11 +93,29 @@ public class UFOCamera : MonoBehaviour
         if (target == null)
             return;
 
-        // Get UFO's vertical velocity
+        // Get UFO's vertical velocity and forward speed
         float verticalVelocity = 0f;
+        float forwardSpeed = 0f;
         if (targetRigidbody != null)
         {
             verticalVelocity = targetRigidbody.velocity.y;
+            // Calculate forward speed relative to UFO's facing direction
+            forwardSpeed = Vector3.Dot(targetRigidbody.velocity, target.forward);
+        }
+
+        // Determine if UFO is reversing and adjust camera accordingly
+        bool isReversing = forwardSpeed < reverseSpeedThreshold;
+        float targetDistance = isReversing ? reverseDistance : distance;
+        float targetFOV = isReversing ? reverseFOV : fieldOfView;
+
+        // Smoothly transition camera distance and FOV
+        currentDistance = Mathf.Lerp(currentDistance, targetDistance, reverseCameraSmoothing * Time.deltaTime);
+        currentFOV = Mathf.Lerp(currentFOV, targetFOV, reverseCameraSmoothing * Time.deltaTime);
+
+        // Apply FOV to camera
+        if (cam != null)
+        {
+            cam.fieldOfView = currentFOV;
         }
 
         // Calculate dynamic height offset based on vertical movement
@@ -96,8 +133,8 @@ public class UFOCamera : MonoBehaviour
 
         // Calculate desired position behind and above the UFO
         // Camera rotates WITH the UFO's yaw for tighter turn tracking
-        // Apply dynamic vertical offset
-        Vector3 desiredPosition = target.position - (target.forward * distance) + (Vector3.up * (height + currentVerticalOffset));
+        // Apply dynamic vertical offset and current distance (which adjusts for reverse)
+        Vector3 desiredPosition = target.position - (target.forward * currentDistance) + (Vector3.up * (height + currentVerticalOffset));
 
         // Smoothly move camera to desired position
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
