@@ -428,11 +428,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bounceForce: 10
+  bounceForce: 20
   stunDuration: 0.3
   minImpactSpeed: 3
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  visualModel: {fileID: 755738915}
+  wobbleAmount: 45
+  wobbleSpeed: 15
+  wobbleDuration: 0.5
 --- !u!1 &731441728
 GameObject:
   m_ObjectHideFlags: 0

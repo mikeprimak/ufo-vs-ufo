@@ -9,7 +9,7 @@ public class UFOCollision : MonoBehaviour
 {
     [Header("Collision Settings")]
     [Tooltip("How much force to bounce back on impact")]
-    public float bounceForce = 270f;
+    public float bounceForce = 4000f;
 
     [Tooltip("How long UFO is stunned after collision (seconds)")]
     public float stunDuration = 0.3f;

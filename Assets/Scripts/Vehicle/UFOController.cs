@@ -9,16 +9,16 @@ public class UFOController : MonoBehaviour
 {
     [Header("Movement Settings")]
     [Tooltip("Maximum speed the UFO can reach")]
-    public float maxSpeed = 15f;
+    public float maxSpeed = 30f;
 
     [Tooltip("How quickly the UFO accelerates")]
-    public float acceleration = 30f;
+    public float acceleration = 60f;
 
     [Tooltip("How quickly the UFO decelerates when not accelerating")]
     public float deceleration = 20f;
 
     [Tooltip("How quickly the UFO stops when braking")]
-    public float brakeForce = 40f;
+    public float brakeForce = 80f;
 
     [Header("Rotation Settings")]
     [Tooltip("How fast the UFO turns left/right")]
@@ -39,7 +39,7 @@ public class UFOController : MonoBehaviour
 
     [Header("Reverse Settings")]
     [Tooltip("Maximum reverse speed")]
-    public float maxReverseSpeed = 8f;
+    public float maxReverseSpeed = 20f;
 
     [Header("Physics")]
     [Tooltip("Natural momentum drag (lower = more momentum)")]
