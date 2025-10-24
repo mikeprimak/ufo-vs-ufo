@@ -129,25 +129,31 @@ public class WeaponSystem : MonoBehaviour
         else
         {
             // Spawn from UFO center, using aim direction
-            spawnPosition = transform.position + (aimDirection * Vector3.forward) * 2f; // Offset 2 units forward in aim direction
+            // Use larger offset (10 units) to accommodate large projectiles like sticky bombs
+            spawnPosition = transform.position + (aimDirection * Vector3.forward) * 10f;
             spawnRotation = aimDirection;
         }
 
         // Spawn projectile
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, spawnRotation);
 
-        // Set owner to prevent self-hits (check both Projectile and HomingProjectile)
+        // Set owner to prevent self-hits (check all projectile types)
         Projectile projectileScript = projectile.GetComponent<Projectile>();
         if (projectileScript != null)
         {
             projectileScript.SetOwner(gameObject);
         }
 
-        // Also check for HomingProjectile component
         HomingProjectile homingProjectileScript = projectile.GetComponent<HomingProjectile>();
         if (homingProjectileScript != null)
         {
             homingProjectileScript.SetOwner(gameObject);
+        }
+
+        StickyBomb stickyBombScript = projectile.GetComponent<StickyBomb>();
+        if (stickyBombScript != null)
+        {
+            stickyBombScript.SetOwner(gameObject);
         }
 
         // Consume ammo

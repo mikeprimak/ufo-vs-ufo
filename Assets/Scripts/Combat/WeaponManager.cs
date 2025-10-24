@@ -20,6 +20,9 @@ public class WeaponManager : MonoBehaviour
     [Tooltip("Reference to BurstWeapon")]
     public BurstWeapon burstWeapon;
 
+    [Tooltip("Reference to StickyBomb weapon system")]
+    public WeaponSystem stickyBombWeaponSystem;
+
     [Header("Current Weapon")]
     public WeaponType currentWeapon = WeaponType.None;
 
@@ -32,7 +35,8 @@ public class WeaponManager : MonoBehaviour
         Missile,
         HomingMissile,
         Laser,
-        Burst
+        Burst,
+        StickyBomb
     }
 
     void Start()
@@ -86,6 +90,8 @@ public class WeaponManager : MonoBehaviour
             laserWeapon.enabled = false;
         if (burstWeapon != null)
             burstWeapon.enabled = false;
+        if (stickyBombWeaponSystem != null)
+            stickyBombWeaponSystem.enabled = false;
 
         // Enable the selected weapon and set ammo for 1 use
         switch (weaponType)
@@ -124,6 +130,18 @@ public class WeaponManager : MonoBehaviour
                 {
                     burstWeapon.enabled = true;
                     burstWeapon.currentAmmo = 13; // Exactly 1 burst (13 shots)
+                }
+                break;
+
+            case WeaponType.StickyBomb:
+                if (stickyBombWeaponSystem != null)
+                {
+                    stickyBombWeaponSystem.currentAmmo = 1; // Only 1 sticky bomb
+                    stickyBombWeaponSystem.enabled = true;
+                }
+                else
+                {
+                    Debug.LogError("StickyBomb weapon: stickyBombWeaponSystem is null!");
                 }
                 break;
 
@@ -188,6 +206,18 @@ public class WeaponManager : MonoBehaviour
                     {
                         // Weapon used, will be removed after burst completes
                         // Don't remove immediately since burst is still firing
+                    }
+                }
+                break;
+
+            case WeaponType.StickyBomb:
+                if (stickyBombWeaponSystem != null && stickyBombWeaponSystem.enabled)
+                {
+                    weaponFired = stickyBombWeaponSystem.TryFire();
+                    if (weaponFired && stickyBombWeaponSystem.currentAmmo <= 0)
+                    {
+                        // Used up the weapon
+                        SetWeapon(WeaponType.None);
                     }
                 }
                 break;
