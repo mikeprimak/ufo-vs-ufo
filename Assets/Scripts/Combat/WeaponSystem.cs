@@ -32,11 +32,29 @@ public class WeaponSystem : MonoBehaviour
 
     private float lastFireTime;
     private AudioSource audioSource;
+    private bool hasBeenInitialized = false;
+
+    void Awake()
+    {
+        // Awake runs before Start and before component is enabled
+        // Only initialize ammo if component starts enabled (standalone use)
+        // If disabled at start, WeaponManager will set ammo before enabling
+        if (enabled)
+        {
+            currentAmmo = startingAmmo;
+        }
+        hasBeenInitialized = true;
+    }
 
     void Start()
     {
-        // Set starting ammo
-        currentAmmo = startingAmmo;
+        // If this is called and we haven't set ammo yet, set it now
+        // This handles the case where component is enabled after Awake
+        if (!hasBeenInitialized)
+        {
+            currentAmmo = startingAmmo;
+            hasBeenInitialized = true;
+        }
 
         // Get or add audio source for fire sound
         audioSource = GetComponent<AudioSource>();
