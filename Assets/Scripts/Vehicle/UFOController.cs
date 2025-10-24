@@ -113,6 +113,7 @@ public class UFOController : MonoBehaviour
     private bool brakeInput;
     private float turnInput;
     private float verticalInput;
+    private bool wasAcceleratingLastFrame;
 
     // Current speed tracking
     private float currentForwardSpeed;
@@ -229,6 +230,9 @@ public class UFOController : MonoBehaviour
 
         // Keep UFO level (prevent tilting from impacts)
         AutoLevel();
+
+        // Track input state for next frame
+        wasAcceleratingLastFrame = accelerateInput;
     }
 
     void GetInput()
@@ -369,7 +373,7 @@ public class UFOController : MonoBehaviour
             // Calculate forward/backward speed (ignore lateral barrel roll movement)
             // Project velocity onto forward direction to get only forward/back speed
             float forwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
-            forwardSpeed = Mathf.Abs(forwardSpeed);
+            float absForwardSpeed = Mathf.Abs(forwardSpeed);
 
             // Apply smooth gradient for speed boost based on forward speed
             // Barrel roll lateral movement doesn't count toward threshold
@@ -383,17 +387,48 @@ public class UFOController : MonoBehaviour
                 // Full speed boost during barrel roll for aggressive vertical maneuvers
                 speedMultiplier = pureVerticalSpeedMultiplier;
             }
-            else if (forwardSpeed < pureVerticalThreshold)
+            else if (absForwardSpeed < pureVerticalThreshold * 2f) // Kick in at 2x threshold (20 units/sec instead of 10)
             {
-                // Lerp from full multiplier to 1x based on forward speed
-                float t = forwardSpeed / pureVerticalThreshold; // 0 to 1
+                // Smooth gradient: Inverse relationship between horizontal and vertical speed
+                // Starts boosting MUCH earlier while still moving forward
+                // Use smoothstep for even smoother transition curve
+                float t = absForwardSpeed / (pureVerticalThreshold * 2f); // 0 to 1
+                t = Mathf.SmoothStep(0f, 1f, t); // Apply smoothing to the transition
                 speedMultiplier = Mathf.Lerp(pureVerticalSpeedMultiplier, 1f, t);
             }
 
-            // Apply vertical movement with gradient multiplier
-            float effectiveVerticalSpeed = verticalSpeed * speedMultiplier;
-            Vector3 verticalMove = Vector3.up * verticalInput * effectiveVerticalSpeed;
-            rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
+            // MOMENTUM CONSERVATION: Maintain constant total speed during transition
+            // When not accelerating, preserve total velocity magnitude
+            if (!accelerateInput && !brakeInput)
+            {
+                // Capture current total speed to preserve
+                float totalSpeed = rb.velocity.magnitude;
+
+                // Calculate effective vertical speed with multiplier
+                float effectiveVerticalSpeed = verticalSpeed * speedMultiplier;
+
+                // Get current horizontal velocity (x and z components)
+                Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+                float currentHorizontalSpeed = horizontalVelocity.magnitude;
+
+                // Calculate target vertical speed using Pythagorean theorem to maintain total speed
+                // total^2 = horizontal^2 + vertical^2
+                // Therefore: vertical = sqrt(total^2 - horizontal^2)
+                float targetVerticalSpeed = Mathf.Sqrt(Mathf.Max(0, totalSpeed * totalSpeed - currentHorizontalSpeed * currentHorizontalSpeed));
+
+                // Ensure we meet minimum effective vertical speed (from multiplier system)
+                targetVerticalSpeed = Mathf.Max(targetVerticalSpeed, effectiveVerticalSpeed);
+
+                // Apply the calculated vertical velocity
+                rb.velocity = new Vector3(rb.velocity.x, targetVerticalSpeed * Mathf.Sign(verticalInput), rb.velocity.z);
+            }
+            else
+            {
+                // When accelerating/braking, use standard vertical control
+                float effectiveVerticalSpeed = verticalSpeed * speedMultiplier;
+                Vector3 verticalMove = Vector3.up * verticalInput * effectiveVerticalSpeed;
+                rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
+            }
         }
     }
 
