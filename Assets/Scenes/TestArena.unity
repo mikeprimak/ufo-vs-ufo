@@ -454,6 +454,7 @@ GameObject:
   - component: {fileID: 451632584}
   - component: {fileID: 451632583}
   - component: {fileID: 451632585}
+  - component: {fileID: 451632586}
   m_Layer: 0
   m_Name: UFO_Player
   m_TagString: Player
@@ -778,6 +779,23 @@ MonoBehaviour:
   maxAmmo: 1
   startingAmmo: 0
   fireSound: {fileID: 0}
+--- !u!114 &451632586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451632571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9731d0d1777b83540992a8cc47106660, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wobbleAmount: 180
+  wobbleDuration: 3
+  wobbleSpeed: 2
+  stunDuration: 0.3
+  stunSpeedMultiplier: 0.2
 --- !u!1 &535376655
 GameObject:
   m_ObjectHideFlags: 0
@@ -2740,6 +2758,7 @@ GameObject:
   - component: {fileID: 1834545114}
   - component: {fileID: 1834545113}
   - component: {fileID: 1834545112}
+  - component: {fileID: 1834545121}
   m_Layer: 0
   m_Name: UFO_Dummy
   m_TagString: Player
@@ -2958,6 +2977,23 @@ Transform:
   - {fileID: 535376656}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1834545121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834545111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9731d0d1777b83540992a8cc47106660, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wobbleAmount: 15
+  wobbleDuration: 0.3
+  wobbleSpeed: 20
+  stunDuration: 0.3
+  stunSpeedMultiplier: 0.2
 --- !u!1 &2031744037
 GameObject:
   m_ObjectHideFlags: 0

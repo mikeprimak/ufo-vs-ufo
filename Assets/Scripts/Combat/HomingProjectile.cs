@@ -166,6 +166,13 @@ public class HomingProjectile : MonoBehaviour
             // TODO: Apply damage to target's health system
             // var health = collision.gameObject.GetComponent<UFOHealth>();
             // if (health != null) health.TakeDamage(damage);
+
+            // Trigger wobble effect
+            UFOHitEffect hitEffect = collision.gameObject.GetComponent<UFOHitEffect>();
+            if (hitEffect != null)
+            {
+                hitEffect.TriggerWobble();
+            }
         }
 
         // Destroy missile on any collision (wall, floor, player)

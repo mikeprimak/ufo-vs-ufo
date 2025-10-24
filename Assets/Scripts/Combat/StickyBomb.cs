@@ -124,6 +124,13 @@ public class StickyBomb : MonoBehaviour
 
             Debug.Log($"[STICKY BOMB] Hit UFO {collision.gameObject.name} for {contactDamage} contact damage");
 
+            // Trigger wobble effect
+            UFOHitEffect hitEffect = collision.gameObject.GetComponent<UFOHitEffect>();
+            if (hitEffect != null)
+            {
+                hitEffect.TriggerWobble();
+            }
+
             // Continue flying - don't stick to UFOs
             return;
         }
@@ -192,6 +199,14 @@ public class StickyBomb : MonoBehaviour
                 // if (health != null) health.TakeDamage(finalDamage);
 
                 Debug.Log($"[STICKY BOMB] Explosion damaged {hit.name} for {finalDamage:F1} damage (distance: {distance:F1})");
+
+                // Trigger wobble effect (stronger wobble for closer hits)
+                UFOHitEffect hitEffect = hit.GetComponent<UFOHitEffect>();
+                if (hitEffect != null)
+                {
+                    float wobbleIntensity = 20f * damageFalloff; // Stronger wobble when closer to explosion
+                    hitEffect.TriggerWobble(wobbleIntensity);
+                }
 
                 // Apply explosion force to UFO (physics knockback)
                 Rigidbody targetRb = hit.GetComponent<Rigidbody>();

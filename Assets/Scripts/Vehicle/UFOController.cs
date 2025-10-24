@@ -62,7 +62,7 @@ public class UFOController : MonoBehaviour
     public Transform visualModel;
 
     [Tooltip("How much the UFO banks when turning (degrees)")]
-    public float bankAmount = 25f;
+    public float bankAmount = 45f;
 
     [Tooltip("How quickly the UFO banks")]
     public float bankSpeed = 3f;
@@ -180,13 +180,29 @@ public class UFOController : MonoBehaviour
 
     void Update()
     {
-        // Get input from keyboard and controller
-        GetInput();
+        // Check if stunned (cannot move/shoot when hit)
+        UFOHitEffect hitEffect = GetComponent<UFOHitEffect>();
+        bool isStunned = (hitEffect != null) && hitEffect.IsStunned();
 
-        // Handle weapon firing
-        if (fireInput && weaponSystem != null)
+        // Get input from keyboard and controller (disabled during stun)
+        if (!isStunned)
         {
-            weaponSystem.TryFire();
+            GetInput();
+
+            // Handle weapon firing
+            if (fireInput && weaponSystem != null)
+            {
+                weaponSystem.TryFire();
+            }
+        }
+        else
+        {
+            // During stun, zero out all inputs
+            accelerateInput = false;
+            brakeInput = false;
+            turnInput = 0f;
+            verticalInput = 0f;
+            fireInput = false;
         }
 
         // Apply visual feedback
@@ -239,7 +255,16 @@ public class UFOController : MonoBehaviour
             consecutiveBarrelRolls = 0;
         }
 
-        // Apply movement and rotation
+        // Apply movement and rotation (with stun slowdown if hit)
+        UFOHitEffect hitEffect = GetComponent<UFOHitEffect>();
+        float stunSpeedMultiplier = (hitEffect != null) ? hitEffect.GetStunSpeedMultiplier() : 1f;
+
+        // Apply stun slowdown to velocity
+        if (stunSpeedMultiplier < 1f)
+        {
+            rb.velocity *= stunSpeedMultiplier;
+        }
+
         HandleMovement();
         HandleRotation();
         HandleVerticalMovement();
@@ -584,6 +609,10 @@ public class UFOController : MonoBehaviour
         if (visualModel == null)
             return;
 
+        // Get wobble offset (if UFO is hit) - declared once for entire method
+        UFOHitEffect hitEffect = GetComponent<UFOHitEffect>();
+        Vector3 wobbleOffset = (hitEffect != null) ? hitEffect.GetWobbleOffset() : Vector3.zero;
+
         // If barrel rolling, override with barrel roll animation
         if (isBarrelRolling)
         {
@@ -595,8 +624,8 @@ public class UFOController : MonoBehaviour
             // Negate direction to match visual roll with movement direction
             float rollAngle = progress * 360f * -barrelRollDirection;
 
-            // Apply pure roll animation (Z-axis rotation)
-            visualModel.localRotation = Quaternion.Euler(0, 0, rollAngle);
+            // Apply pure roll animation (Z-axis rotation) with wobble
+            visualModel.localRotation = Quaternion.Euler(wobbleOffset.x, wobbleOffset.y, rollAngle + wobbleOffset.z);
             return;
         }
 
@@ -624,8 +653,12 @@ public class UFOController : MonoBehaviour
         float pitchLerpSpeed = (Mathf.Abs(verticalInput) > 0.1f) ? visualPitchSpeed : visualPitchSpeed * 0.3f;
         currentPitchAngle = Mathf.Lerp(currentPitchAngle, targetPitchAngle, pitchLerpSpeed * Time.deltaTime);
 
-        // Apply both banking (Z-axis roll) and pitch (X-axis rotation) to visual model
-        visualModel.localRotation = Quaternion.Euler(currentPitchAngle, 0, currentBankAngle);
+        // Apply both banking (Z-axis roll) and pitch (X-axis rotation) to visual model with wobble
+        visualModel.localRotation = Quaternion.Euler(
+            currentPitchAngle + wobbleOffset.x,
+            wobbleOffset.y,
+            currentBankAngle + wobbleOffset.z
+        );
     }
 
     void AutoLevel()
