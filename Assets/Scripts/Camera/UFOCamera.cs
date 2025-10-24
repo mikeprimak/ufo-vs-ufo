@@ -31,10 +31,10 @@ public class UFOCamera : MonoBehaviour
 
     [Header("Vertical Movement Response")]
     [Tooltip("How much camera drops when UFO ascends (negative = drops down)")]
-    public float verticalHeightOffset = -0.2f;
+    public float verticalHeightOffset = -10f;
 
     [Tooltip("Camera pitch adjustment for vertical movement (degrees per unit of velocity). Positive = tilts up when ascending.")]
-    public float verticalTiltAmount = 0.5f;
+    public float verticalTiltAmount = 1.2f;
 
     [Tooltip("How smoothly vertical adjustments happen")]
     public float verticalSmoothing = 3f;
@@ -118,17 +118,38 @@ public class UFOCamera : MonoBehaviour
             cam.fieldOfView = currentFOV;
         }
 
+        // Calculate horizontal speed to detect pure vertical vs angled movement
+        Vector3 horizontalVelocity = new Vector3(targetRigidbody.velocity.x, 0, targetRigidbody.velocity.z);
+        float horizontalSpeed = horizontalVelocity.magnitude;
+
         // Calculate dynamic height offset based on vertical movement
-        // When ascending (positive velocity): camera drops down (negative offset)
-        // When descending (negative velocity): camera rises up (positive offset)
-        float targetVerticalOffset = verticalVelocity * verticalHeightOffset;
+        // Dramatic effect ONLY for forward+ascend, subtle for everything else
+        float targetVerticalOffset = 0f;
+        if (verticalVelocity > 0 && horizontalSpeed > 5f) // Ascending WITH forward movement
+        {
+            // Camera drops down dramatically when ascending while moving forward
+            targetVerticalOffset = verticalVelocity * verticalHeightOffset;
+        }
+        else // Pure vertical or descending - use original subtle behavior
+        {
+            // Camera barely moves (original subtle behavior)
+            targetVerticalOffset = verticalVelocity * (verticalHeightOffset * 0.2f);
+        }
         currentVerticalOffset = Mathf.Lerp(currentVerticalOffset, targetVerticalOffset, verticalSmoothing * Time.deltaTime);
 
         // Calculate dynamic tilt based on vertical movement
-        // When ascending (positive velocity): tilt camera UP (negative pitch angle)
-        // When descending (negative velocity): tilt camera DOWN (positive pitch angle)
-        // Negate to invert: ascending should reduce the lookDownAngle
-        float targetVerticalTilt = -verticalVelocity * verticalTiltAmount;
+        // Dramatic effect ONLY for forward+ascend, subtle for everything else
+        float targetVerticalTilt = 0f;
+        if (verticalVelocity > 0 && horizontalSpeed > 5f) // Ascending WITH forward movement
+        {
+            // Camera tilts up more when ascending while moving forward
+            targetVerticalTilt = -verticalVelocity * verticalTiltAmount;
+        }
+        else // Pure vertical or descending - use original subtle behavior
+        {
+            // Camera barely tilts (original subtle behavior)
+            targetVerticalTilt = -verticalVelocity * (verticalTiltAmount * 0.5f);
+        }
         currentVerticalTilt = Mathf.Lerp(currentVerticalTilt, targetVerticalTilt, verticalSmoothing * Time.deltaTime);
 
         // Calculate desired position behind and above the UFO

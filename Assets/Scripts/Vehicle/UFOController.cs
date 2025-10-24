@@ -24,6 +24,9 @@ public class UFOController : MonoBehaviour
     [Tooltip("How fast the UFO turns left/right")]
     public float turnSpeed = 180f;
 
+    [Tooltip("How quickly turn speed ramps up when you start turning (higher = faster ramp)")]
+    public float turnAcceleration = 3f;
+
     [Tooltip("How fast the UFO rotates up/down")]
     public float pitchSpeed = 100f;
 
@@ -107,6 +110,11 @@ public class UFOController : MonoBehaviour
 
     // Components
     private Rigidbody rb;
+    private WeaponSystem weaponSystem;
+
+    [Header("Aiming (Optional)")]
+    [Tooltip("Camera for aiming direction (if not assigned, uses velocity-based aiming)")]
+    public Camera aimCamera;
 
     // Input values
     private bool accelerateInput;
@@ -114,9 +122,14 @@ public class UFOController : MonoBehaviour
     private float turnInput;
     private float verticalInput;
     private bool wasAcceleratingLastFrame;
+    private bool fireInput;
 
     // Current speed tracking
     private float currentForwardSpeed;
+
+    // Turn ramping for precise aiming
+    private float currentTurnSpeed;
+    private float lastTurnDirection;
 
     // Visual feedback
     private float currentBankAngle;
@@ -146,6 +159,7 @@ public class UFOController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        weaponSystem = GetComponent<WeaponSystem>();
 
         // Configure rigidbody for arcade physics
         rb.drag = dragAmount;
@@ -168,6 +182,12 @@ public class UFOController : MonoBehaviour
     {
         // Get input from keyboard and controller
         GetInput();
+
+        // Handle weapon firing
+        if (fireInput && weaponSystem != null)
+        {
+            weaponSystem.TryFire();
+        }
 
         // Apply visual feedback
         ApplyBankingAndPitch();
@@ -243,11 +263,17 @@ public class UFOController : MonoBehaviour
         accelerateInput = Input.GetKey(KeyCode.A);
         brakeInput = Input.GetKey(KeyCode.D);
 
-        // Controller face buttons (Button 0 = A/Cross, Button 1 = B/Circle)
-        if (Input.GetButton("Fire1")) // Typically button 0
+        // Controller face buttons:
+        // Button 0 (A/Cross) = Accelerate
+        // Button 1 (B/Circle) = Weapon Fire (reserved for future)
+        // Button 3 (Y/Triangle) = Brake/Reverse
+        if (Input.GetButton("Fire1")) // Button 0 (A/Cross) = Accelerate
             accelerateInput = true;
-        if (Input.GetButton("Fire2")) // Typically button 1
+        if (Input.GetKey(KeyCode.JoystickButton3)) // Button 3 (Y/Triangle) = Brake/Reverse
             brakeInput = true;
+
+        // Fire weapon with Button 1 (B/Circle) or Fire3
+        fireInput = Input.GetButton("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
 
         // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
         turnInput = Input.GetAxis("Horizontal");
@@ -346,10 +372,29 @@ public class UFOController : MonoBehaviour
     {
         if (Mathf.Abs(turnInput) > 0.1f)
         {
-            // Tight arcade-style turning
-            float turn = turnInput * turnSpeed * Time.fixedDeltaTime;
+            float turnDirection = Mathf.Sign(turnInput);
+
+            // Detect direction change - reset turn speed for new direction
+            if (turnDirection != lastTurnDirection)
+            {
+                currentTurnSpeed = 0f;
+                lastTurnDirection = turnDirection;
+            }
+
+            // Gradually ramp up turn speed (ease-in)
+            // Starts slow for precision, reaches full speed after brief hold
+            currentTurnSpeed = Mathf.Lerp(currentTurnSpeed, 1f, turnAcceleration * Time.fixedDeltaTime);
+
+            // Apply turn with ramped speed
+            float turn = turnInput * turnSpeed * currentTurnSpeed * Time.fixedDeltaTime;
             Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
             rb.MoveRotation(rb.rotation * turnRotation);
+        }
+        else
+        {
+            // No turn input - reset for next turn
+            currentTurnSpeed = 0f;
+            lastTurnDirection = 0f;
         }
     }
 
@@ -439,6 +484,75 @@ public class UFOController : MonoBehaviour
         verticalControlReenableTime = Time.time + duration;
     }
 
+    /// <summary>
+    /// Get the aiming direction for weapon firing
+    /// Combines camera yaw with UFO velocity pitch for natural aiming
+    /// </summary>
+    public Quaternion GetAimDirection()
+    {
+        Vector3 aimDirection;
+
+        // OPTION 1: Hybrid camera + velocity aiming
+        if (aimCamera != null)
+        {
+            // Get the UFO's yaw (camera tracks this for left/right aiming)
+            float yaw = transform.eulerAngles.y;
+
+            // Calculate pitch from actual velocity (if moving forward)
+            float pitchAngle = 0f;
+            if (rb != null && rb.velocity.magnitude > 5f)
+            {
+                // Get horizontal and vertical velocity components
+                Vector3 horizontalVelocity = Vector3.ProjectOnPlane(rb.velocity, Vector3.up);
+                float horizontalSpeed = horizontalVelocity.magnitude;
+                float verticalVelocity = rb.velocity.y;
+
+                // ONLY apply pitch if there's significant forward/backward movement
+                // Pure vertical movement (hovering up/down) = shoot horizontal
+                if (horizontalSpeed > 3f)
+                {
+                    // Calculate pitch angle from velocity
+                    pitchAngle = Mathf.Atan2(verticalVelocity, horizontalSpeed) * Mathf.Rad2Deg;
+
+                    // Scale pitch angles for natural aiming feel
+                    if (pitchAngle > 0) // Ascending
+                    {
+                        pitchAngle *= 0.75f; // Reduce upward angle to 75%
+                    }
+                    else // Descending
+                    {
+                        pitchAngle *= 0.5f; // Keep downward angle at 50%
+                    }
+                }
+                // else: pure vertical = pitchAngle stays 0 (horizontal shot)
+            }
+
+            // Create aim direction: UFO's yaw + velocity pitch
+            // Negative pitch because Unity's pitch is inverted (positive = down)
+            Quaternion aimRotation = Quaternion.Euler(-pitchAngle, yaw, 0);
+            aimDirection = aimRotation * Vector3.forward;
+
+            Debug.Log($"Camera+Velocity Aim - Pitch: {pitchAngle:F1}° (up is positive), Yaw: {yaw:F1}°, VelY: {rb.velocity.y:F1}");
+        }
+        // OPTION 2: Visual model aiming (matches UFO visual tilt)
+        else if (visualModel != null)
+        {
+            // Use visual model's world rotation (includes pitch and yaw)
+            Vector3 visualForward = visualModel.TransformDirection(Vector3.forward);
+            aimDirection = visualForward;
+            Debug.Log($"Visual Model Aim - Direction: {visualForward}");
+        }
+        // OPTION 3: Fallback to horizontal forward
+        else
+        {
+            aimDirection = transform.forward;
+            Debug.Log("Fallback Aim - Horizontal only");
+        }
+
+        // Create rotation from aim direction
+        return Quaternion.LookRotation(aimDirection);
+    }
+
     void EnforceHeightLimits()
     {
         // Keep UFO within height bounds
@@ -512,7 +626,9 @@ public class UFOController : MonoBehaviour
         }
 
         // Smoothly interpolate to target pitch angle
-        currentPitchAngle = Mathf.Lerp(currentPitchAngle, targetPitchAngle, visualPitchSpeed * Time.deltaTime);
+        // Use slower speed when returning to level (no vertical input) for gradual transition
+        float pitchLerpSpeed = (Mathf.Abs(verticalInput) > 0.1f) ? visualPitchSpeed : visualPitchSpeed * 0.3f;
+        currentPitchAngle = Mathf.Lerp(currentPitchAngle, targetPitchAngle, pitchLerpSpeed * Time.deltaTime);
 
         // Apply both banking (Z-axis roll) and pitch (X-axis rotation) to visual model
         visualModel.localRotation = Quaternion.Euler(currentPitchAngle, 0, currentBankAngle);
