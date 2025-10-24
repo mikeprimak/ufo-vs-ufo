@@ -16,8 +16,8 @@ public class StickyBomb : MonoBehaviour
     public float fuseTime = 5f;
 
     [Header("Explosion")]
-    [Tooltip("Explosion damage amount")]
-    public float explosionDamage = 100f;
+    [Tooltip("Explosion damage amount (flat damage to all UFOs in radius)")]
+    public int explosionDamage = 1;
 
     [Tooltip("Explosion blast radius")]
     public float blastRadius = 90f;
@@ -27,7 +27,7 @@ public class StickyBomb : MonoBehaviour
 
     [Header("Contact Damage")]
     [Tooltip("Damage dealt when hitting a UFO (before explosion)")]
-    public float contactDamage = 25f;
+    public int contactDamage = 1;
 
     [Header("Audio")]
     [Tooltip("Sound when bomb is launched")]
@@ -118,9 +118,11 @@ public class StickyBomb : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             // Deal contact damage but don't explode
-            // TODO: Apply damage when health system exists
-            // var health = collision.gameObject.GetComponent<UFOHealth>();
-            // if (health != null) health.TakeDamage(contactDamage);
+            UFOHealth health = collision.gameObject.GetComponent<UFOHealth>();
+            if (health != null)
+            {
+                health.TakeDamage(contactDamage);
+            }
 
             Debug.Log($"[STICKY BOMB] Hit UFO {collision.gameObject.name} for {contactDamage} contact damage");
 
@@ -189,21 +191,21 @@ public class StickyBomb : MonoBehaviour
         {
             if (hit.CompareTag("Player"))
             {
-                // Calculate distance-based damage (closer = more damage)
+                // Deal flat damage to everyone in radius (no falloff)
+                UFOHealth health = hit.GetComponent<UFOHealth>();
+                if (health != null)
+                {
+                    health.TakeDamage(explosionDamage);
+                }
+
                 float distance = Vector3.Distance(transform.position, hit.transform.position);
-                float damageFalloff = 1f - (distance / blastRadius);
-                float finalDamage = explosionDamage * damageFalloff;
+                Debug.Log($"[STICKY BOMB] Explosion damaged {hit.name} for {explosionDamage} damage (distance: {distance:F1})");
 
-                // TODO: Apply damage when health system exists
-                // var health = hit.GetComponent<UFOHealth>();
-                // if (health != null) health.TakeDamage(finalDamage);
-
-                Debug.Log($"[STICKY BOMB] Explosion damaged {hit.name} for {finalDamage:F1} damage (distance: {distance:F1})");
-
-                // Trigger wobble effect (stronger wobble for closer hits)
+                // Trigger wobble effect (distance-based intensity for visual feedback)
                 UFOHitEffect hitEffect = hit.GetComponent<UFOHitEffect>();
                 if (hitEffect != null)
                 {
+                    float damageFalloff = 1f - (distance / blastRadius);
                     float wobbleIntensity = 20f * damageFalloff; // Stronger wobble when closer to explosion
                     hitEffect.TriggerWobble(wobbleIntensity);
                 }
@@ -213,6 +215,7 @@ public class StickyBomb : MonoBehaviour
                 if (targetRb != null)
                 {
                     Vector3 explosionDirection = (hit.transform.position - transform.position).normalized;
+                    float damageFalloff = 1f - (distance / blastRadius);
                     float explosionForce = 50f * damageFalloff; // Light knockback
                     targetRb.AddForce(explosionDirection * explosionForce, ForceMode.Impulse);
                 }

@@ -14,8 +14,8 @@ public class Projectile : MonoBehaviour
     [Tooltip("How long before projectile destroys itself (seconds)")]
     public float lifetime = 5f;
 
-    [Tooltip("Damage dealt on hit (reserved for future health system)")]
-    public int damage = 10;
+    [Tooltip("Damage dealt on hit")]
+    public int damage = 1;
 
     [Header("Visual Settings")]
     [Tooltip("Optional trail renderer reference")]
@@ -57,11 +57,12 @@ public class Projectile : MonoBehaviour
         // Check what we hit
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Hit another UFO - deal damage (future health system)
-
-            // TODO: Apply damage to target's health system
-            // var health = collision.gameObject.GetComponent<UFOHealth>();
-            // if (health != null) health.TakeDamage(damage);
+            // Hit another UFO - deal damage
+            UFOHealth health = collision.gameObject.GetComponent<UFOHealth>();
+            if (health != null)
+            {
+                health.TakeDamage(damage);
+            }
 
             // Trigger wobble effect
             UFOHitEffect hitEffect = collision.gameObject.GetComponent<UFOHitEffect>();

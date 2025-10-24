@@ -14,8 +14,8 @@ public class HomingProjectile : MonoBehaviour
     [Tooltip("How long before missile destroys itself (seconds)")]
     public float lifetime = 8f;
 
-    [Tooltip("Damage dealt on hit (reserved for future health system)")]
-    public int damage = 20;
+    [Tooltip("Damage dealt on hit")]
+    public int damage = 1;
 
     [Header("Homing Settings")]
     [Tooltip("How quickly missile turns toward target (degrees per second)")]
@@ -161,11 +161,12 @@ public class HomingProjectile : MonoBehaviour
         // Check what we hit
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Hit another UFO - deal damage (future health system)
-
-            // TODO: Apply damage to target's health system
-            // var health = collision.gameObject.GetComponent<UFOHealth>();
-            // if (health != null) health.TakeDamage(damage);
+            // Hit another UFO - deal damage
+            UFOHealth health = collision.gameObject.GetComponent<UFOHealth>();
+            if (health != null)
+            {
+                health.TakeDamage(damage);
+            }
 
             // Trigger wobble effect
             UFOHitEffect hitEffect = collision.gameObject.GetComponent<UFOHitEffect>();

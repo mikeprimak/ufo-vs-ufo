@@ -19,8 +19,8 @@ public class LaserWeapon : MonoBehaviour
     [Tooltip("Width of the laser beam at the end (far from UFO)")]
     public float beamEndWidth = 12f;
 
-    [Tooltip("Damage per second while laser hits target")]
-    public float damagePerSecond = 30f;
+    [Tooltip("Damage dealt when laser hits target (flat damage for entire beam duration)")]
+    public int damage = 1;
 
     [Tooltip("Cooldown after laser ends before can fire again (seconds)")]
     public float cooldown = 1f;
@@ -51,6 +51,7 @@ public class LaserWeapon : MonoBehaviour
     private GameObject owner; // The UFO firing this
     private UFOController ufoController; // For aiming direction
     private Vector3 currentLaserDirection; // Smoothed laser direction
+    private GameObject lastHitTarget; // Track last hit target to deal damage only once per beam activation
 
     void Start()
     {
@@ -159,6 +160,7 @@ public class LaserWeapon : MonoBehaviour
         isActive = true;
         beamEndTime = Time.time + beamDuration;
         lineRenderer.enabled = true;
+        lastHitTarget = null; // Reset damage tracking for new beam
 
         // Initialize laser direction to current aim direction (prevents sweep-in)
         if (ufoController != null)
@@ -268,13 +270,27 @@ public class LaserWeapon : MonoBehaviour
 
     void ApplyDamage(GameObject target)
     {
-        // TODO: Apply damage to target's health system
-        // For now, just log it
-        float damageThisFrame = damagePerSecond * Time.deltaTime;
+        // Only deal damage once per beam activation
+        if (target == lastHitTarget)
+            return;
 
-        // When health system exists:
-        // var health = target.GetComponent<UFOHealth>();
-        // if (health != null) health.TakeDamage(damageThisFrame);
+        lastHitTarget = target;
+
+        // Deal damage
+        UFOHealth health = target.GetComponent<UFOHealth>();
+        if (health != null)
+        {
+            health.TakeDamage(damage);
+        }
+
+        // Trigger wobble effect
+        UFOHitEffect hitEffect = target.GetComponent<UFOHitEffect>();
+        if (hitEffect != null)
+        {
+            hitEffect.TriggerWobble();
+        }
+
+        Debug.Log($"[LASER] Hit {target.name} for {damage} damage");
     }
 
     void DeactivateLaser()
