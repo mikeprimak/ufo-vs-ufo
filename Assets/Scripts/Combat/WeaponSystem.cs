@@ -119,11 +119,18 @@ public class WeaponSystem : MonoBehaviour
         // Spawn projectile
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, spawnRotation);
 
-        // Set owner to prevent self-hits
+        // Set owner to prevent self-hits (check both Projectile and HomingProjectile)
         Projectile projectileScript = projectile.GetComponent<Projectile>();
         if (projectileScript != null)
         {
             projectileScript.SetOwner(gameObject);
+        }
+
+        // Also check for HomingProjectile component
+        HomingProjectile homingProjectileScript = projectile.GetComponent<HomingProjectile>();
+        if (homingProjectileScript != null)
+        {
+            homingProjectileScript.SetOwner(gameObject);
         }
 
         // Consume ammo
