@@ -146,7 +146,6 @@ public class LaserWeapon : MonoBehaviour
         // Check cooldown
         if (Time.time < cooldownEndTime)
         {
-            Debug.Log($"Laser on cooldown! {cooldownEndTime - Time.time:F1}s remaining");
             return false;
         }
 
@@ -186,7 +185,6 @@ public class LaserWeapon : MonoBehaviour
             audioSource.Play();
         }
 
-        Debug.Log("Laser activated!");
     }
 
     void UpdateLaser()
@@ -273,7 +271,6 @@ public class LaserWeapon : MonoBehaviour
         // TODO: Apply damage to target's health system
         // For now, just log it
         float damageThisFrame = damagePerSecond * Time.deltaTime;
-        Debug.Log($"Laser hitting {target.name} for {damageThisFrame:F1} damage this frame!");
 
         // When health system exists:
         // var health = target.GetComponent<UFOHealth>();
@@ -292,7 +289,6 @@ public class LaserWeapon : MonoBehaviour
             audioSource.Stop();
         }
 
-        Debug.Log($"Laser deactivated! Cooldown: {cooldown}s");
     }
 
     // Public method for external triggering (alternative to input check)

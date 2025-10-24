@@ -94,7 +94,6 @@ public class WeaponSystem : MonoBehaviour
         // Check ammo
         if (currentAmmo <= 0)
         {
-            Debug.Log("Out of ammo!");
             return false;
         }
 
@@ -162,8 +161,6 @@ public class WeaponSystem : MonoBehaviour
         {
             audioSource.PlayOneShot(fireSound);
         }
-
-        Debug.Log($"Fired! Ammo remaining: {currentAmmo}/{maxAmmo}");
     }
 
     /// <summary>
@@ -172,7 +169,6 @@ public class WeaponSystem : MonoBehaviour
     public void AddAmmo(int amount)
     {
         currentAmmo = Mathf.Min(currentAmmo + amount, maxAmmo);
-        Debug.Log($"Ammo collected! Current: {currentAmmo}/{maxAmmo}");
     }
 
     /// <summary>
@@ -181,6 +177,5 @@ public class WeaponSystem : MonoBehaviour
     public void RefillAmmo()
     {
         currentAmmo = maxAmmo;
-        Debug.Log($"Ammo refilled! {currentAmmo}/{maxAmmo}");
     }
 }

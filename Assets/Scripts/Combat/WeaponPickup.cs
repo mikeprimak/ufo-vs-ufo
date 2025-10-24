@@ -79,12 +79,9 @@ public class WeaponPickup : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"Pickup trigger hit by: {other.name}, isAvailable: {isAvailable}");
-
         // Only pickup if available
         if (!isAvailable)
         {
-            Debug.Log("Pickup not available, ignoring");
             return;
         }
 
@@ -92,16 +89,11 @@ public class WeaponPickup : MonoBehaviour
         WeaponManager weaponManager = other.GetComponent<WeaponManager>();
         if (weaponManager != null)
         {
-            Debug.Log($"WeaponManager found, giving weapon: {weaponType}");
             // Give weapon to player
             weaponManager.PickupWeapon(weaponType);
 
             // Pickup collected
             Collect();
-        }
-        else
-        {
-            Debug.Log($"No WeaponManager on {other.name}");
         }
     }
 
@@ -127,8 +119,6 @@ public class WeaponPickup : MonoBehaviour
             // Destroy if not respawning
             Destroy(gameObject);
         }
-
-        Debug.Log($"Weapon pickup collected: {weaponType}");
     }
 
     void Respawn()
@@ -146,7 +136,5 @@ public class WeaponPickup : MonoBehaviour
         // Reset bob timer
         bobTimer = 0f;
         transform.position = startPosition;
-
-        Debug.Log($"Weapon pickup respawned: {weaponType}");
     }
 }

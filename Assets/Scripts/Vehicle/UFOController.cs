@@ -532,7 +532,6 @@ public class UFOController : MonoBehaviour
             Quaternion aimRotation = Quaternion.Euler(-pitchAngle, yaw, 0);
             aimDirection = aimRotation * Vector3.forward;
 
-            Debug.Log($"Camera+Velocity Aim - Pitch: {pitchAngle:F1}° (up is positive), Yaw: {yaw:F1}°, VelY: {rb.velocity.y:F1}");
         }
         // OPTION 2: Visual model aiming (matches UFO visual tilt)
         else if (visualModel != null)
@@ -618,11 +617,6 @@ public class UFOController : MonoBehaviour
             // Ascending = nose up (positive pitch), Descending = nose down (negative pitch)
             targetPitchAngle = -verticalInput * visualPitchAmount;
 
-            // Debug logging
-            if (Mathf.Abs(verticalInput) > 0.1f)
-            {
-                Debug.Log($"Pitch Active - Speed: {horizontalSpeed:F1}, VertInput: {verticalInput:F2}, TargetPitch: {targetPitchAngle:F1}°");
-            }
         }
 
         // Smoothly interpolate to target pitch angle

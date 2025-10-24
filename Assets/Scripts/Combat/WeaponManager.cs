@@ -68,7 +68,6 @@ public class WeaponManager : MonoBehaviour
     public void PickupWeapon(WeaponType weaponType)
     {
         SetWeapon(weaponType);
-        Debug.Log($"Picked up weapon: {weaponType}");
     }
 
     /// <summary>
@@ -97,7 +96,6 @@ public class WeaponManager : MonoBehaviour
                     // Set ammo BEFORE enabling (prevents Start() from interfering)
                     weaponSystem.currentAmmo = 1; // Only 1 missile
                     weaponSystem.enabled = true;
-                    Debug.Log($"Missile weapon activated. Ammo set to: {weaponSystem.currentAmmo}");
                 }
                 else
                 {
@@ -147,18 +145,12 @@ public class WeaponManager : MonoBehaviour
             case WeaponType.Missile:
                 if (weaponSystem != null && weaponSystem.enabled)
                 {
-                    Debug.Log($"Trying to fire missile. Current ammo: {weaponSystem.currentAmmo}");
                     weaponFired = weaponSystem.TryFire();
-                    Debug.Log($"Fire attempt result: {weaponFired}, Ammo after: {weaponSystem.currentAmmo}");
                     if (weaponFired && weaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
                         SetWeapon(WeaponType.None);
                     }
-                }
-                else
-                {
-                    Debug.Log($"Cannot fire: weaponSystem null={weaponSystem==null}, enabled={weaponSystem?.enabled}");
                 }
                 break;
 
@@ -191,12 +183,17 @@ public class WeaponManager : MonoBehaviour
                 if (burstWeapon != null && burstWeapon.enabled)
                 {
                     weaponFired = burstWeapon.TryStartBurst();
-                    // Burst will auto-remove when complete
+                    // After firing, immediately remove weapon if ammo depleted
+                    if (weaponFired && burstWeapon.currentAmmo <= 0)
+                    {
+                        // Weapon used, will be removed after burst completes
+                        // Don't remove immediately since burst is still firing
+                    }
                 }
                 break;
 
             case WeaponType.None:
-                Debug.Log("No weapon equipped!");
+                // No weapon equipped
                 break;
         }
     }

@@ -112,6 +112,5 @@ public class AmmoPickup : MonoBehaviour
         if (pickupCollider != null)
             pickupCollider.enabled = true;
 
-        Debug.Log("Ammo pickup respawned!");
     }
 }

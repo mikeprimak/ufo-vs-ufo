@@ -149,7 +149,6 @@ public class HomingProjectile : MonoBehaviour
 
         if (target != null)
         {
-            Debug.Log($"Homing missile locked onto: {target.name}");
         }
     }
 
@@ -163,7 +162,6 @@ public class HomingProjectile : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             // Hit another UFO - deal damage (future health system)
-            Debug.Log($"Homing missile hit {collision.gameObject.name} for {damage} damage!");
 
             // TODO: Apply damage to target's health system
             // var health = collision.gameObject.GetComponent<UFOHealth>();

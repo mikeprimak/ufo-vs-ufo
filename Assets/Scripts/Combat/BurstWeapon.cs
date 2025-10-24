@@ -39,6 +39,9 @@ public class BurstWeapon : MonoBehaviour
     [Tooltip("Ammo consumed per burst (all 13 shots)")]
     public int ammoPerBurst = 13;
 
+    [Tooltip("Starting ammo (only used if component starts enabled)")]
+    public int startingAmmo = 130;
+
     [Header("Audio (Optional)")]
     [Tooltip("Sound played for each shot in burst")]
     public AudioClip fireSound;
@@ -50,9 +53,30 @@ public class BurstWeapon : MonoBehaviour
     private float cooldownEndTime = 0f;
     private bool fireFromLeft = true; // Alternates between left and right
     private UFOController ufoController;
+    private bool hasBeenInitialized = false;
+
+    void Awake()
+    {
+        // Awake runs before Start and before component is enabled
+        // Only initialize ammo if component starts enabled (standalone use)
+        // If disabled at start, WeaponManager will set ammo before enabling
+        if (enabled)
+        {
+            currentAmmo = startingAmmo;
+        }
+        hasBeenInitialized = true;
+    }
 
     void Start()
     {
+        // If this is called and we haven't set ammo yet, set it now
+        // This handles the case where component is enabled after Awake
+        if (!hasBeenInitialized)
+        {
+            currentAmmo = startingAmmo;
+            hasBeenInitialized = true;
+        }
+
         ufoController = GetComponent<UFOController>();
 
         // Setup audio
@@ -67,13 +91,7 @@ public class BurstWeapon : MonoBehaviour
 
     void Update()
     {
-        // Check for fire input
-        // Using Fire2 (same button as missiles/weapons - Button 1 / B-Circle)
-        if (Input.GetButtonDown("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1))
-        {
-            TryStartBurst();
-        }
-
+        // WeaponManager handles fire input, we just handle the burst sequence
         // Handle burst firing
         if (isBursting && Time.time >= nextShotTime)
         {
@@ -86,21 +104,19 @@ public class BurstWeapon : MonoBehaviour
         // Check if already bursting
         if (isBursting)
         {
-            Debug.Log("Already firing burst!");
             return false;
         }
 
         // Check cooldown
         if (Time.time < cooldownEndTime)
         {
-            Debug.Log($"Burst weapon on cooldown! {cooldownEndTime - Time.time:F1}s remaining");
             return false;
         }
 
-        // Check ammo
+        // Check ammo (KEEP THIS LOG for troubleshooting burst weapon issue)
         if (currentAmmo < ammoPerBurst)
         {
-            Debug.Log($"Not enough ammo! Need {ammoPerBurst}, have {currentAmmo}");
+            Debug.Log($"[BURST] Not enough ammo! Need {ammoPerBurst}, have {currentAmmo}");
             return false;
         }
 
@@ -123,10 +139,10 @@ public class BurstWeapon : MonoBehaviour
         nextShotTime = Time.time; // Fire first shot immediately
         fireFromLeft = true; // Start from left side
 
-        // Consume ammo
+        // Consume ammo (KEEP THIS LOG for troubleshooting burst weapon issue)
+        Debug.Log($"[BURST] Starting burst. Ammo before: {currentAmmo}");
         currentAmmo -= ammoPerBurst;
-
-        Debug.Log($"Burst started! Firing {burstCount} shots. Ammo: {currentAmmo}/{maxAmmo}");
+        Debug.Log($"[BURST] Burst started! Ammo after consuming {ammoPerBurst}: {currentAmmo}");
     }
 
     void FireSingleShot()
@@ -200,20 +216,18 @@ public class BurstWeapon : MonoBehaviour
         isBursting = false;
         cooldownEndTime = Time.time + cooldown;
 
-        Debug.Log($"Burst complete! Cooldown: {cooldown}s. Ammo: {currentAmmo}/{maxAmmo}");
+        Debug.Log($"[BURST] Burst complete! Ammo remaining: {currentAmmo}");
     }
 
     // Public methods for ammo pickups
     public void AddAmmo(int amount)
     {
         currentAmmo = Mathf.Min(currentAmmo + amount, maxAmmo);
-        Debug.Log($"Burst weapon ammo collected! Current: {currentAmmo}/{maxAmmo}");
     }
 
     public void RefillAmmo()
     {
         currentAmmo = maxAmmo;
-        Debug.Log($"Burst weapon ammo refilled! {currentAmmo}/{maxAmmo}");
     }
 
     // Public methods for checking state
