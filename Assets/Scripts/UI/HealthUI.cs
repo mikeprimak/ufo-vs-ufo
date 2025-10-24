@@ -36,6 +36,8 @@ public class HealthUI : MonoBehaviour
 
         // Create heart icons based on max health
         CreateHeartIcons();
+
+        Debug.Log($"[HEALTH UI] Created {heartImages.Length} hearts for {targetUFO.name}");
     }
 
     void Update()
@@ -63,7 +65,19 @@ public class HealthUI : MonoBehaviour
 
             // Add Image component
             Image heartImage = heartObj.AddComponent<Image>();
-            heartImage.sprite = fullHeartSprite;
+
+            // Use sprite if provided, otherwise use default white sprite
+            if (fullHeartSprite != null)
+            {
+                heartImage.sprite = fullHeartSprite;
+            }
+            else
+            {
+                // Use Unity's default UI sprite (white square)
+                heartImage.sprite = null;
+                heartImage.color = Color.green; // Green for full health
+            }
+
             heartImage.preserveAspect = true;
 
             // Set size and position
@@ -73,6 +87,8 @@ public class HealthUI : MonoBehaviour
 
             // Store reference
             heartImages[i] = heartImage;
+
+            Debug.Log($"[HEALTH UI] Created heart {i} at position {rectTransform.anchoredPosition}");
         }
     }
 
@@ -91,11 +107,27 @@ public class HealthUI : MonoBehaviour
             // Show full heart if index < current health, empty heart otherwise
             if (i < currentHealth)
             {
-                heartImages[i].sprite = fullHeartSprite;
+                // Full health
+                if (fullHeartSprite != null)
+                {
+                    heartImages[i].sprite = fullHeartSprite;
+                }
+                else
+                {
+                    heartImages[i].color = Color.green; // Green square for full
+                }
             }
             else
             {
-                heartImages[i].sprite = emptyHeartSprite;
+                // Empty health
+                if (emptyHeartSprite != null)
+                {
+                    heartImages[i].sprite = emptyHeartSprite;
+                }
+                else
+                {
+                    heartImages[i].color = Color.red; // Red square for empty
+                }
             }
         }
     }

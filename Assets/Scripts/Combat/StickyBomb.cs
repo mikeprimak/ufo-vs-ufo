@@ -48,6 +48,7 @@ public class StickyBomb : MonoBehaviour
     private bool isStuck = false;
     private float timer = 0f;
     private bool hasExploded = false;
+    private GameObject stuckToUFO = null; // Track if stuck to a UFO (to avoid double damage)
 
     void Start()
     {

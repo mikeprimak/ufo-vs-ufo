@@ -7,7 +7,8 @@
       "Bash(git commit:*)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(if not exist \"Assets\\Scripts\\UI\" mkdir \"Assets\\Scripts\\UI\")"
     ],
     "deny": [],
     "ask": []
