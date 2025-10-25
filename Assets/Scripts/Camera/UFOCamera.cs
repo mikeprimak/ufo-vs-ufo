@@ -77,13 +77,13 @@ public class UFOCamera : MonoBehaviour
     public bool enableCameraShake = true;
 
     [Tooltip("How long shake lasts (seconds)")]
-    public float shakeDuration = 0.2f;
+    public float shakeDuration = 1.0f;
 
     [Tooltip("Maximum shake intensity (position offset in units)")]
-    public float shakeIntensity = 0.5f;
+    public float shakeIntensity = 3.0f;
 
     [Tooltip("How quickly shake decays")]
-    public float shakeDecaySpeed = 3f;
+    public float shakeDecaySpeed = 0.5f;
 
     private Camera cam;
     private Vector3 currentVelocity;
@@ -290,10 +290,15 @@ public class UFOCamera : MonoBehaviour
     public void TriggerShake(float intensity = 1.0f)
     {
         if (!enableCameraShake)
+        {
+            Debug.LogWarning("[Camera Shake] DISABLED - enableCameraShake is false!");
             return;
+        }
 
         shakeTimeRemaining = shakeDuration;
         currentShakeIntensity = shakeIntensity * Mathf.Clamp01(intensity);
+
+        Debug.Log($"*** [Camera Shake] TRIGGERED! Duration: {shakeDuration}s, CurrentIntensity: {currentShakeIntensity:F2} units ***");
     }
 
     /// <summary>
