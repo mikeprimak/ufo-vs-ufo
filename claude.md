@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 14
+**Update Count:** 15
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -279,11 +279,17 @@ Wall_North, Wall_South, Wall_East, Wall_West (Cubes with Box Colliders)
      - `m_HDR: 0` (was 1 - HDR is very expensive on integrated GPU)
      - `m_AllowMSAA: 0` (was 1 - anti-aliasing kills integrated GPU)
      - `m_AllowHDROutput: 0` (was 1)
+  5. **CRITICAL - Directional Light Shadows (TestArena.unity - Line 308):**
+     - `m_Shadows: m_Type: 0` (MUST be 0 - NO SHADOWS)
+     - Was set to 2 (Soft Shadows) - MAJOR GPU KILLER
+     - Real-time dynamic shadows on integrated GPU = instant crash
+     - QualitySettings.asset already has `shadows: 0` globally
+     - **ALWAYS verify light shadow settings in scene file**
 - **Key Takeaway:** On integrated GPU, NEVER use:
   - HighFidelity render pipeline
   - Depth/Opaque textures
   - High vertex counts
-  - Real-time shadows
+  - Real-time shadows (even if QualitySettings disables them, check scene lights!)
   - HDR/MSAA
 - **Visual Impact:** Game still looks great with optimized settings
 
