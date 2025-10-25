@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
-**Last Updated:** 2025-10-23
-**Update Count:** 11
+**Last Updated:** 2025-10-24
+**Update Count:** 12
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -229,6 +229,27 @@ Wall_North, Wall_South, Wall_East, Wall_West (Cubes with Box Colliders)
 ### Need to Reimport:
 - Auto Refresh should be enabled (Edit → Preferences → General)
 - If disabled, right-click script → Reimport after changes
+
+### GPU Device Reset / D3D11 Swapchain Crash (CRITICAL):
+- **Symptoms:** Unity crashes with "Failed to present D3D11 swapchain due to device reset/removed" - may shut down PC
+- **Root Cause:** Integrated GPU overloaded by expensive rendering features
+- **Solutions Applied:**
+  1. **LaserWeapon.cs LineRenderer Settings (Lines 113-120):**
+     - `numCornerVertices = 2` (was 16 - major GPU killer!)
+     - `numCapVertices = 2` (was 16 - major GPU killer!)
+     - `shadowCastingMode = Off` (was On - real-time shadows on dynamic laser = GPU death)
+     - `receiveShadows = false` (was true)
+     - `generateLightingData = false` (was true - huge overhead every frame)
+     - Removed emission keyword (adds shader complexity)
+  2. **Camera Settings (TestArena.unity):**
+     - `m_HDR: 0` (was 1 - HDR is very expensive on integrated GPU)
+     - `m_AllowMSAA: 0` (was 1 - anti-aliasing kills integrated GPU)
+     - `m_AllowHDROutput: 0` (was 1)
+  3. **URP Settings Already Optimized:**
+     - Using URP-Performant asset with shadows disabled
+     - No MSAA at pipeline level
+- **Key Takeaway:** On integrated GPU, NEVER use high vertex counts, real-time shadows, or HDR
+- **Visual Impact:** Laser still looks good as billboard with bright color, just less geometrically complex
 
 ## Git Workflow
 ```bash

@@ -105,19 +105,19 @@ public class LaserWeapon : MonoBehaviour
         lineRenderer.positionCount = 2;
         lineRenderer.enabled = false;
 
-        // Make it a 3D tube - use View alignment but with high quality segments
-        lineRenderer.alignment = LineAlignment.View; // Billboard, but we'll make it cylindrical with segments
+        // LOW-END GPU OPTIMIZED: Simple billboard with minimal geometry
+        lineRenderer.alignment = LineAlignment.View; // Billboard facing camera
         lineRenderer.textureMode = LineTextureMode.Tile;
 
-        // These create the cylindrical shape - MORE vertices = rounder tube
-        lineRenderer.numCornerVertices = 16; // More vertices for smoother circle
-        lineRenderer.numCapVertices = 16; // Rounded end caps
-        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On; // Cast shadows for 3D effect
-        lineRenderer.receiveShadows = true;
+        // PERFORMANCE: Use minimal vertices - 2-4 is enough for a billboard laser
+        lineRenderer.numCornerVertices = 2; // Minimal vertices (was 16 - caused GPU crash!)
+        lineRenderer.numCapVertices = 2; // Minimal end caps (was 16 - caused GPU crash!)
+        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // NO shadows for performance
+        lineRenderer.receiveShadows = false; // NO shadow receiving for performance
 
-        // CRITICAL: Tell Unity to generate a proper cylinder mesh
+        // Standard settings
         lineRenderer.useWorldSpace = true;
-        lineRenderer.generateLightingData = true;
+        lineRenderer.generateLightingData = false; // DISABLED for performance (was causing GPU overload)
 
         // Set material and color
         if (beamMaterial != null)
@@ -133,9 +133,9 @@ public class LaserWeapon : MonoBehaviour
         lineRenderer.startColor = beamColor;
         lineRenderer.endColor = beamColor;
 
-        // Make it glow
-        lineRenderer.material.EnableKeyword("_EMISSION");
-        lineRenderer.material.SetColor("_EmissionColor", beamColor * 2f);
+        // PERFORMANCE: Simplified glow - only if using Unlit shader (no emission keyword needed)
+        // Emission keyword adds shader complexity - avoid on low-end GPU
+        // The Unlit/Color shader with bright color is sufficient for laser effect
     }
 
     public bool TryFire()
