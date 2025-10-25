@@ -56,6 +56,35 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("How smoothly reverse camera transitions happen")]
     public float reverseCameraSmoothing = 3f;
 
+    [Header("FOV Kick (Game Feel)")]
+    [Tooltip("Enable FOV kick on acceleration/braking for speed rush feel")]
+    public bool enableFOVKick = true;
+
+    [Tooltip("FOV increase when accelerating (e.g., 5 = 75 FOV becomes 80)")]
+    public float accelerationFOVBoost = 5f;
+
+    [Tooltip("FOV decrease when braking hard (e.g., 5 = 75 FOV becomes 70)")]
+    public float brakeFOVReduction = 5f;
+
+    [Tooltip("FOV increase during combo boost (e.g., 10 = 75 FOV becomes 85)")]
+    public float comboBoostFOVBoost = 10f;
+
+    [Tooltip("How quickly FOV kicks in/out")]
+    public float fovKickSpeed = 5f;
+
+    [Header("Camera Shake (Game Feel)")]
+    [Tooltip("Enable camera shake on impacts")]
+    public bool enableCameraShake = true;
+
+    [Tooltip("How long shake lasts (seconds)")]
+    public float shakeDuration = 0.2f;
+
+    [Tooltip("Maximum shake intensity (position offset in units)")]
+    public float shakeIntensity = 0.15f;
+
+    [Tooltip("How quickly shake decays")]
+    public float shakeDecaySpeed = 3f;
+
     private Camera cam;
     private Vector3 currentVelocity;
     private Rigidbody targetRigidbody;
@@ -63,6 +92,12 @@ public class UFOCamera : MonoBehaviour
     private float currentVerticalTilt;
     private float currentDistance;
     private float currentFOV;
+    private UFOController ufoController; // For detecting acceleration/braking input
+
+    // Camera shake state
+    private float shakeTimeRemaining;
+    private float currentShakeIntensity;
+    private Vector3 shakeOffset;
 
     void Start()
     {
@@ -85,6 +120,8 @@ public class UFOCamera : MonoBehaviour
         {
             // Try to get the rigidbody for velocity tracking
             targetRigidbody = target.GetComponent<Rigidbody>();
+            // Try to get UFOController for input detection
+            ufoController = target.GetComponent<UFOController>();
         }
     }
 
@@ -106,11 +143,44 @@ public class UFOCamera : MonoBehaviour
         // Determine if UFO is reversing and adjust camera accordingly
         bool isReversing = forwardSpeed < reverseSpeedThreshold;
         float targetDistance = isReversing ? reverseDistance : distance;
-        float targetFOV = isReversing ? reverseFOV : fieldOfView;
+        float baseFOV = isReversing ? reverseFOV : fieldOfView;
+
+        // === FOV KICK SYSTEM (Game Feel) ===
+        float fovModifier = 0f;
+        if (enableFOVKick)
+        {
+            // Check if accelerating or braking
+            bool isAccelerating = Input.GetKey(KeyCode.A) || Input.GetButton("Fire1");
+            bool isBraking = Input.GetKey(KeyCode.D) || Input.GetButton("Fire2");
+
+            // Check if combo boost is active (if UFOController exists)
+            bool isComboBoostActive = false;
+            if (ufoController != null)
+            {
+                // Access combo boost state from UFOController
+                isComboBoostActive = ufoController.IsComboBoostActive();
+            }
+
+            // Apply FOV modifiers based on input
+            if (isComboBoostActive)
+            {
+                fovModifier = comboBoostFOVBoost; // Biggest kick for combo boost
+            }
+            else if (isAccelerating && !isBraking)
+            {
+                fovModifier = accelerationFOVBoost; // Speed rush feel
+            }
+            else if (isBraking && !isAccelerating)
+            {
+                fovModifier = -brakeFOVReduction; // Zoom in slightly when braking
+            }
+        }
+
+        float targetFOV = baseFOV + fovModifier;
 
         // Smoothly transition camera distance and FOV
         currentDistance = Mathf.Lerp(currentDistance, targetDistance, reverseCameraSmoothing * Time.deltaTime);
-        currentFOV = Mathf.Lerp(currentFOV, targetFOV, reverseCameraSmoothing * Time.deltaTime);
+        currentFOV = Mathf.Lerp(currentFOV, targetFOV, fovKickSpeed * Time.deltaTime);
 
         // Apply FOV to camera
         if (cam != null)
@@ -152,10 +222,35 @@ public class UFOCamera : MonoBehaviour
         }
         currentVerticalTilt = Mathf.Lerp(currentVerticalTilt, targetVerticalTilt, verticalSmoothing * Time.deltaTime);
 
+        // === CAMERA SHAKE SYSTEM (Game Feel) ===
+        if (enableCameraShake && shakeTimeRemaining > 0)
+        {
+            // Decay shake over time
+            shakeTimeRemaining -= Time.deltaTime;
+            currentShakeIntensity = Mathf.Lerp(currentShakeIntensity, 0f, shakeDecaySpeed * Time.deltaTime);
+
+            // Generate random shake offset
+            shakeOffset = Random.insideUnitSphere * currentShakeIntensity;
+
+            // Clamp shake when nearly done
+            if (shakeTimeRemaining <= 0)
+            {
+                shakeOffset = Vector3.zero;
+                currentShakeIntensity = 0f;
+            }
+        }
+        else
+        {
+            shakeOffset = Vector3.zero;
+        }
+
         // Calculate desired position behind and above the UFO
         // Camera rotates WITH the UFO's yaw for tighter turn tracking
         // Apply dynamic vertical offset and current distance (which adjusts for reverse)
         Vector3 desiredPosition = target.position - (target.forward * currentDistance) + (Vector3.up * (height + currentVerticalOffset));
+
+        // Add shake offset to desired position
+        desiredPosition += shakeOffset;
 
         // Smoothly move camera to desired position
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
@@ -185,5 +280,40 @@ public class UFOCamera : MonoBehaviour
     public void SetCameraHeight(float newHeight)
     {
         height = newHeight;
+    }
+
+    /// <summary>
+    /// Trigger camera shake with custom intensity
+    /// Call this from collision scripts for impact feedback
+    /// </summary>
+    /// <param name="intensity">Shake strength (0-1), 1.0 = full shakeIntensity</param>
+    public void TriggerShake(float intensity = 1.0f)
+    {
+        if (!enableCameraShake)
+            return;
+
+        shakeTimeRemaining = shakeDuration;
+        currentShakeIntensity = shakeIntensity * Mathf.Clamp01(intensity);
+    }
+
+    /// <summary>
+    /// Trigger camera shake based on impact speed
+    /// Automatically scales intensity based on how hard you hit
+    /// </summary>
+    /// <param name="impactSpeed">Speed of impact (will be normalized)</param>
+    /// <param name="maxSpeed">Maximum expected impact speed for normalization</param>
+    public void TriggerShakeFromImpact(float impactSpeed, float maxSpeed = 30f)
+    {
+        if (!enableCameraShake)
+            return;
+
+        // Normalize impact speed to 0-1 range
+        float intensity = Mathf.Clamp01(impactSpeed / maxSpeed);
+
+        // Only shake if impact is significant (> 10% of max speed)
+        if (intensity > 0.1f)
+        {
+            TriggerShake(intensity);
+        }
     }
 }

@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 12
+**Update Count:** 13
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -164,6 +164,19 @@ Assets/
 - Reverse Speed Threshold: -1 (triggers reverse camera mode)
 - Reverse Camera Smoothing: 3 (transition speed)
 
+**FOV Kick Settings (Game Feel - NEW):**
+- Enable FOV Kick: true
+- Acceleration FOV Boost: 5° (75 → 80 when accelerating)
+- Brake FOV Reduction: 5° (75 → 70 when braking)
+- Combo Boost FOV Boost: 10° (75 → 85 during combo boost)
+- FOV Kick Speed: 5 (transition smoothness)
+
+**Camera Shake Settings (Game Feel - NEW):**
+- Enable Camera Shake: true
+- Shake Duration: 0.2s
+- Shake Intensity: 0.15 units
+- Shake Decay Speed: 3
+
 **Features:**
 - Tight rotation tracking for forward-firing weapon aiming (0.5-1.0 recommended)
 - Tracks UFO physics rotation only (not visual banking from UFO_Visual)
@@ -175,6 +188,17 @@ Assets/
   - Prevents UFO from approaching bottom edge of screen
   - Smooth transitions between normal and reverse camera states
   - Automatically detects reverse movement based on velocity
+- **FOV Kick System (Zero GPU Cost)**: FOV dynamically adjusts based on input for speed rush feel
+  - Widens FOV when accelerating (speed rush effect)
+  - Narrows FOV when braking (focus/slow-down effect)
+  - Maximum FOV boost during barrel roll combo (dramatic speed sensation)
+  - Smooth transitions prevent jarring changes
+- **Camera Shake System (Zero GPU Cost)**: Random position offset on impacts
+  - Triggered automatically by UFOCollision.cs on wall/floor hits
+  - Shake intensity scales with impact speed
+  - Heavy floor crashes = full shake, angled hits = medium shake, wall hits = scaled by speed
+  - Decays smoothly over shake duration
+  - Public methods: `TriggerShake(intensity)` and `TriggerShakeFromImpact(speed, maxSpeed)`
 
 ## Scene Setup (TestArena)
 

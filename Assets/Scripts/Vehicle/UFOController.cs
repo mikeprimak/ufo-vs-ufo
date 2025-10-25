@@ -577,6 +577,15 @@ public class UFOController : MonoBehaviour
         return Quaternion.LookRotation(aimDirection);
     }
 
+    /// <summary>
+    /// Check if combo boost is currently active
+    /// Used by UFOCamera for FOV kick effect
+    /// </summary>
+    public bool IsComboBoostActive()
+    {
+        return Time.time < comboBoostEndTime;
+    }
+
     void EnforceHeightLimits()
     {
         // Keep UFO within height bounds

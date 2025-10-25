@@ -47,6 +47,7 @@ public class UFOCollision : MonoBehaviour
     private bool isBouncing;
     private float bounceEndTime;
     private Quaternion lockedRotation;
+    private UFOCamera ufoCamera; // For triggering camera shake
 
     void Start()
     {
@@ -58,6 +59,13 @@ public class UFOCollision : MonoBehaviour
         {
             ufoMaterial = ufoRenderer.material;
             originalColor = ufoMaterial.color;
+        }
+
+        // Find UFOCamera in the scene (usually on Main Camera)
+        ufoCamera = FindObjectOfType<UFOCamera>();
+        if (ufoCamera == null)
+        {
+            Debug.LogWarning("UFOCollision: No UFOCamera found in scene. Camera shake will not work.");
         }
     }
 
@@ -135,6 +143,12 @@ public class UFOCollision : MonoBehaviour
 
             // Visual feedback - flash briefly
             StartFlash();
+
+            // Camera shake based on impact speed
+            if (ufoCamera != null)
+            {
+                ufoCamera.TriggerShakeFromImpact(impactSpeed);
+            }
         }
     }
 
@@ -182,6 +196,12 @@ public class UFOCollision : MonoBehaviour
                 lockedRotation = transform.rotation;
                 isBouncing = true;
                 bounceEndTime = Time.time + 0.5f;
+
+                // Strong camera shake for heavy crash
+                if (ufoCamera != null)
+                {
+                    ufoCamera.TriggerShake(1.0f); // Full intensity
+                }
             }
             else if (hasHorizontalMovement)
             {
@@ -209,6 +229,12 @@ public class UFOCollision : MonoBehaviour
             if (isHeavyCrash)
             {
                 StartFlash();
+
+                // Medium camera shake for angled heavy crash
+                if (ufoCamera != null)
+                {
+                    ufoCamera.TriggerShake(0.7f); // Medium intensity
+                }
             }
         }
         else
