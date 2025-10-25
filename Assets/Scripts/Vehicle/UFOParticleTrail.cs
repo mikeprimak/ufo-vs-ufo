@@ -21,7 +21,7 @@ public class UFOParticleTrail : MonoBehaviour
     public float emissionRate = 15f;
 
     [Tooltip("Particle start speed (how fast they move initially)")]
-    public float startSpeed = 0.5f;
+    public float startSpeed = 0.4f;
 
     [Header("Colors")]
     [Tooltip("Particle color at spawn")]
@@ -52,6 +52,7 @@ public class UFOParticleTrail : MonoBehaviour
 
     private ParticleSystem leftTrailParticles;
     private ParticleSystem rightTrailParticles;
+    private ParticleSystem centerTrailParticles;
     private Rigidbody rb;
 
     void Start()
@@ -66,7 +67,11 @@ public class UFOParticleTrail : MonoBehaviour
         Vector3 rightPosition = new Vector3(lateralOffset, verticalOffset, forwardOffset);
         rightTrailParticles = CreateParticleSystem("ParticleTrail_Right", rightPosition);
 
-        Debug.Log($"[PARTICLE TRAIL] Dual particle trails created for {gameObject.name}");
+        // Create CENTER particle emitter (well behind UFO)
+        Vector3 centerPosition = new Vector3(0f, verticalOffset, forwardOffset - 3f);
+        centerTrailParticles = CreateParticleSystem("ParticleTrail_Center", centerPosition);
+
+        Debug.Log($"[PARTICLE TRAIL] Triple particle trails created for {gameObject.name}");
     }
 
     ParticleSystem CreateParticleSystem(string name, Vector3 localPosition)
@@ -179,7 +184,7 @@ public class UFOParticleTrail : MonoBehaviour
 
     void Update()
     {
-        if (leftTrailParticles == null || rightTrailParticles == null || rb == null)
+        if (leftTrailParticles == null || rightTrailParticles == null || centerTrailParticles == null || rb == null)
             return;
 
         if (!enableSpeedResponse)
@@ -195,6 +200,10 @@ public class UFOParticleTrail : MonoBehaviour
         // Update RIGHT particle system
         var rightEmission = rightTrailParticles.emission;
         UpdateEmission(rightEmission, currentSpeed);
+
+        // Update CENTER particle system
+        var centerEmission = centerTrailParticles.emission;
+        UpdateEmission(centerEmission, currentSpeed);
     }
 
     void UpdateEmission(ParticleSystem.EmissionModule emission, float currentSpeed)
