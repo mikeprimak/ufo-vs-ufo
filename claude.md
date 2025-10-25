@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 13
+**Update Count:** 14
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -258,22 +258,34 @@ Wall_North, Wall_South, Wall_East, Wall_West (Cubes with Box Colliders)
 - **Symptoms:** Unity crashes with "Failed to present D3D11 swapchain due to device reset/removed" - may shut down PC
 - **Root Cause:** Integrated GPU overloaded by expensive rendering features
 - **Solutions Applied:**
-  1. **LaserWeapon.cs LineRenderer Settings (Lines 113-120):**
+  1. **MOST IMPORTANT - Graphics Pipeline (ProjectSettings/GraphicsSettings.asset):**
+     - **MUST use URP-Performant** (GUID: d0e2fc18fe036412f8223b3b3d9ad574)
+     - **NEVER use URP-HighFidelity** (has HDR, 4x MSAA, 4096 shadow maps, reflection probes = instant GPU death)
+     - Check: Edit → Project Settings → Graphics → "Scriptable Render Pipeline Settings"
+     - Should say "URP-Performant" NOT "URP-HighFidelity"
+  2. **CRITICAL - Depth/Opaque Textures (NEVER ENABLE THESE):**
+     - `m_RequireDepthTexture: 0` - MUST stay 0 (enabling = doubles GPU workload)
+     - `m_RequireOpaqueTexture: 0` - MUST stay 0 (enabling = massive memory bandwidth)
+     - Location: URP-Performant asset settings
+     - **Particle Sorting:** Use Render Queue or Sorting Layers instead (zero GPU cost)
+  3. **LaserWeapon.cs LineRenderer Settings (Lines 113-120):**
      - `numCornerVertices = 2` (was 16 - major GPU killer!)
      - `numCapVertices = 2` (was 16 - major GPU killer!)
      - `shadowCastingMode = Off` (was On - real-time shadows on dynamic laser = GPU death)
      - `receiveShadows = false` (was true)
      - `generateLightingData = false` (was true - huge overhead every frame)
      - Removed emission keyword (adds shader complexity)
-  2. **Camera Settings (TestArena.unity):**
+  4. **Camera Settings (TestArena.unity):**
      - `m_HDR: 0` (was 1 - HDR is very expensive on integrated GPU)
      - `m_AllowMSAA: 0` (was 1 - anti-aliasing kills integrated GPU)
      - `m_AllowHDROutput: 0` (was 1)
-  3. **URP Settings Already Optimized:**
-     - Using URP-Performant asset with shadows disabled
-     - No MSAA at pipeline level
-- **Key Takeaway:** On integrated GPU, NEVER use high vertex counts, real-time shadows, or HDR
-- **Visual Impact:** Laser still looks good as billboard with bright color, just less geometrically complex
+- **Key Takeaway:** On integrated GPU, NEVER use:
+  - HighFidelity render pipeline
+  - Depth/Opaque textures
+  - High vertex counts
+  - Real-time shadows
+  - HDR/MSAA
+- **Visual Impact:** Game still looks great with optimized settings
 
 ## Git Workflow
 ```bash
