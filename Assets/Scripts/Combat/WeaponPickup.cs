@@ -30,12 +30,21 @@ public class WeaponPickup : MonoBehaviour
     [Tooltip("Bob height")]
     public float bobHeight = 0.5f;
 
+    [Header("Pickup Settings")]
+    [Tooltip("Trigger collider radius multiplier (increase for easier pickup)")]
+    public float triggerSizeMultiplier = 2f;
+
     private MeshRenderer pickupRenderer;
     private Collider pickupCollider;
     private bool isAvailable = true;
     private float respawnTimer = 0f;
     private Vector3 startPosition;
     private float bobTimer = 0f;
+
+    // Reservation system for AI
+    private GameObject claimedBy = null;
+    private float claimTime = 0f;
+    private float claimTimeout = 5f; // Release claim after 5 seconds if not collected
 
     void Start()
     {
@@ -53,6 +62,18 @@ public class WeaponPickup : MonoBehaviour
         if (pickupCollider != null)
         {
             pickupCollider.isTrigger = true;
+
+            // Increase trigger size for easier pickup
+            if (pickupCollider is SphereCollider)
+            {
+                SphereCollider sphere = (SphereCollider)pickupCollider;
+                sphere.radius *= triggerSizeMultiplier;
+            }
+            else if (pickupCollider is BoxCollider)
+            {
+                BoxCollider box = (BoxCollider)pickupCollider;
+                box.size *= triggerSizeMultiplier;
+            }
         }
     }
 
@@ -76,6 +97,21 @@ public class WeaponPickup : MonoBehaviour
             if (respawnTimer <= 0f)
             {
                 Respawn();
+            }
+        }
+
+        // Handle claim timeout - release claim if AI takes too long
+        if (claimedBy != null)
+        {
+            // Check if claimer was destroyed
+            if (claimedBy == null)
+            {
+                ReleaseClaim();
+            }
+            // Check timeout
+            else if (Time.time >= claimTime + claimTimeout)
+            {
+                ReleaseClaim();
             }
         }
     }
@@ -132,6 +168,9 @@ public class WeaponPickup : MonoBehaviour
     {
         isAvailable = false;
 
+        // Release claim when collected
+        ReleaseClaim();
+
         // Hide visual
         if (pickupRenderer != null)
             pickupRenderer.enabled = false;
@@ -156,6 +195,9 @@ public class WeaponPickup : MonoBehaviour
     {
         isAvailable = true;
 
+        // Release any existing claims when respawning
+        ReleaseClaim();
+
         // Show visual
         if (pickupRenderer != null)
             pickupRenderer.enabled = true;
@@ -167,5 +209,60 @@ public class WeaponPickup : MonoBehaviour
         // Reset bob timer
         bobTimer = 0f;
         transform.position = startPosition;
+    }
+
+    /// <summary>
+    /// Check if this pickup is currently available (not respawning)
+    /// </summary>
+    public bool IsAvailable()
+    {
+        return isAvailable;
+    }
+
+    /// <summary>
+    /// Check if this pickup is claimed by someone else
+    /// </summary>
+    public bool IsClaimedByOther(GameObject requester)
+    {
+        return claimedBy != null && claimedBy != requester;
+    }
+
+    /// <summary>
+    /// Try to claim this pickup for AI targeting
+    /// </summary>
+    public bool TryClaim(GameObject claimer)
+    {
+        // Can't claim if not available
+        if (!isAvailable)
+            return false;
+
+        // Can't claim if already claimed by someone else
+        if (claimedBy != null && claimedBy != claimer)
+            return false;
+
+        // Claim it
+        claimedBy = claimer;
+        claimTime = Time.time;
+        return true;
+    }
+
+    /// <summary>
+    /// Release claim on this pickup
+    /// </summary>
+    public void ReleaseClaim()
+    {
+        claimedBy = null;
+        claimTime = 0f;
+    }
+
+    /// <summary>
+    /// Release claim if it was claimed by specific GameObject
+    /// </summary>
+    public void ReleaseClaimBy(GameObject claimer)
+    {
+        if (claimedBy == claimer)
+        {
+            ReleaseClaim();
+        }
     }
 }

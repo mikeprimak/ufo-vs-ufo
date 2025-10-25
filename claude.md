@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 24
+**Update Count:** 25
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -9,29 +9,47 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - Small 3D arenas with vertical elements
 - Third-person camera, wide FOV
 - Simple projectile weapons and pickups
+- AI opponents for single-player gameplay
 - Must run on low-end PC (no dedicated GPU)
 
 ## Current Phase
-**Phase 1 Complete:** Basic UFO flight mechanics with keyboard and gamepad support
+**Phase 2 In Progress:** Combat mechanics and AI opponents
+
+**Completed:**
+- ✅ Basic UFO flight mechanics with keyboard and gamepad support
+- ✅ Weapon system with pickups and firing
+- ✅ Random weapon pickup boxes (mystery boxes)
+- ✅ AI enemy implementation with state machine
 
 ## Next Session
-**TODO:** Refine camera shake and FOV kick
-- Camera shake is functional but may need fine-tuning for feel
-- FOV kick system exists but could use polish/adjustments
-- Both features currently working but can be improved for better game feel
+**TODO:** Test and tune AI behavior
+- AI opponents can patrol, seek weapons, chase, and attack
+- Need to test 1v3 gameplay balance
+- May need tuning of aggression, detection ranges, and attack behavior
+- Consider adding difficulty settings or AI personality variations
 
 ## File Structure
 ```
 Assets/
 ├── Scripts/
 │   ├── Vehicle/
-│   │   ├── UFOController.cs - Main flight controller
+│   │   ├── UFOController.cs - Main flight controller (supports AI input)
+│   │   ├── UFOAIController.cs - AI behavior controller (state machine)
 │   │   ├── UFOCollision.cs - Collision bounce system
+│   │   ├── UFOHealth.cs - Health and death system
 │   │   ├── UFOHoverWobble.cs - Hover bobbing effect (not in use)
 │   │   └── UFOThrusterEffects.cs - Particle effects (not set up)
 │   ├── Camera/
 │   │   └── UFOCamera.cs - Third-person follow camera
-│   ├── Combat/ (empty - future)
+│   ├── Combat/
+│   │   ├── WeaponManager.cs - Weapon inventory and switching
+│   │   ├── WeaponSystem.cs - Projectile weapon firing
+│   │   ├── WeaponPickup.cs - Weapon pickup boxes (supports random)
+│   │   ├── Projectile.cs - Basic projectile
+│   │   ├── HomingProjectile.cs - Homing missile
+│   │   ├── LaserWeapon.cs - Laser beam weapon
+│   │   ├── BurstWeapon.cs - Burst fire weapon
+│   │   └── StickyBomb.cs - Sticky bomb weapon
 │   └── Arena/ (empty - future)
 ├── Scenes/
 │   └── TestArena.unity - Main test scene
@@ -71,12 +89,18 @@ Assets/
 - Combo Boost Fade In Time: 0.3s
 - Combo Boost Fade Out Time: 0.5s
 
-**Controls:**
+**Controls (Player Mode):**
 - A / Controller Button 0 → Accelerate
 - D / Controller Button 1 → Brake/Reverse
 - Arrow Keys / Left Stick → Turn left/right, Ascend/Descend
 - Q / RB (Button 5) → Barrel roll right
 - E / LB (Button 4) → Barrel roll left
+
+**AI Input Support:**
+- Use AI Input: false (player) / true (AI controlled)
+- When enabled, reads from public AI input fields instead of Input system
+- AI fields: aiAccelerate, aiBrake, aiTurn, aiVertical, aiBarrelRollLeft/Right, aiFire
+- Allows UFOAIController to control movement via virtual inputs
 
 **Features:**
 - Arcade physics: tight turns, instant brake, momentum-based movement
@@ -152,6 +176,46 @@ Assets/
 - Player retains acceleration/turning control throughout
 
 **Important:** Wobble feature was attempted but removed due to conflicts with banking
+
+### UFOAIController.cs
+**Current Inspector Values:**
+- Aggression: 0.7 (0-1, how aggressively AI pursues)
+- Decision Interval: 0.2s (how often AI makes decisions)
+- Detection Range: 100 units (how far AI can see enemies)
+- Attack Range: 60 units (distance to start firing)
+- Wall Avoidance Distance: 15 units (minimum distance from walls)
+- Arrival Distance: 10 units (how close to get to targets)
+- Barrel Roll Chance: 0.3 (30% chance to barrel roll for evasion)
+- Patrol Radius: 30 units (how far AI wanders when idle)
+
+**AI States (State Machine):**
+1. **Patrol** (Green) - No weapon, wanders randomly
+2. **SeekWeapon** (Cyan) - No weapon, flies to nearest weapon pickup
+3. **Chase** (Yellow) - Has weapon, pursues enemy but out of range
+4. **Attack** (Red) - Has weapon, fires at enemy in range
+
+**Features:**
+- Uses UFOController's AI input system for movement
+- Finds nearest enemies tagged "Player"
+- Seeks weapon pickups when unarmed
+- Wall avoidance using forward/side raycasts
+- Aims at target when in attack range
+- Strafes around target while attacking
+- Random barrel rolls for evasion
+- Debug gizmos show current state and target lines
+
+**Setup Requirements:**
+- UFOController: Use AI Input = true
+- WeaponManager: Allow AI Control = true
+- Tag must be "Player" to detect/be detected
+- UFOHealth component required
+
+**Tuning Tips:**
+- Lower aggression (0.3-0.5) for easier AI
+- Higher aggression (0.9-1.0) for harder AI
+- Increase decision interval (0.3-0.5s) for better performance
+- Decrease attack range (40) for more aggressive close-combat AI
+- See AI_SETUP_GUIDE.md for detailed tuning guide
 
 ### UFOCamera.cs
 **Current Inspector Values:**

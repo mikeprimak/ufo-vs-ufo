@@ -26,6 +26,10 @@ public class WeaponManager : MonoBehaviour
     [Header("Current Weapon")]
     public WeaponType currentWeapon = WeaponType.None;
 
+    [Header("AI Control")]
+    [Tooltip("If true, AI can trigger weapon firing via TryFireWeaponAI()")]
+    public bool allowAIControl = false;
+
     private UFOController ufoController;
 
     // Weapon types
@@ -282,5 +286,16 @@ public class WeaponManager : MonoBehaviour
     public bool HasWeapon()
     {
         return currentWeapon != WeaponType.None;
+    }
+
+    /// <summary>
+    /// AI method to try firing current weapon
+    /// </summary>
+    public void TryFireWeaponAI()
+    {
+        if (!allowAIControl)
+            return;
+
+        TryFireCurrentWeapon();
     }
 }

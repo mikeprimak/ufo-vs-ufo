@@ -108,6 +108,31 @@ public class UFOController : MonoBehaviour
     [Tooltip("Fade out time for combo boost (seconds)")]
     public float comboBoostFadeOutTime = 0.5f;
 
+    [Header("AI Control (Optional)")]
+    [Tooltip("If true, reads from AI input fields instead of Input system")]
+    public bool useAIInput = false;
+
+    [Tooltip("AI accelerate input (0-1)")]
+    [HideInInspector] public float aiAccelerate = 0f;
+
+    [Tooltip("AI brake input (0-1)")]
+    [HideInInspector] public float aiBrake = 0f;
+
+    [Tooltip("AI turn input (-1 to 1)")]
+    [HideInInspector] public float aiTurn = 0f;
+
+    [Tooltip("AI vertical input (-1 to 1)")]
+    [HideInInspector] public float aiVertical = 0f;
+
+    [Tooltip("AI barrel roll left trigger")]
+    [HideInInspector] public bool aiBarrelRollLeft = false;
+
+    [Tooltip("AI barrel roll right trigger")]
+    [HideInInspector] public bool aiBarrelRollRight = false;
+
+    [Tooltip("AI fire weapon trigger")]
+    [HideInInspector] public bool aiFire = false;
+
     // Components
     private Rigidbody rb;
     private WeaponSystem weaponSystem;
@@ -282,33 +307,61 @@ public class UFOController : MonoBehaviour
 
     void GetInput()
     {
-        // Keyboard controls:
-        // A = Accelerate forward
-        // D = Brake/Reverse
-        accelerateInput = Input.GetKey(KeyCode.A);
-        brakeInput = Input.GetKey(KeyCode.D);
+        // Declare barrel roll variables once at method scope
+        bool wantsLeftRoll = false;
+        bool wantsRightRoll = false;
 
-        // Controller face buttons:
-        // Button 0 (A/Cross) = Accelerate
-        // Button 1 (B/Circle) = Weapon Fire (reserved for future)
-        // Button 3 (Y/Triangle) = Brake/Reverse
-        if (Input.GetButton("Fire1")) // Button 0 (A/Cross) = Accelerate
-            accelerateInput = true;
-        if (Input.GetKey(KeyCode.JoystickButton3)) // Button 3 (Y/Triangle) = Brake/Reverse
-            brakeInput = true;
+        if (useAIInput)
+        {
+            // Read from AI inputs
+            accelerateInput = aiAccelerate > 0.1f;
+            brakeInput = aiBrake > 0.1f;
+            turnInput = aiTurn;
+            verticalInput = aiVertical;
+            fireInput = aiFire;
 
-        // Fire weapon with Button 1 (B/Circle) or Fire3
-        fireInput = Input.GetButton("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
+            // Barrel roll input from AI
+            wantsLeftRoll = aiBarrelRollLeft;
+            wantsRightRoll = aiBarrelRollRight;
 
-        // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
-        turnInput = Input.GetAxis("Horizontal");
+            // Reset AI triggers
+            aiBarrelRollLeft = false;
+            aiBarrelRollRight = false;
+            aiFire = false;
+        }
+        else
+        {
+            // Player input (original code)
+            // Keyboard controls:
+            // A = Accelerate forward
+            // D = Brake/Reverse
+            accelerateInput = Input.GetKey(KeyCode.A);
+            brakeInput = Input.GetKey(KeyCode.D);
 
-        // Arrow keys for vertical movement (Up/Down) + Controller Left Stick Y-axis
-        verticalInput = Input.GetAxis("Vertical");
+            // Controller face buttons:
+            // Button 0 (A/Cross) = Accelerate
+            // Button 1 (B/Circle) = Weapon Fire (reserved for future)
+            // Button 3 (Y/Triangle) = Brake/Reverse
+            if (Input.GetButton("Fire1")) // Button 0 (A/Cross) = Accelerate
+                accelerateInput = true;
+            if (Input.GetKey(KeyCode.JoystickButton3)) // Button 3 (Y/Triangle) = Brake/Reverse
+                brakeInput = true;
 
-        // Barrel roll input (shoulder bumpers)
-        bool wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
-        bool wantsRightRoll = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+            // Fire weapon with Button 1 (B/Circle) or Fire3
+            fireInput = Input.GetButton("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
+
+            // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
+            turnInput = Input.GetAxis("Horizontal");
+
+            // Arrow keys for vertical movement (Up/Down) + Controller Left Stick Y-axis
+            verticalInput = Input.GetAxis("Vertical");
+
+            // Barrel roll input (shoulder bumpers)
+            wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
+            wantsRightRoll = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+        }
+
+        // Process barrel rolls (shared logic for both AI and player)
 
         if (wantsLeftRoll || wantsRightRoll)
         {
