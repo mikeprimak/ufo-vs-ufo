@@ -68,7 +68,7 @@ public class UFOController : MonoBehaviour
     public float bankSpeed = 3f;
 
     [Tooltip("How much the UFO pitches when ascending/descending (degrees)")]
-    public float visualPitchAmount = 30f;
+    public float visualPitchAmount = 25f;
 
     [Tooltip("How quickly the UFO pitches visually")]
     public float visualPitchSpeed = 3f;
@@ -554,8 +554,10 @@ public class UFOController : MonoBehaviour
             }
             else
             {
-                // When accelerating/braking, use standard vertical control
-                float effectiveVerticalSpeed = verticalSpeed * speedMultiplier;
+                // When accelerating/braking, allow steeper climbs/dives
+                // Use a higher multiplier (2x) to enable aggressive forward+up/down flight paths
+                float activeFlightMultiplier = 2f;
+                float effectiveVerticalSpeed = verticalSpeed * speedMultiplier * activeFlightMultiplier;
                 Vector3 verticalMove = Vector3.up * verticalInput * effectiveVerticalSpeed;
                 rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
             }

@@ -907,7 +907,7 @@ MonoBehaviour:
   visualModel: {fileID: 755738915}
   bankAmount: 25
   bankSpeed: 3
-  visualPitchAmount: 45
+  visualPitchAmount: 25
   visualPitchSpeed: 3
   minSpeedForPitch: 5
   barrelRollDistance: 18
@@ -1156,19 +1156,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  particleLifetime: 1
-  startSize: 0.5
-  endSize: 0.1
-  emissionRate: 30
-  startSpeed: 2
-  startColor: {r: 0, g: 1, b: 1, a: 0.8}
-  endColor: {r: 0, g: 1, b: 1, a: 0}
+  particleLifetime: 0.2
+  startSize: 0.15
+  endSize: 0.01
+  emissionRate: 15
+  startSpeed: 0.4
+  startColor: {r: 1, g: 1, b: 0, a: 0.8}
+  endColor: {r: 1, g: 1, b: 0, a: 0}
   enableSpeedResponse: 1
-  minSpeedForTrail: 5
+  minSpeedForTrail: 10
   maxSpeedForTrail: 30
   lateralOffset: 4
-  forwardOffset: 0
-  verticalOffset: -0.5
+  forwardOffset: -3
+  verticalOffset: -1
 --- !u!1 &598115976
 GameObject:
   m_ObjectHideFlags: 0

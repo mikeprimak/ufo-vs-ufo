@@ -72,6 +72,19 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("How quickly FOV kicks in/out")]
     public float fovKickSpeed = 5f;
 
+    [Header("Turn Zoom Out (Game Feel)")]
+    [Tooltip("Enable dynamic camera zoom out during sharp turns")]
+    public bool enableTurnZoomOut = true;
+
+    [Tooltip("Additional distance when making sharp turns (added to base distance)")]
+    public float turnZoomOutDistance = 3f;
+
+    [Tooltip("How quickly camera zooms in/out during turns")]
+    public float turnZoomSpeed = 4f;
+
+    [Tooltip("Angular velocity threshold to trigger zoom out (degrees/sec)")]
+    public float turnZoomThreshold = 90f;
+
     [Header("Camera Shake (Game Feel)")]
     [Tooltip("Enable camera shake on impacts")]
     public bool enableCameraShake = true;
@@ -99,6 +112,8 @@ public class UFOCamera : MonoBehaviour
     private float currentDistance;
     private float currentFOV;
     private UFOController ufoController; // For detecting acceleration/braking input
+    private float currentTurnZoomOut; // Current turn-based distance offset
+    private Quaternion lastTargetRotation; // For measuring rotation delta
 
     // Camera shake state
     private float shakeTimeRemaining;
@@ -139,6 +154,9 @@ public class UFOCamera : MonoBehaviour
             Quaternion targetYawRotation = Quaternion.Euler(0, targetEuler.y, 0);
             Vector3 lookDirection = targetYawRotation * Vector3.forward;
             transform.rotation = Quaternion.LookRotation(lookDirection) * Quaternion.Euler(lookDownAngle, 0, 0);
+
+            // Initialize last rotation for turn detection
+            lastTargetRotation = target.rotation;
         }
     }
 
@@ -157,9 +175,39 @@ public class UFOCamera : MonoBehaviour
             forwardSpeed = Vector3.Dot(targetRigidbody.velocity, target.forward);
         }
 
+        // === TURN ZOOM OUT SYSTEM (Game Feel) ===
+        // Detect sharp turns by measuring rotation delta (since UFO uses MoveRotation, not physics rotation)
+        float targetTurnZoomOut = 0f;
+        if (enableTurnZoomOut && target != null)
+        {
+            // Calculate rotation delta since last frame
+            Quaternion rotationDelta = target.rotation * Quaternion.Inverse(lastTargetRotation);
+
+            // Convert to angle in degrees
+            rotationDelta.ToAngleAxis(out float angleDelta, out Vector3 axis);
+
+            // Calculate angular speed (degrees per second)
+            float angularSpeed = angleDelta / Time.deltaTime;
+
+            // If turning faster than threshold, zoom out proportionally
+            if (angularSpeed > turnZoomThreshold)
+            {
+                // Normalize turn speed (0-1 range, capped at 2x threshold)
+                float turnIntensity = Mathf.Clamp01((angularSpeed - turnZoomThreshold) / turnZoomThreshold);
+                targetTurnZoomOut = turnIntensity * turnZoomOutDistance;
+            }
+
+            // Store current rotation for next frame
+            lastTargetRotation = target.rotation;
+        }
+
+        // Smoothly lerp current turn zoom out
+        currentTurnZoomOut = Mathf.Lerp(currentTurnZoomOut, targetTurnZoomOut, turnZoomSpeed * Time.deltaTime);
+
         // Determine if UFO is reversing and adjust camera accordingly
         bool isReversing = forwardSpeed < reverseSpeedThreshold;
-        float targetDistance = isReversing ? reverseDistance : distance;
+        float baseDistance = isReversing ? reverseDistance : distance;
+        float targetDistance = baseDistance + currentTurnZoomOut; // Add turn zoom out
         float baseFOV = isReversing ? reverseFOV : fieldOfView;
 
         // === FOV KICK SYSTEM (Game Feel) ===
