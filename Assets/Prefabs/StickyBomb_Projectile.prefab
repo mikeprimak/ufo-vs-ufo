@@ -148,11 +148,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 35
   fuseTime: 5
-  explosionDamage: 100
+  explosionDamage: 1
   blastRadius: 30
   explosionPrefab: {fileID: 2677883429208286301, guid: cb2c24a8717689742ad4fcc55202dd8a,
     type: 3}
-  contactDamage: 25
+  contactDamage: 1
   launchSound: {fileID: 0}
   stickSound: {fileID: 0}
   tickSound: {fileID: 0}

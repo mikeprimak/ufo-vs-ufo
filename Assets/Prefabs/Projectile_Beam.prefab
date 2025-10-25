@@ -150,5 +150,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 50
   lifetime: 5
-  damage: 10
+  damage: 1
   trail: {fileID: 0}

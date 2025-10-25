@@ -145,10 +145,10 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e67ab4d63c76c84980a35ea24fb7eb0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   speed: 40
   lifetime: 8
-  damage: 20
+  damage: 1
   turnRate: 90
   acceleration: 20
   maxSpeed: 70
