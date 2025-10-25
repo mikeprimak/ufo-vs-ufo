@@ -77,13 +77,19 @@ public class UFOCamera : MonoBehaviour
     public bool enableCameraShake = true;
 
     [Tooltip("How long shake lasts (seconds)")]
-    public float shakeDuration = 1.0f;
+    public float shakeDuration = 0.3f;
 
     [Tooltip("Maximum shake intensity (position offset in units)")]
-    public float shakeIntensity = 3.0f;
+    public float shakeIntensity = 0.4f;
 
     [Tooltip("How quickly shake decays")]
-    public float shakeDecaySpeed = 0.5f;
+    public float shakeDecaySpeed = 5f;
+
+    [Tooltip("Minimum impact speed to trigger shake (units/s)")]
+    public float minShakeSpeed = 15f;
+
+    [Tooltip("Minimum time between shakes (seconds)")]
+    public float shakeCooldown = 0.3f;
 
     private Camera cam;
     private Vector3 currentVelocity;
@@ -98,6 +104,7 @@ public class UFOCamera : MonoBehaviour
     private float shakeTimeRemaining;
     private float currentShakeIntensity;
     private Vector3 shakeOffset;
+    private float lastShakeTime;
 
     void Start()
     {
@@ -313,19 +320,29 @@ public class UFOCamera : MonoBehaviour
         if (!enableCameraShake)
             return;
 
+        // Check cooldown - don't shake if too soon after last shake
+        float timeSinceLastShake = Time.time - lastShakeTime;
+        if (timeSinceLastShake < shakeCooldown)
+        {
+            Debug.Log($"[Camera Shake] Skipped (cooldown). Time since last: {timeSinceLastShake:F2}s, Need >= {shakeCooldown:F2}s");
+            return;
+        }
+
+        // Check minimum speed threshold - ignore weak impacts
+        if (impactSpeed < minShakeSpeed)
+        {
+            Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {minShakeSpeed:F1}");
+            return;
+        }
+
         // Normalize impact speed to 0-1 range
         float intensity = Mathf.Clamp01(impactSpeed / maxSpeed);
 
-        // Only shake if impact is significant (>= 10% of max speed)
-        // Changed from > to >= to match minWallImpactSpeed threshold (3.0)
-        if (intensity >= 0.1f)
-        {
-            Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
-            TriggerShake(intensity);
-        }
-        else
-        {
-            Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {maxSpeed * 0.1f:F1}");
-        }
+        Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
+
+        // Update last shake time
+        lastShakeTime = Time.time;
+
+        TriggerShake(intensity);
     }
 }

@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 19
+**Update Count:** 20
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -171,18 +171,22 @@ Assets/
 - Combo Boost FOV Boost: 10° (75 → 85 during combo boost)
 - FOV Kick Speed: 5 (transition smoothness)
 
-**Camera Shake Settings (Game Feel - NEW):**
+**Camera Shake Settings (Game Feel - FINAL TUNED):**
 - Enable Camera Shake: true
-- Shake Duration: 1.0s (EXTREME for testing - was 0.2s)
-- Shake Intensity: 3.0 units (EXTREME for testing - was 0.5 units)
-- Shake Decay Speed: 0.5 (SLOW for testing - was 3)
+- Shake Duration: 0.3s (short, punchy shake)
+- Shake Intensity: 0.4 units (subtle but visible)
+- Shake Decay Speed: 5 (fades out quickly)
+- Min Shake Speed: 15 units/s (no shake for light bumps - only medium/hard impacts)
+- Shake Cooldown: 0.3s (prevents rapid-fire shaking when scraping walls)
 - **CRITICAL BUG FIXED (UFOCamera.cs:252-257):** Shake was being smoothed out by camera lerp!
   - Old: Added shake to desiredPosition, THEN lerped toward it (shake got dampened)
   - New: Lerp to position, THEN add shake directly (shake is instant and visible)
   - Shake must be applied AFTER smoothing, not before
-- **Bug Fixed:** Threshold changed from `> 0.1` to `>= 0.1` to match minWallImpactSpeed (3.0)
-- **Debug logging:** Shows "TRIGGERED!" in console when shake is called
-- **NOTE:** These are EXTREME test values to make shake impossible to miss
+- **Improvements:**
+  - Shake intensity scales with impact speed (harder hits = more shake)
+  - Minimum speed threshold prevents shake on weak collisions
+  - Cooldown prevents shake spam when bouncing repeatedly
+- **Debug logging:** Shows impact speed, intensity, and skip reasons in console
 
 **Features:**
 - Tight rotation tracking for forward-firing weapon aiming (0.5-1.0 recommended)
