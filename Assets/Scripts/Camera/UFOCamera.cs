@@ -80,7 +80,7 @@ public class UFOCamera : MonoBehaviour
     public float shakeDuration = 0.2f;
 
     [Tooltip("Maximum shake intensity (position offset in units)")]
-    public float shakeIntensity = 0.15f;
+    public float shakeIntensity = 0.5f;
 
     [Tooltip("How quickly shake decays")]
     public float shakeDecaySpeed = 3f;
@@ -310,10 +310,16 @@ public class UFOCamera : MonoBehaviour
         // Normalize impact speed to 0-1 range
         float intensity = Mathf.Clamp01(impactSpeed / maxSpeed);
 
-        // Only shake if impact is significant (> 10% of max speed)
-        if (intensity > 0.1f)
+        // Only shake if impact is significant (>= 10% of max speed)
+        // Changed from > to >= to match minWallImpactSpeed threshold (3.0)
+        if (intensity >= 0.1f)
         {
+            Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
             TriggerShake(intensity);
+        }
+        else
+        {
+            Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {maxSpeed * 0.1f:F1}");
         }
     }
 }

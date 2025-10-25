@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 16
+**Update Count:** 17
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -174,8 +174,10 @@ Assets/
 **Camera Shake Settings (Game Feel - NEW):**
 - Enable Camera Shake: true
 - Shake Duration: 0.2s
-- Shake Intensity: 0.15 units
+- Shake Intensity: 0.5 units (increased from 0.15 for better visibility)
 - Shake Decay Speed: 3
+- **Bug Fixed:** Threshold changed from `> 0.1` to `>= 0.1` to match minWallImpactSpeed (3.0)
+- Debug logging added to console for troubleshooting
 
 **Features:**
 - Tight rotation tracking for forward-firing weapon aiming (0.5-1.0 recommended)
