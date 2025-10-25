@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-24
-**Update Count:** 20
+**Update Count:** 21
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -13,6 +13,12 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 
 ## Current Phase
 **Phase 1 Complete:** Basic UFO flight mechanics with keyboard and gamepad support
+
+## Next Session
+**TODO:** Refine camera shake and FOV kick
+- Camera shake is functional but may need fine-tuning for feel
+- FOV kick system exists but could use polish/adjustments
+- Both features currently working but can be improved for better game feel
 
 ## File Structure
 ```

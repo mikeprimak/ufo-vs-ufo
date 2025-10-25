@@ -1629,6 +1629,17 @@ MonoBehaviour:
   reverseFOV: 90
   reverseSpeedThreshold: -1
   reverseCameraSmoothing: 3
+  enableFOVKick: 1
+  accelerationFOVBoost: 5
+  brakeFOVReduction: 5
+  comboBoostFOVBoost: 10
+  fovKickSpeed: 5
+  enableCameraShake: 1
+  shakeDuration: 0.3
+  shakeIntensity: 0.4
+  shakeDecaySpeed: 0.5
+  minShakeSpeed: 15
+  shakeCooldown: 0.3
 --- !u!1 &998158369
 GameObject:
   m_ObjectHideFlags: 0
