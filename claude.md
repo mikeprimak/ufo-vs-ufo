@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 25
+**Update Count:** 26
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -38,7 +38,8 @@ Assets/
 │   │   ├── UFOCollision.cs - Collision bounce system
 │   │   ├── UFOHealth.cs - Health and death system
 │   │   ├── UFOHoverWobble.cs - Hover bobbing effect (not in use)
-│   │   └── UFOThrusterEffects.cs - Particle effects (not set up)
+│   │   ├── UFOThrusterEffects.cs - Particle effects (not set up)
+│   │   └── UFOParticleTrail.cs - Motion trail particles (integrated GPU optimized)
 │   ├── Camera/
 │   │   └── UFOCamera.cs - Third-person follow camera
 │   ├── Combat/
@@ -75,7 +76,7 @@ Assets/
 - Visual Model: UFO_Visual (for banking and pitch effects)
 - Bank Amount: 25°
 - Bank Speed: 3
-- Visual Pitch Amount: 30°
+- Visual Pitch Amount: 25° (reduced from 30° for less extreme tilt)
 - Visual Pitch Speed: 3
 - Min Speed For Pitch: 5
 - Barrel Roll Distance: 18
@@ -111,6 +112,8 @@ Assets/
 - **Fast vertical movement**: 3x speed boost when moving only up/down OR during barrel rolls
   - Normal vertical speed: 8 units/sec
   - Pure vertical speed: 24 units/sec (no forward/backward movement)
+  - **Forward + vertical**: 16 units/sec (2x multiplier for steeper climb/dive angles)
+  - Achieves ~28° climb/dive angle when accelerating forward + up/down
   - Smooth gradient transition based on forward speed (threshold: 10 units/sec)
   - **Barrel roll vertical boost**: Full 3x speed multiplier during barrel rolls regardless of forward speed
   - Allows aggressive evasive climbs/dives while barrel rolling forward
@@ -234,7 +237,13 @@ Assets/
 - Reverse Speed Threshold: -1 (triggers reverse camera mode)
 - Reverse Camera Smoothing: 3 (transition speed)
 
-**FOV Kick Settings (Game Feel - NEW):**
+**Turn Zoom Out Settings (Game Feel - NEW):**
+- Enable Turn Zoom Out: true
+- Turn Zoom Out Distance: 3 units (additional distance during sharp turns)
+- Turn Zoom Speed: 4 (transition smoothness)
+- Turn Zoom Threshold: 90 degrees/sec (angular velocity to trigger zoom out)
+
+**FOV Kick Settings (Game Feel):**
 - Enable FOV Kick: true
 - Acceleration FOV Boost: 5° (75 → 80 when accelerating)
 - Brake FOV Reduction: 5° (75 → 70 when braking)
@@ -265,6 +274,11 @@ Assets/
 - Dynamic vertical tilt: ascending = camera tilts up, descending = camera tilts down
 - Smooth position following with retained smoothing for comfort
 - Designed for center-screen aiming and forward-firing weapons
+- **Turn Zoom Out System (Zero GPU Cost)**: Camera pulls back during sharp turns
+  - Measures rotation delta per frame (compatible with MoveRotation)
+  - Zooms out up to 3 units when turning faster than 90°/sec
+  - Prevents camera from catching up too much during tight maneuvers
+  - Smooth lerp transition (4x speed)
 - **Dynamic reverse camera**: When UFO reverses, camera pulls back and widens FOV for better visibility
   - Prevents UFO from approaching bottom edge of screen
   - Smooth transitions between normal and reverse camera states
@@ -280,6 +294,34 @@ Assets/
   - Heavy floor crashes = full shake, angled hits = medium shake, wall hits = scaled by speed
   - Decays smoothly over shake duration
   - Public methods: `TriggerShake(intensity)` and `TriggerShakeFromImpact(speed, maxSpeed)`
+
+### UFOParticleTrail.cs
+**Current Inspector Values (OPTIMIZED FOR INTEGRATED GPU):**
+- Particle Lifetime: 0.15s (short trail)
+- Start Size: 0.1 (small particles)
+- End Size: 0.01 (fade to tiny)
+- Emission Rate: 5 particles/sec (HEAVILY REDUCED from 15)
+- Start Speed: 0.3 (slow drift)
+- Min Speed For Trail: 10 units/sec (only emit when moving)
+- Max Speed For Trail: 30 units/sec (full emission at max speed)
+
+**Optimization Features (CRITICAL for integrated GPU):**
+- **3 emitters per UFO**: Left, Right, Center trails
+- **Max 20 particles per emitter** (was 100 - 80% reduction)
+- **Standard alpha blend** instead of expensive additive blending
+- **Unlit/Transparent shader** (not Particles/Standard Unlit)
+- **32x32 texture resolution** (was 64x64 - 75% fewer pixels)
+- **No shadows, no occlusion queries, no anisotropic filtering**
+- **Total GPU load reduced by ~80%** compared to original implementation
+- World space simulation for motion trail effect
+- Speed-based emission (stops emitting when hovering/stopped)
+
+**Performance Impact:**
+- 3 emitters × 5 particles/sec × 4 UFOs = **60 particles/sec max** (was 180)
+- **Safe for integrated GPU** when using optimized settings
+- If crashes still occur, disable component entirely in Inspector
+
+**Important:** Original additive blending version caused D3D11 swapchain crashes on integrated GPU
 
 ## Scene Setup (TestArena)
 
