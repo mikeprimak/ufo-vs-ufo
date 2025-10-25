@@ -249,11 +249,12 @@ public class UFOCamera : MonoBehaviour
         // Apply dynamic vertical offset and current distance (which adjusts for reverse)
         Vector3 desiredPosition = target.position - (target.forward * currentDistance) + (Vector3.up * (height + currentVerticalOffset));
 
-        // Add shake offset to desired position
-        desiredPosition += shakeOffset;
-
-        // Smoothly move camera to desired position
+        // Smoothly move camera to desired position (WITHOUT shake - that's applied after)
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+
+        // Apply shake DIRECTLY to final position (instant, not smoothed by lerp)
+        // This ensures shake is visible and not dampened by camera smoothing
+        transform.position += shakeOffset;
 
         // Camera tracks UFO's physics rotation (not visual banking from UFO_Visual)
         // Extract only the Y rotation (yaw) from the target to keep horizon level
