@@ -755,6 +755,7 @@ GameObject:
   - component: {fileID: 451632586}
   - component: {fileID: 451632587}
   - component: {fileID: 451632588}
+  - component: {fileID: 451632589}
   m_Layer: 0
   m_Name: UFO_Player
   m_TagString: Player
@@ -919,6 +920,7 @@ MonoBehaviour:
   comboBoostDuration: 2
   comboBoostFadeInTime: 0.3
   comboBoostFadeOutTime: 0.5
+  movementEnabled: 1
   useAIInput: 0
   aiAccelerate: 0
   aiBrake: 0
@@ -1142,6 +1144,26 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &451632589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451632571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trailTime: 0.5
+  startWidth: 1
+  endWidth: 0
+  minSpeedForTrail: 5
+  startColor: {r: 0, g: 1, b: 1, a: 1}
+  endColor: {r: 0, g: 1, b: 1, a: 0}
+  enableSpeedResponse: 1
+  maxSpeedForTrail: 30
 --- !u!1 &598115976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1792,6 +1814,7 @@ GameObject:
   - component: {fileID: 859948922}
   - component: {fileID: 859948921}
   - component: {fileID: 859948938}
+  - component: {fileID: 859948939}
   m_Layer: 0
   m_Name: UFO_AI_2
   m_TagString: Player
@@ -2057,6 +2080,7 @@ MonoBehaviour:
   comboBoostDuration: 2
   comboBoostFadeInTime: 0.3
   comboBoostFadeOutTime: 0.5
+  movementEnabled: 1
   useAIInput: 1
   aiAccelerate: 0
   aiBrake: 0
@@ -2200,6 +2224,26 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &859948939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859948920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trailTime: 0.5
+  startWidth: 1
+  endWidth: 0
+  minSpeedForTrail: 5
+  startColor: {r: 0, g: 1, b: 1, a: 1}
+  endColor: {r: 0, g: 1, b: 1, a: 0}
+  enableSpeedResponse: 1
+  maxSpeedForTrail: 30
 --- !u!1 &867499428
 GameObject:
   m_ObjectHideFlags: 0
@@ -2226,6 +2270,7 @@ GameObject:
   - component: {fileID: 867499430}
   - component: {fileID: 867499429}
   - component: {fileID: 867499446}
+  - component: {fileID: 867499447}
   m_Layer: 0
   m_Name: UFO_AI_3
   m_TagString: Player
@@ -2491,6 +2536,7 @@ MonoBehaviour:
   comboBoostDuration: 2
   comboBoostFadeInTime: 0.3
   comboBoostFadeOutTime: 0.5
+  movementEnabled: 1
   useAIInput: 1
   aiAccelerate: 0
   aiBrake: 0
@@ -2634,6 +2680,26 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &867499447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867499428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trailTime: 0.5
+  startWidth: 1
+  endWidth: 0
+  minSpeedForTrail: 5
+  startColor: {r: 0, g: 1, b: 1, a: 1}
+  endColor: {r: 0, g: 1, b: 1, a: 0}
+  enableSpeedResponse: 1
+  maxSpeedForTrail: 30
 --- !u!1 &877747714
 GameObject:
   m_ObjectHideFlags: 0
@@ -3168,7 +3234,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1181172150}
-  - {fileID: 1844082309}
   - {fileID: 2002018270}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3830,6 +3895,7 @@ GameObject:
   - component: {fileID: 1576578800}
   - component: {fileID: 1576578799}
   - component: {fileID: 1576578816}
+  - component: {fileID: 1576578817}
   m_Layer: 0
   m_Name: UFO_AI_1
   m_TagString: Player
@@ -4095,6 +4161,7 @@ MonoBehaviour:
   comboBoostDuration: 2
   comboBoostFadeInTime: 0.3
   comboBoostFadeOutTime: 0.5
+  movementEnabled: 1
   useAIInput: 1
   aiAccelerate: 0
   aiBrake: 0
@@ -4238,6 +4305,26 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &1576578817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576578798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trailTime: 0.5
+  startWidth: 1
+  endWidth: 0
+  minSpeedForTrail: 5
+  startColor: {r: 0, g: 1, b: 1, a: 1}
+  endColor: {r: 0, g: 1, b: 1, a: 0}
+  enableSpeedResponse: 1
+  maxSpeedForTrail: 30
 --- !u!1 &1589016234
 GameObject:
   m_ObjectHideFlags: 0
@@ -4575,59 +4662,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1844082308
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1844082309}
-  - component: {fileID: 1844082310}
-  m_Layer: 5
-  m_Name: HealthUI
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1844082309
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844082308}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1124075658}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 50, y: -200}
-  m_SizeDelta: {x: 200, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1844082310
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1844082308}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b7fb28331cf5a44dba4d682d77c659a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetUFO: {fileID: 451632587}
-  fullHeartSprite: {fileID: 0}
-  emptyHeartSprite: {fileID: 0}
-  heartSize: 50
-  heartSpacing: 10
 --- !u!1 &1867461009
 GameObject:
   m_ObjectHideFlags: 0
