@@ -12,16 +12,16 @@ public class UFOParticleTrail : MonoBehaviour
     public float particleLifetime = 0.2f;
 
     [Tooltip("Particle start size")]
-    public float startSize = 0.3f;
+    public float startSize = 0.15f;
 
     [Tooltip("Particle end size")]
-    public float endSize = 0.05f;
+    public float endSize = 0.01f;
 
     [Tooltip("Particles emitted per second")]
     public float emissionRate = 15f;
 
     [Tooltip("Particle start speed (how fast they move initially)")]
-    public float startSpeed = 2f;
+    public float startSpeed = 0.5f;
 
     [Header("Colors")]
     [Tooltip("Particle color at spawn")]
