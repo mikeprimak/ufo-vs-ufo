@@ -154,6 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomWeapon: 1
   weaponType: 5
   respawns: 1
   respawnTime: 10
@@ -877,6 +878,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomWeapon: 1
   weaponType: 2
   respawns: 1
   respawnTime: 15
@@ -1373,6 +1375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomWeapon: 1
   weaponType: 3
   respawns: 1
   respawnTime: 15
@@ -2137,6 +2140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomWeapon: 1
   weaponType: 4
   respawns: 1
   respawnTime: 15
@@ -2366,6 +2370,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomWeapon: 1
   weaponType: 1
   respawns: 1
   respawnTime: 15

@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 22
+**Update Count:** 24
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -320,66 +320,71 @@ git push
 **Repository:** https://github.com/mikeprimak/ufo-vs-ufo
 
 ## Future Development Plans
-- **Launch Target:** Free-to-play on Steam
-- Phase 2: Combat mechanics (projectiles, pickups)
-- Phase 3: Online multiplayer implementation
-- Phase 4: Multiple arenas
-- Phase 5: Progression/cosmetics system
+- **Primary Goal:** Make a simple, fun, free game that works well on any PC
+- **Launch Target:** Free on Steam (and/or itch.io)
+- Phase 2: Combat mechanics (projectiles, pickups, AI opponents)
+- Phase 3: Polish single-player/local multiplayer experience
+- Phase 4: Release and see if people want online multiplayer
+- Phase 5: Add online multiplayer only if there's demand (keep it simple)
 - Visual effects: Thruster particles, trail renderer (scripts exist but not set up)
 - Audio: Engine sounds, impacts, weapon sounds
 
-## Multiplayer Architecture (Planned)
+## Multiplayer Strategy (Keep It Simple)
 
-### **Selected Approach: Mirror + Self-Hosted + PlayFab**
-**Decision rationale:** Build it right once for F2P launch - avoid costly migration later
+### **Philosophy: Fun First, Complexity Later**
+**Primary goal is NOT monetization** - it's making a simple, fun, free game that works well.
 
-**Technology Stack:**
-- **Mirror Networking** - Open-source authoritative server networking (free, no CCU limits)
-- **Self-Hosted Dedicated Servers** - VPS/cloud hosting for predictable costs
-- **PlayFab (Microsoft)** - Backend services for matchmaking, progression, economy (free tier: 100k players)
-- **Easy Anti-Cheat** - If needed (Steam integration available)
+**Approach: Start Single-Player, Add Online Only If Needed**
 
-**Why This Stack:**
-- F2P games can hit high CCU unexpectedly - per-player pricing (Photon) could cost thousands/month before monetization
-- Authoritative servers prevent cheating (critical for F2P with free accounts)
-- Self-hosted costs 5-10x less at scale than managed solutions
-- PlayFab handles complex backend (matchmaking, leaderboards, virtual economy) for free
-- Full control over infrastructure and no vendor lock-in
+### **Phase 1: Single-Player / Local Multiplayer (Launch Target)**
+- **AI opponents** for practice/solo play
+- **Local multiplayer** (split-screen or hot-seat if feasible)
+- **No networking complexity** - just make the gameplay fun
+- **Launch as free game** on Steam and/or itch.io
+- **See if people actually want online multiplayer** before building it
 
-**Alternative Considered (Rejected):**
-- **Photon PUN 2:** Great for rapid prototyping, but $95-2000+/month based on CCU
-  - Risk: If game succeeds, costs spiral before revenue established
-  - Would require full rewrite to migrate away later
+**Why start here:**
+- Focus on making the core game fun, not infrastructure
+- Works offline - no servers, no costs, no maintenance
+- Much simpler to develop and test
+- Many successful indie games started this way
 
-**Implementation Requirements:**
-- **Server-authoritative architecture:** Server validates all player actions, clients send inputs only
-- **Server-side hit detection:** Prevents aimbots and hit manipulation
-- **Movement validation:** Server checks physics possibility to prevent speed hacks
-- **Regional servers:** Multiple instances (US-West, US-East, EU) for low latency
+### **Phase 2: Online Multiplayer (Only If There's Demand)**
 
-**Cost Projections:**
-- **Beta (20-100 players):** $5-10/month (single small VPS)
-- **Launch (500 CCU):** $50-150/month (dedicated server)
-- **Success (2000+ CCU):** $200-500/month (multiple regional servers)
-- **PlayFab:** Free tier until very successful
+If people play the game and ask for online multiplayer, pick the simplest approach:
 
-**Monetization (Required for F2P):**
-- Cosmetic skins (UFO paint jobs, decals, trails)
-- Battle pass system (seasonal progression)
-- Starter packs ($5-10 bundles)
-- Virtual currency economy
+**Option A: Steam P2P (Simplest for casual play)**
+- **Free forever** - no servers, no monthly costs
+- **Friend invites** via Steam - built-in
+- **Easy to implement** - Steamworks API handles everything
+- **Downside:** Players can cheat (but does it matter for casual fun?)
+- **Best for:** Playing with friends, casual matches
 
-**Anti-Cheat Strategy:**
-1. Authoritative server validates everything (primary defense)
-2. Server-side physics simulation and hit detection
-3. Easy Anti-Cheat integration if cheating becomes prevalent
-4. Rate limiting and sanity checks on all client inputs
+**Option B: Photon Free Tier (If you need matchmaking)**
+- **Free for 20 concurrent users** - likely enough for a small free game
+- **Easy to add** to existing Unity code
+- **Built-in matchmaking** and lobbies
+- **Only pay if game gets popular** ($95/mo for 100 CCU)
+- **Best for:** Strangers finding matches, ranked play
 
-**Migration Path:**
-- Phase 1: Build single-player + combat mechanics first
-- Phase 2: Implement Mirror networking with authoritative server
-- Phase 3: Integrate PlayFab for matchmaking/progression
-- Phase 4: Deploy regional servers before F2P launch
+**Option C: Complex Infrastructure (Only if game really takes off)**
+- Mirror + dedicated servers + EOS/PlayFab
+- For thousands of concurrent players
+- Anti-cheat, server authority, regional servers
+- **Don't build this unless you need it** - massive complexity for uncertain benefit
+
+### **Decision Tree:**
+1. **Game is fun but nobody plays it** → No online multiplayer needed, move on to next project
+2. **People play and want to play with friends** → Add Steam P2P (1 week of work)
+3. **People want matchmaking with strangers** → Add Photon (2-3 weeks of work)
+4. **Game unexpectedly blows up** → Migrate to dedicated servers (revisit complex architecture)
+
+### **Current Plan:**
+- Build combat mechanics and AI opponents first
+- Release single-player version as free game
+- Wait for player feedback
+- Add online multiplayer only if people ask for it
+- Keep it simple - use Steam P2P or Photon free tier initially
 
 ## Performance Targets
 - Must run on low-end PC (no dedicated GPU)

@@ -7,7 +7,10 @@ using UnityEngine;
 public class WeaponPickup : MonoBehaviour
 {
     [Header("Weapon Type")]
-    [Tooltip("Which weapon this pickup gives")]
+    [Tooltip("Enable to give a random weapon instead of a specific one")]
+    public bool randomWeapon = false;
+
+    [Tooltip("Which weapon this pickup gives (ignored if randomWeapon is true)")]
     public WeaponManager.WeaponType weaponType = WeaponManager.WeaponType.Missile;
 
     [Header("Respawn Settings")]
@@ -89,12 +92,40 @@ public class WeaponPickup : MonoBehaviour
         WeaponManager weaponManager = other.GetComponent<WeaponManager>();
         if (weaponManager != null)
         {
+            // Determine which weapon to give
+            WeaponManager.WeaponType weaponToGive = randomWeapon ? GetRandomWeaponType() : weaponType;
+
             // Give weapon to player
-            weaponManager.PickupWeapon(weaponType);
+            weaponManager.PickupWeapon(weaponToGive);
 
             // Pickup collected
             Collect();
         }
+    }
+
+    /// <summary>
+    /// Get a random weapon type (excluding None)
+    /// </summary>
+    WeaponManager.WeaponType GetRandomWeaponType()
+    {
+        // Get all weapon types except None
+        System.Array allWeapons = System.Enum.GetValues(typeof(WeaponManager.WeaponType));
+
+        // Create array of valid weapons (exclude None which is index 0)
+        WeaponManager.WeaponType[] validWeapons = new WeaponManager.WeaponType[allWeapons.Length - 1];
+        int index = 0;
+        foreach (WeaponManager.WeaponType weapon in allWeapons)
+        {
+            if (weapon != WeaponManager.WeaponType.None)
+            {
+                validWeapons[index] = weapon;
+                index++;
+            }
+        }
+
+        // Pick random weapon
+        int randomIndex = Random.Range(0, validWeapons.Length);
+        return validWeapons[randomIndex];
     }
 
     void Collect()
