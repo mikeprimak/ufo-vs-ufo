@@ -1153,17 +1153,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 451632571}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
+  m_Script: {fileID: 11500000, guid: c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trailTime: 0.5
-  startWidth: 1
-  endWidth: 0
-  minSpeedForTrail: 5
-  startColor: {r: 0, g: 1, b: 1, a: 1}
+  particleLifetime: 1
+  startSize: 0.5
+  endSize: 0.1
+  emissionRate: 30
+  startSpeed: 2
+  startColor: {r: 0, g: 1, b: 1, a: 0.8}
   endColor: {r: 0, g: 1, b: 1, a: 0}
   enableSpeedResponse: 1
+  minSpeedForTrail: 5
   maxSpeedForTrail: 30
+  lateralOffset: 4
+  forwardOffset: 0
+  verticalOffset: -0.5
 --- !u!1 &598115976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1814,7 +1819,6 @@ GameObject:
   - component: {fileID: 859948922}
   - component: {fileID: 859948921}
   - component: {fileID: 859948938}
-  - component: {fileID: 859948939}
   m_Layer: 0
   m_Name: UFO_AI_2
   m_TagString: Player
@@ -2224,26 +2228,6 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
---- !u!114 &859948939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 859948920}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  trailTime: 0.5
-  startWidth: 1
-  endWidth: 0
-  minSpeedForTrail: 5
-  startColor: {r: 0, g: 1, b: 1, a: 1}
-  endColor: {r: 0, g: 1, b: 1, a: 0}
-  enableSpeedResponse: 1
-  maxSpeedForTrail: 30
 --- !u!1 &867499428
 GameObject:
   m_ObjectHideFlags: 0
@@ -2270,7 +2254,6 @@ GameObject:
   - component: {fileID: 867499430}
   - component: {fileID: 867499429}
   - component: {fileID: 867499446}
-  - component: {fileID: 867499447}
   m_Layer: 0
   m_Name: UFO_AI_3
   m_TagString: Player
@@ -2680,26 +2663,6 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
---- !u!114 &867499447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 867499428}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  trailTime: 0.5
-  startWidth: 1
-  endWidth: 0
-  minSpeedForTrail: 5
-  startColor: {r: 0, g: 1, b: 1, a: 1}
-  endColor: {r: 0, g: 1, b: 1, a: 0}
-  enableSpeedResponse: 1
-  maxSpeedForTrail: 30
 --- !u!1 &877747714
 GameObject:
   m_ObjectHideFlags: 0
@@ -3895,7 +3858,6 @@ GameObject:
   - component: {fileID: 1576578800}
   - component: {fileID: 1576578799}
   - component: {fileID: 1576578816}
-  - component: {fileID: 1576578817}
   m_Layer: 0
   m_Name: UFO_AI_1
   m_TagString: Player
@@ -4305,26 +4267,6 @@ MonoBehaviour:
   fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
---- !u!114 &1576578817
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1576578798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  trailTime: 0.5
-  startWidth: 1
-  endWidth: 0
-  minSpeedForTrail: 5
-  startColor: {r: 0, g: 1, b: 1, a: 1}
-  endColor: {r: 0, g: 1, b: 1, a: 0}
-  enableSpeedResponse: 1
-  maxSpeedForTrail: 30
 --- !u!1 &1589016234
 GameObject:
   m_ObjectHideFlags: 0
