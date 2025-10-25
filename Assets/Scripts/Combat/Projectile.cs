@@ -83,8 +83,6 @@ public class Projectile : MonoBehaviour
             // Store the root UFO that was directly hit (to skip in explosion)
             directHitTarget = rootObject;
 
-            Debug.Log($"[PROJECTILE] Direct hit on {rootObject.name}, marking to skip explosion damage");
-
             // Hit another UFO - deal direct hit damage
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
@@ -112,8 +110,6 @@ public class Projectile : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
-        Debug.Log($"[PROJECTILE] EXPLODING at {transform.position} with radius {blastRadius}");
 
         // Track which UFOs we've already damaged (to avoid hitting same UFO multiple times)
         System.Collections.Generic.HashSet<GameObject> damagedUFOs = new System.Collections.Generic.HashSet<GameObject>();
@@ -150,7 +146,6 @@ public class Projectile : MonoBehaviour
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);
-                Debug.Log($"[PROJECTILE] Explosion damaged {rootUFO.name} for {explosionDamage} damage (distance: {distance:F1})");
 
                 // Trigger wobble effect (distance-based intensity)
                 UFOHitEffect hitEffect = rootUFO.GetComponent<UFOHitEffect>();

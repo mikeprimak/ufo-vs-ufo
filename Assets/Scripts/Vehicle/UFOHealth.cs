@@ -50,16 +50,12 @@ public class UFOHealth : MonoBehaviour
     {
         if (isDead)
         {
-            Debug.Log($"[UFO HEALTH] {gameObject.name} is already dead, ignoring {damageAmount} damage");
             return; // Already dead, ignore further damage
         }
 
         // Reduce health
-        int oldHealth = currentHealth;
         currentHealth -= damageAmount;
         currentHealth = Mathf.Max(0, currentHealth); // Clamp to 0
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage. Health: {oldHealth} → {currentHealth}/{maxHealth}");
 
         // Check if dead
         if (currentHealth <= 0)
@@ -77,8 +73,6 @@ public class UFOHealth : MonoBehaviour
             return; // Already dead
 
         isDead = true;
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} has been destroyed!");
 
         // Spawn death explosion effect
         if (deathExplosionPrefab != null)

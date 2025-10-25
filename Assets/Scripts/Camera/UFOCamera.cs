@@ -129,6 +129,16 @@ public class UFOCamera : MonoBehaviour
             targetRigidbody = target.GetComponent<Rigidbody>();
             // Try to get UFOController for input detection
             ufoController = target.GetComponent<UFOController>();
+
+            // IMMEDIATELY position camera behind UFO (no lerp delay)
+            Vector3 initialPosition = target.position - (target.forward * distance) + (Vector3.up * height);
+            transform.position = initialPosition;
+
+            // IMMEDIATELY set camera rotation to match UFO
+            Vector3 targetEuler = target.eulerAngles;
+            Quaternion targetYawRotation = Quaternion.Euler(0, targetEuler.y, 0);
+            Vector3 lookDirection = targetYawRotation * Vector3.forward;
+            transform.rotation = Quaternion.LookRotation(lookDirection) * Quaternion.Euler(lookDownAngle, 0, 0);
         }
     }
 

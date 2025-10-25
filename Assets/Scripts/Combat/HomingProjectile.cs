@@ -141,8 +141,6 @@ public class HomingProjectile : MonoBehaviour
         // Find all objects with target tag
         GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
 
-        Debug.Log($"[HOMING] Found {potentialTargets.Length} potential targets with tag '{targetTag}'");
-
         float bestScore = float.MaxValue;
         Transform bestTarget = null;
 
@@ -150,10 +148,7 @@ public class HomingProjectile : MonoBehaviour
         {
             // Skip the owner
             if (potentialTarget == owner)
-            {
-                Debug.Log($"[HOMING] Skipping owner: {potentialTarget.name}");
                 continue;
-            }
 
             // Check distance
             float distance = Vector3.Distance(transform.position, potentialTarget.transform.position);
@@ -165,8 +160,6 @@ public class HomingProjectile : MonoBehaviour
             Vector3 directionToTarget = (potentialTarget.transform.position - transform.position).normalized;
             float angle = Vector3.Angle(transform.forward, directionToTarget);
 
-            Debug.Log($"[HOMING] Checking {potentialTarget.name}, distance: {distance:F1}, angle: {angle:F1}°");
-
             // Check line of sight - missile can't track through walls
             RaycastHit hit;
 
@@ -175,8 +168,6 @@ public class HomingProjectile : MonoBehaviour
 
             if (Physics.Raycast(rayStart, directionToTarget, out hit, distance))
             {
-                Debug.Log($"[HOMING] Raycast hit: {hit.collider.gameObject.name} (tag: {hit.collider.tag})");
-
                 // Check if raycast hit the target UFO (or any of its child objects)
                 // Check the root GameObject's tag (handles UFO_Visual children)
                 if (hit.collider.transform.root.CompareTag(targetTag))
@@ -187,36 +178,16 @@ public class HomingProjectile : MonoBehaviour
                     float distanceWeight = 0.5f; // Distance matters less
                     float score = (angle * angleWeight) + (distance * distanceWeight);
 
-                    Debug.Log($"[HOMING] Valid target! Score: {score:F1} (angle: {angle:F1}°, distance: {distance:F1})");
-
                     if (score < bestScore)
                     {
                         bestScore = score;
                         bestTarget = potentialTarget.transform;
-                        Debug.Log($"[HOMING] NEW BEST TARGET: {potentialTarget.name}");
                     }
                 }
-                else
-                {
-                    Debug.Log($"[HOMING] LOS blocked by: {hit.collider.gameObject.name}");
-                }
-            }
-            else
-            {
-                Debug.Log($"[HOMING] Raycast hit nothing");
             }
         }
 
         target = bestTarget;
-
-        if (target != null)
-        {
-            Debug.Log($"[HOMING] Final target: {target.name}");
-        }
-        else
-        {
-            Debug.Log($"[HOMING] No valid target found");
-        }
     }
 
     void OnCollisionEnter(Collision collision)
@@ -239,8 +210,6 @@ public class HomingProjectile : MonoBehaviour
             // Store the root UFO that was directly hit (to skip in explosion)
             directHitTarget = rootObject;
 
-            Debug.Log($"[HOMING MISSILE] Direct hit on {rootObject.name}, marking to skip explosion damage");
-
             // Hit another UFO - deal direct hit damage
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
@@ -262,8 +231,6 @@ public class HomingProjectile : MonoBehaviour
 
     void Explode()
     {
-        Debug.Log($"[HOMING MISSILE] EXPLODING at {transform.position} with radius {blastRadius}");
-
         // Track which UFOs we've already damaged (to avoid hitting same UFO multiple times)
         System.Collections.Generic.HashSet<GameObject> damagedUFOs = new System.Collections.Generic.HashSet<GameObject>();
 
@@ -299,7 +266,6 @@ public class HomingProjectile : MonoBehaviour
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);
-                Debug.Log($"[HOMING MISSILE] Explosion damaged {rootUFO.name} for {explosionDamage} damage (distance: {distance:F1})");
 
                 // Trigger wobble effect (distance-based intensity)
                 UFOHitEffect hitEffect = rootUFO.GetComponent<UFOHitEffect>();

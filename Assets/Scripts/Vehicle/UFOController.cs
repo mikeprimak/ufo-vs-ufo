@@ -108,6 +108,10 @@ public class UFOController : MonoBehaviour
     [Tooltip("Fade out time for combo boost (seconds)")]
     public float comboBoostFadeOutTime = 0.5f;
 
+    [Header("Movement Control")]
+    [Tooltip("If false, UFO cannot move (rotation still allowed)")]
+    public bool movementEnabled = true;
+
     [Header("AI Control (Optional)")]
     [Tooltip("If true, reads from AI input fields instead of Input system")]
     public bool useAIInput = false;
@@ -290,13 +294,16 @@ public class UFOController : MonoBehaviour
             rb.velocity *= stunSpeedMultiplier;
         }
 
-        HandleMovement();
-        HandleRotation();
-        HandleVerticalMovement();
-        EnforceHeightLimits();
+        // Movement can be disabled (e.g., during countdown), but rotation is always allowed
+        if (movementEnabled)
+        {
+            HandleMovement();
+            HandleVerticalMovement();
+            EnforceHeightLimits();
+            HandleBarrelRoll(); // Barrel roll physics
+        }
 
-        // Handle barrel roll physics
-        HandleBarrelRoll();
+        HandleRotation(); // Always allow rotation, even during countdown
 
         // Keep UFO level (prevent tilting from impacts)
         AutoLevel();
