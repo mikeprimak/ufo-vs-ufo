@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bfb4120bedc080c45835297ff4b556d1, type: 2}
+  - {fileID: 2100000, guid: da410865ed5cebf4a9b250ee65261684, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -105,7 +105,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 1.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6429336199824383547
 Rigidbody:
@@ -146,13 +146,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e67ab4d63c76c84980a35ea24fb7eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 40
+  speed: 60
   lifetime: 8
   damage: 1
-  turnRate: 90
-  acceleration: 20
-  maxSpeed: 70
-  detectionRadius: 100
+  blastRadius: 40
+  explosionDamage: 1
+  explosionPrefab: {fileID: 2677883429208286301, guid: 7a9c3f2e5d4b6a1c8e7f9d2b4c6a8e3f,
+    type: 3}
+  explosionSound: {fileID: 0}
+  turnRate: 60
+  acceleration: 30
+  maxSpeed: 105
+  detectionRadius: 400
   targetTag: Player
-  homingDelay: 0.2
+  homingDelay: 0.05
   trail: {fileID: 0}

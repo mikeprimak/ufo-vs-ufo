@@ -104,7 +104,7 @@ public class WeaponManager : MonoBehaviour
                 if (weaponSystem != null)
                 {
                     // Set ammo BEFORE enabling (prevents Start() from interfering)
-                    weaponSystem.currentAmmo = 1; // Only 1 missile
+                    weaponSystem.currentAmmo = 3; // 3 missiles per pickup
                     weaponSystem.enabled = true;
                 }
                 else
@@ -133,7 +133,7 @@ public class WeaponManager : MonoBehaviour
                 if (burstWeapon != null)
                 {
                     burstWeapon.enabled = true;
-                    burstWeapon.currentAmmo = 13; // Exactly 1 burst (13 shots)
+                    burstWeapon.currentAmmo = 24; // Exactly 1 burst (24 shots)
                 }
                 break;
 

@@ -11,7 +11,7 @@ public class BurstWeapon : MonoBehaviour
     public GameObject projectilePrefab;
 
     [Tooltip("Number of shots in the burst")]
-    public int burstCount = 13;
+    public int burstCount = 24;
 
     [Tooltip("Time between each shot in the burst (seconds)")]
     public float burstDelay = 0.08f;
@@ -26,21 +26,24 @@ public class BurstWeapon : MonoBehaviour
     [Tooltip("Right side fire point (optional, will create offset if not assigned)")]
     public Transform rightFirePoint;
 
-    [Tooltip("Distance from UFO center for left/right fire points (if not manually assigned)")]
-    public float firePointOffset = 2f;
+    [Tooltip("Sideways distance from UFO center for left/right fire points")]
+    public float firePointOffset = 3f;
+
+    [Tooltip("Forward distance from UFO center for fire points")]
+    public float forwardOffset = 15f;
 
     [Header("Ammo Settings")]
     [Tooltip("Current ammo available")]
-    public int currentAmmo = 130;
+    public int currentAmmo = 240;
 
     [Tooltip("Maximum ammo capacity")]
-    public int maxAmmo = 200;
+    public int maxAmmo = 240;
 
-    [Tooltip("Ammo consumed per burst (all 13 shots)")]
-    public int ammoPerBurst = 13;
+    [Tooltip("Ammo consumed per burst (all 24 shots)")]
+    public int ammoPerBurst = 24;
 
     [Tooltip("Starting ammo (only used if component starts enabled)")]
-    public int startingAmmo = 130;
+    public int startingAmmo = 240;
 
     [Header("Audio (Optional)")]
     [Tooltip("Sound played for each shot in burst")]
@@ -207,8 +210,12 @@ public class BurstWeapon : MonoBehaviour
         }
 
         // Otherwise, calculate offset from UFO center
-        Vector3 offset = fireFromLeft ? -transform.right : transform.right;
-        return transform.position + offset * firePointOffset;
+        // Spawn FORWARD and to the side to avoid hitting own UFO
+        Vector3 sideOffset = fireFromLeft ? -transform.right : transform.right;
+        Vector3 forwardOffsetVec = transform.forward * forwardOffset;
+        Vector3 totalOffset = forwardOffsetVec + (sideOffset * firePointOffset);
+
+        return transform.position + totalOffset;
     }
 
     void CompleteBurst()

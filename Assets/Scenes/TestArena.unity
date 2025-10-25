@@ -161,6 +161,7 @@ MonoBehaviour:
   rotationSpeed: 90
   bobSpeed: 1
   bobHeight: 0.5
+  triggerSizeMultiplier: 2
 --- !u!65 &1852711
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -928,7 +929,7 @@ MonoBehaviour:
   firePoint: {fileID: 0}
   fireRate: 0.3
   currentAmmo: 0
-  maxAmmo: 1
+  maxAmmo: 3
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &451632581
@@ -968,15 +969,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 9191723643175361914, guid: efc9c8f5fe6d26041aa96fcaed76a772,
     type: 3}
-  burstCount: 13
+  burstCount: 24
   burstDelay: 0.08
   cooldown: 2
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
+  forwardOffset: 8
   currentAmmo: 0
-  maxAmmo: 13
-  ammoPerBurst: 13
+  maxAmmo: 24
+  ammoPerBurst: 24
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &451632583
@@ -1103,13 +1105,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomWeapon: 1
-  weaponType: 2
+  randomWeapon: 0
+  weaponType: 1
   respawns: 1
-  respawnTime: 15
+  respawnTime: 2
   rotationSpeed: 90
   bobSpeed: 1
   bobHeight: 0.5
+  triggerSizeMultiplier: 2
 --- !u!65 &598115978
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1607,6 +1610,7 @@ MonoBehaviour:
   rotationSpeed: 90
   bobSpeed: 1
   bobHeight: 0.5
+  triggerSizeMultiplier: 2
 --- !u!65 &855958208
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1739,6 +1743,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aggression: 0.7
   decisionInterval: 0.2
+  turnSmoothSpeed: 5
   detectionRange: 200
   attackRange: 60
   wallAvoidanceDistance: 15
@@ -1857,6 +1862,7 @@ MonoBehaviour:
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
+  forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
   ammoPerBurst: 13
@@ -2150,6 +2156,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aggression: 0.7
   decisionInterval: 0.2
+  turnSmoothSpeed: 5
   detectionRange: 200
   attackRange: 60
   wallAvoidanceDistance: 15
@@ -2268,6 +2275,7 @@ MonoBehaviour:
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
+  forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
   ammoPerBurst: 13
@@ -3353,6 +3361,7 @@ MonoBehaviour:
   rotationSpeed: 90
   bobSpeed: 1
   bobHeight: 0.5
+  triggerSizeMultiplier: 2
 --- !u!65 &1423016522
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3679,6 +3688,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aggression: 0.7
   decisionInterval: 0.2
+  turnSmoothSpeed: 5
   detectionRange: 200
   attackRange: 60
   wallAvoidanceDistance: 15
@@ -3797,6 +3807,7 @@ MonoBehaviour:
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
+  forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
   ammoPerBurst: 13
@@ -4076,13 +4087,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomWeapon: 1
+  randomWeapon: 0
   weaponType: 1
   respawns: 1
-  respawnTime: 15
+  respawnTime: 3
   rotationSpeed: 90
   bobSpeed: 1
   bobHeight: 0.5
+  triggerSizeMultiplier: 2
 --- !u!65 &1589016236
 BoxCollider:
   m_ObjectHideFlags: 0

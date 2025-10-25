@@ -5,7 +5,8 @@
       "Bash(tasklist:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nAdd random weapon pickup feature for mystery boxes\n\nWeapon pickups now support random weapon selection via new ''randomWeapon'' \ncheckbox - gives unpredictable weapon each pickup for variety. Backward \ncompatible with specific weapon types. All arena pickups enabled with \nrandom mode. Also adds Claude Code sound hooks for task completion feedback.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
