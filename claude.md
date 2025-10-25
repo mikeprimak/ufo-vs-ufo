@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
-**Last Updated:** 2025-10-24
-**Update Count:** 21
+**Last Updated:** 2025-10-25
+**Update Count:** 22
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -320,12 +320,66 @@ git push
 **Repository:** https://github.com/mikeprimak/ufo-vs-ufo
 
 ## Future Development Plans
+- **Launch Target:** Free-to-play on Steam
 - Phase 2: Combat mechanics (projectiles, pickups)
-- Phase 3: Multiple arenas
-- Phase 4: Multiplayer/AI opponents
+- Phase 3: Online multiplayer implementation
+- Phase 4: Multiple arenas
+- Phase 5: Progression/cosmetics system
 - Visual effects: Thruster particles, trail renderer (scripts exist but not set up)
 - Audio: Engine sounds, impacts, weapon sounds
-- Camera polish: Screen shake, FOV kick on acceleration
+
+## Multiplayer Architecture (Planned)
+
+### **Selected Approach: Mirror + Self-Hosted + PlayFab**
+**Decision rationale:** Build it right once for F2P launch - avoid costly migration later
+
+**Technology Stack:**
+- **Mirror Networking** - Open-source authoritative server networking (free, no CCU limits)
+- **Self-Hosted Dedicated Servers** - VPS/cloud hosting for predictable costs
+- **PlayFab (Microsoft)** - Backend services for matchmaking, progression, economy (free tier: 100k players)
+- **Easy Anti-Cheat** - If needed (Steam integration available)
+
+**Why This Stack:**
+- F2P games can hit high CCU unexpectedly - per-player pricing (Photon) could cost thousands/month before monetization
+- Authoritative servers prevent cheating (critical for F2P with free accounts)
+- Self-hosted costs 5-10x less at scale than managed solutions
+- PlayFab handles complex backend (matchmaking, leaderboards, virtual economy) for free
+- Full control over infrastructure and no vendor lock-in
+
+**Alternative Considered (Rejected):**
+- **Photon PUN 2:** Great for rapid prototyping, but $95-2000+/month based on CCU
+  - Risk: If game succeeds, costs spiral before revenue established
+  - Would require full rewrite to migrate away later
+
+**Implementation Requirements:**
+- **Server-authoritative architecture:** Server validates all player actions, clients send inputs only
+- **Server-side hit detection:** Prevents aimbots and hit manipulation
+- **Movement validation:** Server checks physics possibility to prevent speed hacks
+- **Regional servers:** Multiple instances (US-West, US-East, EU) for low latency
+
+**Cost Projections:**
+- **Beta (20-100 players):** $5-10/month (single small VPS)
+- **Launch (500 CCU):** $50-150/month (dedicated server)
+- **Success (2000+ CCU):** $200-500/month (multiple regional servers)
+- **PlayFab:** Free tier until very successful
+
+**Monetization (Required for F2P):**
+- Cosmetic skins (UFO paint jobs, decals, trails)
+- Battle pass system (seasonal progression)
+- Starter packs ($5-10 bundles)
+- Virtual currency economy
+
+**Anti-Cheat Strategy:**
+1. Authoritative server validates everything (primary defense)
+2. Server-side physics simulation and hit detection
+3. Easy Anti-Cheat integration if cheating becomes prevalent
+4. Rate limiting and sanity checks on all client inputs
+
+**Migration Path:**
+- Phase 1: Build single-player + combat mechanics first
+- Phase 2: Implement Mirror networking with authoritative server
+- Phase 3: Integrate PlayFab for matchmaking/progression
+- Phase 4: Deploy regional servers before F2P launch
 
 ## Performance Targets
 - Must run on low-end PC (no dedicated GPU)
