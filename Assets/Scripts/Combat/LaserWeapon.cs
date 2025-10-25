@@ -173,6 +173,8 @@ public class LaserWeapon : MonoBehaviour
             currentLaserDirection = transform.forward;
         }
 
+        Debug.Log($"[LASER] {gameObject.name} activated laser beam for {beamDuration}s");
+
         // Play fire sound
         if (audioSource != null && fireSound != null)
         {
@@ -242,18 +244,36 @@ public class LaserWeapon : MonoBehaviour
             endPos = hit.point;
             actualDistance = Vector3.Distance(startPos, endPos);
 
-            // Check if we hit a UFO
-            if (hit.collider.CompareTag("Player") && hit.collider.gameObject != owner)
+            // Check if we hit a UFO - check the HIT OBJECT AND ITS PARENTS for "Player" tag
+            GameObject hitObject = hit.collider.gameObject;
+            Transform checkTransform = hit.collider.transform;
+            bool isPlayer = false;
+
+            // Check the hit object and all parents for "Player" tag
+            while (checkTransform != null)
             {
-                // Deal damage
-                ApplyDamage(hit.collider.gameObject);
+                if (checkTransform.CompareTag("Player"))
+                {
+                    hitObject = checkTransform.gameObject;
+                    isPlayer = true;
+                    break;
+                }
+                checkTransform = checkTransform.parent;
             }
+
+            if (isPlayer && hitObject != owner)
+            {
+                // Deal damage to the UFO
+                ApplyDamage(hitObject);
+            }
+            // Ignore hits on self (owner) or non-Player objects
         }
         else
         {
             // Nothing hit - beam goes to max range
             endPos = startPos + direction * beamRange;
             actualDistance = beamRange;
+            // Removed log for missed shots
         }
 
         // Scale end width based on actual distance traveled
@@ -272,15 +292,24 @@ public class LaserWeapon : MonoBehaviour
     {
         // Only deal damage once per beam activation
         if (target == lastHitTarget)
+        {
+            Debug.Log($"[LASER] Target {target.name} already damaged this beam (lastHitTarget), skipping");
             return;
+        }
 
         lastHitTarget = target;
+        Debug.Log($"[LASER] Attempting to apply {damage} damage to {target.name}");
 
         // Deal damage
         UFOHealth health = target.GetComponent<UFOHealth>();
         if (health != null)
         {
+            Debug.Log($"[LASER] UFOHealth component found on {target.name}, dealing {damage} damage");
             health.TakeDamage(damage);
+        }
+        else
+        {
+            Debug.LogWarning($"[LASER] No UFOHealth component found on {target.name}! Cannot deal damage.");
         }
 
         // Trigger wobble effect
@@ -288,9 +317,12 @@ public class LaserWeapon : MonoBehaviour
         if (hitEffect != null)
         {
             hitEffect.TriggerWobble();
+            Debug.Log($"[LASER] Triggered wobble effect on {target.name}");
         }
-
-        Debug.Log($"[LASER] Hit {target.name} for {damage} damage");
+        else
+        {
+            Debug.Log($"[LASER] No UFOHitEffect component on {target.name}");
+        }
     }
 
     void DeactivateLaser()
@@ -298,6 +330,8 @@ public class LaserWeapon : MonoBehaviour
         isActive = false;
         lineRenderer.enabled = false;
         cooldownEndTime = Time.time + cooldown;
+
+        Debug.Log($"[LASER] {gameObject.name} deactivated laser beam, cooldown until {cooldownEndTime:F2}");
 
         // Stop beam sound
         if (audioSource != null && audioSource.isPlaying)
