@@ -26,6 +26,22 @@ public class WeaponManager : MonoBehaviour
     [Header("Current Weapon")]
     public WeaponType currentWeapon = WeaponType.None;
 
+    [Header("Weapon Icons")]
+    [Tooltip("Icon sprite for Missile weapon")]
+    public Sprite missileIcon;
+
+    [Tooltip("Icon sprite for Homing Missile weapon")]
+    public Sprite homingMissileIcon;
+
+    [Tooltip("Icon sprite for Laser weapon")]
+    public Sprite laserIcon;
+
+    [Tooltip("Icon sprite for Burst weapon")]
+    public Sprite burstIcon;
+
+    [Tooltip("Icon sprite for Sticky Bomb weapon")]
+    public Sprite stickyBombIcon;
+
     [Header("AI Control")]
     [Tooltip("If true, AI can trigger weapon firing via TryFireWeaponAI()")]
     public bool allowAIControl = false;
@@ -83,6 +99,7 @@ public class WeaponManager : MonoBehaviour
     /// </summary>
     void SetWeapon(WeaponType weaponType)
     {
+        //Debug.Log($"[WEAPON MANAGER] SetWeapon called: {weaponType} on {gameObject.name}");
         currentWeapon = weaponType;
 
         // Disable all weapons
@@ -106,10 +123,11 @@ public class WeaponManager : MonoBehaviour
                     // Set ammo BEFORE enabling (prevents Start() from interfering)
                     weaponSystem.currentAmmo = 3; // 3 missiles per pickup
                     weaponSystem.enabled = true;
+                    //Debug.Log($"[WEAPON MANAGER] Missile weapon enabled on {gameObject.name}, ammo set to 3");
                 }
                 else
                 {
-                    Debug.LogError("Missile weapon: weaponSystem is null!");
+                    Debug.LogError($"[WEAPON MANAGER] Missile weapon: weaponSystem is null on {gameObject.name}!");
                 }
                 break;
 
@@ -168,9 +186,13 @@ public class WeaponManager : MonoBehaviour
                 if (weaponSystem != null && weaponSystem.enabled)
                 {
                     weaponFired = weaponSystem.TryFire();
-                    if (weaponFired && weaponSystem.currentAmmo <= 0)
+                    //Debug.Log($"[WEAPON MANAGER] Missile fired: {weaponFired}, remaining ammo: {weaponSystem.currentAmmo}");
+
+                    // Check ammo regardless of whether shot fired (ammo decreases even on failed shots)
+                    if (weaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
+                        //Debug.Log("[WEAPON MANAGER] Missile ammo depleted, removing weapon");
                         SetWeapon(WeaponType.None);
                     }
                 }
@@ -180,7 +202,9 @@ public class WeaponManager : MonoBehaviour
                 if (homingWeaponSystem != null && homingWeaponSystem.enabled)
                 {
                     weaponFired = homingWeaponSystem.TryFire();
-                    if (weaponFired && homingWeaponSystem.currentAmmo <= 0)
+
+                    // Check ammo regardless of whether shot fired
+                    if (homingWeaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
                         SetWeapon(WeaponType.None);
@@ -205,8 +229,9 @@ public class WeaponManager : MonoBehaviour
                 if (burstWeapon != null && burstWeapon.enabled)
                 {
                     weaponFired = burstWeapon.TryStartBurst();
-                    // After firing, immediately remove weapon if ammo depleted
-                    if (weaponFired && burstWeapon.currentAmmo <= 0)
+
+                    // Check ammo regardless of whether shot fired
+                    if (burstWeapon.currentAmmo <= 0)
                     {
                         // Weapon used, will be removed after burst completes
                         // Don't remove immediately since burst is still firing
@@ -218,7 +243,9 @@ public class WeaponManager : MonoBehaviour
                 if (stickyBombWeaponSystem != null && stickyBombWeaponSystem.enabled)
                 {
                     weaponFired = stickyBombWeaponSystem.TryFire();
-                    if (weaponFired && stickyBombWeaponSystem.currentAmmo <= 0)
+
+                    // Check ammo regardless of whether shot fired
+                    if (stickyBombWeaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
                         SetWeapon(WeaponType.None);
@@ -286,6 +313,29 @@ public class WeaponManager : MonoBehaviour
     public bool HasWeapon()
     {
         return currentWeapon != WeaponType.None;
+    }
+
+    /// <summary>
+    /// Get the current weapon icon sprite for UI display
+    /// </summary>
+    public Sprite GetCurrentWeaponIcon()
+    {
+        switch (currentWeapon)
+        {
+            case WeaponType.Missile:
+                return missileIcon;
+            case WeaponType.HomingMissile:
+                return homingMissileIcon;
+            case WeaponType.Laser:
+                return laserIcon;
+            case WeaponType.Burst:
+                return burstIcon;
+            case WeaponType.StickyBomb:
+                return stickyBombIcon;
+            case WeaponType.None:
+            default:
+                return null; // No icon for no weapon
+        }
     }
 
     /// <summary>

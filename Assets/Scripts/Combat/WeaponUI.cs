@@ -4,8 +4,8 @@ using TMPro;
 
 /// <summary>
 /// Displays the current weapon on screen
+/// Supports both text display and icon/image display
 /// Updates automatically when weapon changes
-/// Supports both legacy Text and TextMeshPro
 /// </summary>
 public class WeaponUI : MonoBehaviour
 {
@@ -13,11 +13,19 @@ public class WeaponUI : MonoBehaviour
     [Tooltip("The WeaponManager to monitor")]
     public WeaponManager weaponManager;
 
+    [Header("Text Display (Optional)")]
     [Tooltip("UI Text element to display weapon name (Legacy)")]
     public Text weaponText;
 
     [Tooltip("TextMeshPro text element (use this OR weaponText above)")]
     public TextMeshProUGUI weaponTextTMP;
+
+    [Header("Icon Display (Optional)")]
+    [Tooltip("UI Image element to display weapon icon")]
+    public Image weaponIcon;
+
+    [Tooltip("Sprite to show when no weapon equipped")]
+    public Sprite noWeaponSprite;
 
     [Header("Display Settings")]
     [Tooltip("Text to show when no weapon equipped")]
@@ -59,14 +67,17 @@ public class WeaponUI : MonoBehaviour
         if (weaponManager == null)
             return;
 
+        // Update text displays
         string displayText;
         if (weaponManager.HasWeapon())
         {
             displayText = weaponPrefix + weaponManager.GetCurrentWeaponName().ToUpper();
+            //Debug.Log($"[WEAPON UI] Has weapon: {weaponManager.GetCurrentWeaponName()}");
         }
         else
         {
             displayText = noWeaponText;
+            //Debug.Log("[WEAPON UI] No weapon");
         }
 
         // Update whichever text component exists
@@ -77,6 +88,27 @@ public class WeaponUI : MonoBehaviour
         if (weaponTextTMP != null)
         {
             weaponTextTMP.text = displayText;
+        }
+
+        // Update icon display
+        if (weaponIcon != null)
+        {
+            Sprite iconSprite = weaponManager.GetCurrentWeaponIcon();
+
+            if (iconSprite != null)
+            {
+                weaponIcon.sprite = iconSprite;
+                weaponIcon.enabled = true; // Show icon when weapon equipped
+            }
+            else if (noWeaponSprite != null)
+            {
+                weaponIcon.sprite = noWeaponSprite;
+                weaponIcon.enabled = true; // Show "no weapon" icon
+            }
+            else
+            {
+                weaponIcon.enabled = false; // Hide icon if no sprite available
+            }
         }
     }
 }
