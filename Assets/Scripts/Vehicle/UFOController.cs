@@ -89,25 +89,6 @@ public class UFOController : MonoBehaviour
     [Tooltip("How early you can buffer the next barrel roll (seconds before current one ends)")]
     public float barrelRollBufferWindow = 0.2f;
 
-    [Header("Barrel Roll Combo Settings")]
-    [Tooltip("Number of consecutive barrel rolls needed for combo boost")]
-    public int comboRollsRequired = 3;
-
-    [Tooltip("Time window to complete combo chain (seconds)")]
-    public float comboTimeWindow = 2f;
-
-    [Tooltip("Speed boost multiplier when combo is triggered")]
-    public float comboSpeedBoost = 1.5f;
-
-    [Tooltip("Duration of the combo speed boost (seconds)")]
-    public float comboBoostDuration = 3f;
-
-    [Tooltip("Fade in time for combo boost (seconds)")]
-    public float comboBoostFadeInTime = 0.3f;
-
-    [Tooltip("Fade out time for combo boost (seconds)")]
-    public float comboBoostFadeOutTime = 0.5f;
-
     [Header("Boost Settings")]
     [Tooltip("Speed multiplier when boosting")]
     public float boostSpeedMultiplier = 1.8f;
@@ -189,14 +170,6 @@ public class UFOController : MonoBehaviour
     private bool isInPlaceRoll; // True if barrel roll has no lateral movement
     private bool nextRollIsInPlace; // Flag for next roll to be in-place
 
-    // Combo system
-    private int consecutiveBarrelRolls;
-    private float lastBarrelRollTime;
-    private bool isComboBoostActive;
-    private float comboBoostEndTime;
-    private float comboBoostStartTime;
-    private float currentComboMultiplier; // Smoothly lerps between 1.0 and comboSpeedBoost
-
     // Boost system
     private float currentBoostTime; // Current boost available (0 to maxBoostTime)
     private bool isBoosting; // Is boost currently active?
@@ -221,9 +194,6 @@ public class UFOController : MonoBehaviour
         // Enable interpolation to smooth movement between FixedUpdate calls
         // This prevents jittery visuals when camera follows in LateUpdate
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-
-        // Initialize combo multiplier
-        currentComboMultiplier = 1f;
     }
 
     void Update()
@@ -259,50 +229,6 @@ public class UFOController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Handle combo boost fade in/out
-        if (isComboBoostActive)
-        {
-            float timeSinceStart = Time.time - comboBoostStartTime;
-            float timeUntilEnd = comboBoostEndTime - Time.time;
-
-            if (timeSinceStart < comboBoostFadeInTime)
-            {
-                // Fade in: lerp from 1.0 to comboSpeedBoost
-                float fadeInProgress = timeSinceStart / comboBoostFadeInTime;
-                currentComboMultiplier = Mathf.Lerp(1f, comboSpeedBoost, fadeInProgress);
-            }
-            else if (timeUntilEnd <= comboBoostFadeOutTime)
-            {
-                // Fade out: lerp from comboSpeedBoost back to 1.0
-                float fadeOutProgress = timeUntilEnd / comboBoostFadeOutTime;
-                currentComboMultiplier = Mathf.Lerp(1f, comboSpeedBoost, fadeOutProgress);
-            }
-            else
-            {
-                // Full boost active
-                currentComboMultiplier = comboSpeedBoost;
-            }
-
-            // Check if combo boost completely expired
-            if (Time.time >= comboBoostEndTime)
-            {
-                isComboBoostActive = false;
-                currentComboMultiplier = 1f;
-                Debug.Log("Combo boost ended!");
-            }
-        }
-        else
-        {
-            // Not boosting, ensure multiplier is at base level
-            currentComboMultiplier = 1f;
-        }
-
-        // Reset combo chain if too much time passed since last barrel roll
-        if (consecutiveBarrelRolls > 0 && Time.time - lastBarrelRollTime > comboTimeWindow)
-        {
-            consecutiveBarrelRolls = 0;
-        }
-
         // Apply movement and rotation (with stun slowdown if hit)
         UFOHitEffect hitEffect = GetComponent<UFOHitEffect>();
         float stunSpeedMultiplier = (hitEffect != null) ? hitEffect.GetStunSpeedMultiplier() : 1f;
@@ -449,11 +375,11 @@ public class UFOController : MonoBehaviour
         // Get current forward speed (positive = forward, negative = backward)
         currentForwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
 
-        // Calculate effective max speed (with combo boost AND manual boost)
-        float speedMultiplier = currentComboMultiplier;
+        // Calculate effective max speed (with manual boost only)
+        float speedMultiplier = 1f;
         if (isBoosting)
         {
-            speedMultiplier *= boostSpeedMultiplier; // Stack boost on top of combo
+            speedMultiplier = boostSpeedMultiplier;
         }
 
         float effectiveMaxSpeed = maxSpeed * speedMultiplier;
@@ -728,15 +654,6 @@ public class UFOController : MonoBehaviour
     }
 
     /// <summary>
-    /// Check if combo boost is currently active
-    /// Used by UFOCamera for FOV kick effect
-    /// </summary>
-    public bool IsComboBoostActive()
-    {
-        return Time.time < comboBoostEndTime;
-    }
-
-    /// <summary>
     /// Get current boost amount (0 to maxBoostTime)
     /// </summary>
     public float GetCurrentBoost()
@@ -878,33 +795,6 @@ public class UFOController : MonoBehaviour
         barrelRollStartTime = Time.time;
         barrelRollEndTime = Time.time + barrelRollDuration;
         barrelRollCooldownEndTime = barrelRollEndTime + barrelRollCooldown;
-
-        // Track combo chain
-        // Check if this roll is within the combo time window
-        if (Time.time - lastBarrelRollTime <= comboTimeWindow)
-        {
-            consecutiveBarrelRolls++;
-            Debug.Log($"Barrel roll combo: {consecutiveBarrelRolls}/{comboRollsRequired}");
-        }
-        else
-        {
-            // Too much time passed, reset chain
-            consecutiveBarrelRolls = 1;
-        }
-
-        lastBarrelRollTime = Time.time;
-
-        // Check if combo is complete
-        if (consecutiveBarrelRolls >= comboRollsRequired && !isComboBoostActive)
-        {
-            // Activate combo boost!
-            isComboBoostActive = true;
-            comboBoostStartTime = Time.time;
-            comboBoostEndTime = Time.time + comboBoostDuration;
-            consecutiveBarrelRolls = 0; // Reset counter after triggering
-
-            Debug.Log($"COMBO BOOST ACTIVATED! Speed x{comboSpeedBoost} for {comboBoostDuration} seconds (fade in: {comboBoostFadeInTime}s, fade out: {comboBoostFadeOutTime}s)!");
-        }
     }
 
     void HandleBarrelRoll()

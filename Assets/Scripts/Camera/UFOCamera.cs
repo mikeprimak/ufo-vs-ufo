@@ -66,9 +66,6 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("FOV decrease when braking hard (e.g., 5 = 75 FOV becomes 70)")]
     public float brakeFOVReduction = 5f;
 
-    [Tooltip("FOV increase during combo boost (e.g., 10 = 75 FOV becomes 85)")]
-    public float comboBoostFOVBoost = 10f;
-
     [Tooltip("How quickly FOV kicks in/out")]
     public float fovKickSpeed = 5f;
 
@@ -218,20 +215,8 @@ public class UFOCamera : MonoBehaviour
             bool isAccelerating = Input.GetKey(KeyCode.A) || Input.GetButton("Fire1");
             bool isBraking = Input.GetKey(KeyCode.D) || Input.GetButton("Fire2");
 
-            // Check if combo boost is active (if UFOController exists)
-            bool isComboBoostActive = false;
-            if (ufoController != null)
-            {
-                // Access combo boost state from UFOController
-                isComboBoostActive = ufoController.IsComboBoostActive();
-            }
-
             // Apply FOV modifiers based on input
-            if (isComboBoostActive)
-            {
-                fovModifier = comboBoostFOVBoost; // Biggest kick for combo boost
-            }
-            else if (isAccelerating && !isBraking)
+            if (isAccelerating && !isBraking)
             {
                 fovModifier = accelerationFOVBoost; // Speed rush feel
             }
