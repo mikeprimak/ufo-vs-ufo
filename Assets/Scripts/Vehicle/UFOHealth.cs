@@ -11,7 +11,17 @@ public class UFOHealth : MonoBehaviour
     public int maxHealth = 3;
 
     [Tooltip("Invincibility duration after taking damage (seconds)")]
-    public float invincibilityDuration = 0.5f;
+    public float invincibilityDuration = 3f;
+
+    [Header("Invincibility Visual Feedback")]
+    [Tooltip("Enable visual blink/flash during invincibility frames")]
+    public bool enableInvincibilityBlink = true;
+
+    [Tooltip("How fast the UFO blinks during invincibility (blinks per second)")]
+    public float blinkFrequency = 8f;
+
+    [Tooltip("Renderer to flash (usually UFO_Body)")]
+    public Renderer ufoRenderer;
 
     [Header("Death Settings")]
     [Tooltip("Explosion effect prefab to spawn on death (optional)")]
@@ -34,6 +44,10 @@ public class UFOHealth : MonoBehaviour
     private bool isInvincible = false;
     private float invincibilityEndTime = 0f;
 
+    // Blink effect
+    private bool isVisible = true;
+    private float nextBlinkTime = 0f;
+
     // Components
     private Rigidbody rb;
     private UFOController controller;
@@ -53,9 +67,34 @@ public class UFOHealth : MonoBehaviour
     void Update()
     {
         // Update invincibility frames
-        if (isInvincible && Time.time >= invincibilityEndTime)
+        if (isInvincible)
         {
-            isInvincible = false;
+            // Handle blinking effect during invincibility
+            if (enableInvincibilityBlink && ufoRenderer != null)
+            {
+                // Toggle visibility at blink frequency
+                if (Time.time >= nextBlinkTime)
+                {
+                    isVisible = !isVisible;
+                    ufoRenderer.enabled = isVisible;
+                    nextBlinkTime = Time.time + (1f / blinkFrequency);
+                }
+            }
+
+            // Check if invincibility expired
+            if (Time.time >= invincibilityEndTime)
+            {
+                isInvincible = false;
+
+                Debug.Log($"[UFO HEALTH] {gameObject.name} invincibility expired at {Time.time}");
+
+                // Ensure renderer is visible when i-frames end
+                if (ufoRenderer != null)
+                {
+                    ufoRenderer.enabled = true;
+                    isVisible = true;
+                }
+            }
         }
     }
 
@@ -85,6 +124,9 @@ public class UFOHealth : MonoBehaviour
         // Activate invincibility frames
         isInvincible = true;
         invincibilityEndTime = Time.time + invincibilityDuration;
+        nextBlinkTime = Time.time; // Start blinking immediately
+
+        Debug.Log($"[UFO HEALTH] {gameObject.name} invincibility activated for {invincibilityDuration} seconds (until {invincibilityEndTime})");
 
         // Check if dead
         if (currentHealth <= 0)

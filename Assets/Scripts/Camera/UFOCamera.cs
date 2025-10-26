@@ -72,18 +72,18 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("How quickly FOV kicks in/out")]
     public float fovKickSpeed = 5f;
 
-    [Header("Turn Zoom Out (Game Feel)")]
+    [Header("Dynamic Zoom Out (Game Feel)")]
     [Tooltip("Enable dynamic camera zoom out during sharp turns")]
     public bool enableTurnZoomOut = true;
 
     [Tooltip("Additional distance when making sharp turns (added to base distance)")]
     public float turnZoomOutDistance = 3f;
 
-    [Tooltip("How quickly camera zooms in/out during turns")]
-    public float turnZoomSpeed = 4f;
-
     [Tooltip("Angular velocity threshold to trigger zoom out (degrees/sec)")]
     public float turnZoomThreshold = 90f;
+
+    [Tooltip("How quickly camera zooms in/out during turns")]
+    public float turnZoomSpeed = 4f;
 
     [Header("Camera Shake (Game Feel)")]
     [Tooltip("Enable camera shake on impacts")]
@@ -112,7 +112,7 @@ public class UFOCamera : MonoBehaviour
     private float currentDistance;
     private float currentFOV;
     private UFOController ufoController; // For detecting acceleration/braking input
-    private float currentTurnZoomOut; // Current turn-based distance offset
+    private float currentTurnZoomOut; // Turn-based distance offset
     private Quaternion lastTargetRotation; // For measuring rotation delta
 
     // Camera shake state
@@ -254,13 +254,13 @@ public class UFOCamera : MonoBehaviour
         }
 
         // Calculate horizontal speed to detect pure vertical vs angled movement
-        Vector3 horizontalVelocity = new Vector3(targetRigidbody.velocity.x, 0, targetRigidbody.velocity.z);
-        float horizontalSpeed = horizontalVelocity.magnitude;
+        Vector3 cameraHorizontalVel = new Vector3(targetRigidbody.velocity.x, 0, targetRigidbody.velocity.z);
+        float cameraHorizontalSpeed = cameraHorizontalVel.magnitude;
 
         // Calculate dynamic height offset based on vertical movement
         // Dramatic effect ONLY for forward+ascend, subtle for everything else
         float targetVerticalOffset = 0f;
-        if (verticalVelocity > 0 && horizontalSpeed > 5f) // Ascending WITH forward movement
+        if (verticalVelocity > 0 && cameraHorizontalSpeed > 5f) // Ascending WITH forward movement
         {
             // Camera drops down dramatically when ascending while moving forward
             targetVerticalOffset = verticalVelocity * verticalHeightOffset;
@@ -275,7 +275,7 @@ public class UFOCamera : MonoBehaviour
         // Calculate dynamic tilt based on vertical movement
         // Dramatic effect ONLY for forward+ascend, subtle for everything else
         float targetVerticalTilt = 0f;
-        if (verticalVelocity > 0 && horizontalSpeed > 5f) // Ascending WITH forward movement
+        if (verticalVelocity > 0 && cameraHorizontalSpeed > 5f) // Ascending WITH forward movement
         {
             // Camera tilts up more when ascending while moving forward
             targetVerticalTilt = -verticalVelocity * verticalTiltAmount;

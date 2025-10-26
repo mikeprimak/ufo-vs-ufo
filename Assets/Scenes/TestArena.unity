@@ -1121,6 +1121,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 3
+  invincibilityDuration: 3
+  enableInvincibilityBlink: 1
+  blinkFrequency: 15
+  ufoRenderer: {fileID: 616217639}
   deathExplosionPrefab: {fileID: 0}
   wreckLifetime: 10
   deathSound: {fileID: 0}
@@ -1157,12 +1161,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   particleLifetime: 0.2
-  startSize: 0.15
-  endSize: 0.01
-  emissionRate: 15
-  startSpeed: 0.4
-  startColor: {r: 1, g: 1, b: 0, a: 0.8}
-  endColor: {r: 1, g: 1, b: 0, a: 0}
+  startSize: 0.25
+  endSize: 0.05
+  emissionRate: 8
+  startSpeed: 0.3
+  startColor: {r: 1, g: 1, b: 0.5, a: 1}
+  endColor: {r: 1, g: 1, b: 0.5, a: 0}
   enableSpeedResponse: 1
   minSpeedForTrail: 10
   maxSpeedForTrail: 30
@@ -1381,6 +1385,12 @@ PrefabInstance:
 --- !u!4 &616217638 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: db2cd7942fa27e440940f05e275680c5,
+    type: 3}
+  m_PrefabInstance: {fileID: 616217637}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &616217639 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: db2cd7942fa27e440940f05e275680c5,
     type: 3}
   m_PrefabInstance: {fileID: 616217637}
   m_PrefabAsset: {fileID: 0}
@@ -1860,6 +1870,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 3
+  invincibilityDuration: 3
+  enableInvincibilityBlink: 1
+  blinkFrequency: 15
+  ufoRenderer: {fileID: 1109463499}
   deathExplosionPrefab: {fileID: 0}
   wreckLifetime: 10
   deathSound: {fileID: 0}
@@ -2295,6 +2309,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 3
+  invincibilityDuration: 3
+  enableInvincibilityBlink: 1
+  blinkFrequency: 15
+  ufoRenderer: {fileID: 2089720818}
   deathExplosionPrefab: {fileID: 0}
   wreckLifetime: 10
   deathSound: {fileID: 0}
@@ -2937,6 +2955,14 @@ MonoBehaviour:
   brakeFOVReduction: 5
   comboBoostFOVBoost: 10
   fovKickSpeed: 5
+  enableTurnZoomOut: 1
+  turnZoomOutDistance: 3
+  turnZoomThreshold: 90
+  enableVerticalZoomOut: 1
+  verticalZoomOutDistance: 2
+  verticalZoomThreshold: 15
+  pureVerticalThreshold: 5
+  dynamicZoomSpeed: 4
   enableCameraShake: 1
   shakeDuration: 0.3
   shakeIntensity: 0.4
@@ -3102,6 +3128,12 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1109463499 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: db2cd7942fa27e440940f05e275680c5,
+    type: 3}
+  m_PrefabInstance: {fileID: 384204018}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1124075654
 GameObject:
   m_ObjectHideFlags: 0
@@ -3677,6 +3709,12 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1443315011}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &1443315013 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: db2cd7942fa27e440940f05e275680c5,
+    type: 3}
+  m_PrefabInstance: {fileID: 1443315011}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1490376430
 GameObject:
   m_ObjectHideFlags: 0
@@ -3899,6 +3937,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 3
+  invincibilityDuration: 3
+  enableInvincibilityBlink: 1
+  blinkFrequency: 15
+  ufoRenderer: {fileID: 1443315013}
   deathExplosionPrefab: {fileID: 0}
   wreckLifetime: 10
   deathSound: {fileID: 0}
@@ -4300,7 +4342,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 2
+  weaponType: 4
   respawns: 1
   respawnTime: 3
   rotationSpeed: 90
@@ -4878,6 +4920,12 @@ PrefabInstance:
 --- !u!4 &2089720817 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: db2cd7942fa27e440940f05e275680c5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2089720816}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &2089720818 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: db2cd7942fa27e440940f05e275680c5,
     type: 3}
   m_PrefabInstance: {fileID: 2089720816}
   m_PrefabAsset: {fileID: 0}

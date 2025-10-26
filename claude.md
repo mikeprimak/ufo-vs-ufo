@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 28
+**Update Count:** 35
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -183,17 +183,26 @@ Assets/
 ### UFOHealth.cs
 **Current Inspector Values:**
 - Max Health: 3 HP (default)
-- Invincibility Duration: 0.5 seconds (i-frames after taking damage)
+- Invincibility Duration: 3 seconds (i-frames after taking damage)
+- Enable Invincibility Blink: true (visual feedback during i-frames)
+- Blink Frequency: 8 blinks/second (rapid flashing)
+- UFO Renderer: UFO_Body renderer (must be assigned in Inspector)
 - Death Explosion Prefab: (optional visual effect)
 - Wreck Lifetime: 10 seconds (how long wreck stays before cleanup)
 - Death Sound: (optional audio clip)
 
 **Features:**
-- **Invincibility Frames (i-frames)**: 0.5s immunity after taking damage
+- **Invincibility Frames (i-frames)**: 3 seconds immunity after taking damage
   - Prevents rapid-fire weapons (burst, laser) from instant-killing
   - First hit deals damage, subsequent hits blocked during i-frame window
   - Allows counterplay and dodge opportunities
   - Debug logging shows when damage is blocked
+- **Blink/Flash Visual Feedback**: UFO flashes during 3 second invincibility
+  - Rapid on/off toggling of renderer (8 blinks/sec default)
+  - Clear visual indicator that UFO is temporarily invincible
+  - Automatically stops blinking when 3 second i-frames expire
+  - Ensures UFO is visible when invincibility ends
+  - Zero performance cost (just renderer enable/disable)
 - **Death System**: When HP reaches 0, UFO becomes physics wreck
   - Disables flight controls (UFOController)
   - Disables collision system (UFOCollision)
@@ -204,7 +213,7 @@ Assets/
 - **Health Management**: Get/Set health, heal, reset for respawns
 - **Public API**: IsDead(), IsInvincible(), GetCurrentHealth(), etc.
 
-**Important:** I-frames prevent burst weapon from dealing all 3 damage in one burst (was instant death)
+**Important:** 3 second i-frames prevent burst weapon from dealing all 3 damage in one burst (was instant death)
 
 ### UFOAIController.cs
 **Current Inspector Values:**
@@ -263,11 +272,11 @@ Assets/
 - Reverse Speed Threshold: -1 (triggers reverse camera mode)
 - Reverse Camera Smoothing: 3 (transition speed)
 
-**Turn Zoom Out Settings (Game Feel - NEW):**
+**Turn Zoom Out Settings (Game Feel):**
 - Enable Turn Zoom Out: true
 - Turn Zoom Out Distance: 3 units (additional distance during sharp turns)
-- Turn Zoom Speed: 4 (transition smoothness)
 - Turn Zoom Threshold: 90 degrees/sec (angular velocity to trigger zoom out)
+- Turn Zoom Speed: 4 (transition smoothness)
 
 **FOV Kick Settings (Game Feel):**
 - Enable FOV Kick: true
