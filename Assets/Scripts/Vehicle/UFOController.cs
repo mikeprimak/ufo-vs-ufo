@@ -90,8 +90,17 @@ public class UFOController : MonoBehaviour
     public float barrelRollBufferWindow = 0.2f;
 
     [Header("Boost Settings")]
-    [Tooltip("Speed multiplier when boosting")]
-    public float boostSpeedMultiplier = 1.8f;
+    [Tooltip("Speed to reach in first second of boost")]
+    public float boostFirstSecondSpeed = 60f;
+
+    [Tooltip("Additional speed gained per second after first second")]
+    public float boostSpeedGainPerSecond = 20f;
+
+    [Tooltip("Maximum speed achievable during boost")]
+    public float maxBoostSpeed = 120f;
+
+    [Tooltip("Time to decelerate from boost speed back to normal speed (seconds)")]
+    public float boostDecelerationTime = 4f;
 
     [Tooltip("Maximum boost time available (seconds)")]
     public float maxBoostTime = 4f;
@@ -173,6 +182,10 @@ public class UFOController : MonoBehaviour
     // Boost system
     private float currentBoostTime; // Current boost available (0 to maxBoostTime)
     private bool isBoosting; // Is boost currently active?
+    private float boostStartTime; // Time when boost was activated
+    private bool isDeceleratingFromBoost; // Is currently decelerating after boost ended?
+    private float boostEndTime; // Time when boost ended (for deceleration tracking)
+    private float speedWhenBoostEnded; // Speed when boost ended (for smooth deceleration)
 
     void Start()
     {
@@ -334,8 +347,8 @@ public class UFOController : MonoBehaviour
                 }
             }
 
-            // Boost input (LB / Button 4)
-            bool boostInput = Input.GetButton("Jump") || Input.GetKey(KeyCode.JoystickButton4); // Jump maps to LB
+            // Boost input (LB / Button 4 only)
+            bool boostInput = Input.GetKey(KeyCode.JoystickButton4); // LB only
             HandleBoost(boostInput);
         }
 
@@ -375,15 +388,21 @@ public class UFOController : MonoBehaviour
         // Get current forward speed (positive = forward, negative = backward)
         currentForwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
 
-        // Calculate effective max speed (with manual boost only)
-        float speedMultiplier = 1f;
+        // Determine effective max speed based on boost state OR deceleration state
+        float effectiveMaxSpeed;
         if (isBoosting)
         {
-            speedMultiplier = boostSpeedMultiplier;
+            effectiveMaxSpeed = maxBoostSpeed;
         }
-
-        float effectiveMaxSpeed = maxSpeed * speedMultiplier;
-        float effectiveAcceleration = acceleration * speedMultiplier;
+        else if (isDeceleratingFromBoost)
+        {
+            // During deceleration, don't clamp to normal max speed yet
+            effectiveMaxSpeed = maxBoostSpeed;
+        }
+        else
+        {
+            effectiveMaxSpeed = maxSpeed;
+        }
 
         if (accelerateInput && brakeInput)
         {
@@ -393,17 +412,96 @@ public class UFOController : MonoBehaviour
         else if (accelerateInput)
         {
             // A pressed - accelerate forward
-            if (currentForwardSpeed < effectiveMaxSpeed)
+            // During deceleration, don't apply normal acceleration (let deceleration system handle it)
+            if (!isDeceleratingFromBoost && currentForwardSpeed < effectiveMaxSpeed)
             {
-                rb.AddForce(transform.forward * effectiveAcceleration, ForceMode.Acceleration);
+                rb.AddForce(transform.forward * acceleration, ForceMode.Acceleration);
             }
 
-            // Clamp to max forward speed (effective max with boost)
-            if (currentForwardSpeed > effectiveMaxSpeed)
+            // Clamp to max forward speed (but not during deceleration)
+            if (!isDeceleratingFromBoost && currentForwardSpeed > effectiveMaxSpeed)
             {
                 Vector3 horizontalVelocity = rb.velocity;
                 horizontalVelocity.y = 0;
                 rb.velocity = transform.forward * effectiveMaxSpeed + Vector3.up * rb.velocity.y;
+            }
+        }
+
+        // Apply boost acceleration (works independently of regular acceleration)
+        if (isBoosting)
+        {
+            // Drain boost meter (using FixedDeltaTime to sync with FixedUpdate timing)
+            currentBoostTime -= Time.fixedDeltaTime;
+            currentBoostTime = Mathf.Max(0f, currentBoostTime);
+
+            // Calculate time since boost started
+            float boostDuration = Time.time - boostStartTime;
+
+            // Calculate target speed based on boost duration
+            // First second: 0 → 60 units/sec
+            // After first second: +10 units/sec per second (60 → 70 → 80 → 90)
+            float targetBoostSpeed;
+            if (boostDuration <= 1f)
+            {
+                // First second: immediately target 60 speed (aggressive acceleration)
+                targetBoostSpeed = boostFirstSecondSpeed;
+            }
+            else
+            {
+                // After first second: add 10 per second
+                float additionalTime = boostDuration - 1f;
+                targetBoostSpeed = boostFirstSecondSpeed + (boostSpeedGainPerSecond * additionalTime);
+            }
+
+            // Clamp to max boost speed
+            targetBoostSpeed = Mathf.Min(targetBoostSpeed, maxBoostSpeed);
+
+            // Debug: Log every 0.5 seconds
+            if (Time.frameCount % 30 == 0)
+            {
+                Debug.Log($"[BOOST] Duration={boostDuration:F2}s, TargetSpeed={targetBoostSpeed:F1}, CurrentSpeed={currentForwardSpeed:F1}, BoostMeter={currentBoostTime:F2}s");
+            }
+
+            // Calculate acceleration needed to reach target speed
+            float speedDifference = targetBoostSpeed - currentForwardSpeed;
+
+            // Apply strong force to quickly reach target speed
+            if (speedDifference > 0)
+            {
+                // Aggressive acceleration to reach target (higher multiplier = faster response)
+                float accelerationForce = speedDifference * 10f;
+                rb.AddForce(transform.forward * accelerationForce, ForceMode.Acceleration);
+            }
+
+            // Hard clamp to max boost speed (safety)
+            if (currentForwardSpeed > maxBoostSpeed)
+            {
+                rb.velocity = transform.forward * maxBoostSpeed + Vector3.up * rb.velocity.y;
+            }
+        }
+        // Handle smooth deceleration when boost ends
+        else if (isDeceleratingFromBoost)
+        {
+            float timeSinceBoostEnded = Time.time - boostEndTime;
+
+            // Check if deceleration period is complete
+            if (timeSinceBoostEnded >= boostDecelerationTime)
+            {
+                // Deceleration complete - return to normal physics
+                isDeceleratingFromBoost = false;
+                Debug.Log("Boost deceleration complete!");
+            }
+            else
+            {
+                // Calculate target speed: smoothly lerp from boost speed to max normal speed
+                float decayProgress = timeSinceBoostEnded / boostDecelerationTime;
+                float targetSpeed = Mathf.Lerp(speedWhenBoostEnded, maxSpeed, decayProgress);
+
+                Debug.Log($"Decelerating: Progress={decayProgress:F2}, TargetSpeed={targetSpeed:F1}, CurrentSpeed={currentForwardSpeed:F1}");
+
+                // Apply controlled deceleration directly to velocity
+                // Set velocity exactly to target speed to override drag/physics interference
+                rb.velocity = transform.forward * targetSpeed + Vector3.up * rb.velocity.y;
             }
         }
         else if (brakeInput)
@@ -445,19 +543,34 @@ public class UFOController : MonoBehaviour
     {
         if (boostInput && currentBoostTime > 0f)
         {
-            // Boost button held and boost available - activate boost
-            isBoosting = true;
+            // Boost button held and boost available
+            if (!isBoosting)
+            {
+                // Just started boosting - record start time and cancel deceleration
+                isBoosting = true;
+                boostStartTime = Time.time;
+                isDeceleratingFromBoost = false;
+                Debug.Log($"[BOOST START] Initial BoostMeter={currentBoostTime:F2}s, StartTime={boostStartTime:F2}");
+            }
 
-            // Drain boost over time
-            currentBoostTime -= Time.deltaTime;
-            currentBoostTime = Mathf.Max(0f, currentBoostTime);
+            // NOTE: Meter drain moved to FixedUpdate to sync with boost duration timing
         }
         else
         {
-            // Boost button not held or boost depleted - deactivate boost
-            isBoosting = false;
+            // Boost button not held or boost depleted
+            if (isBoosting)
+            {
+                // Just stopped boosting - start deceleration period (ONLY ONCE!)
+                isBoosting = false;
+                isDeceleratingFromBoost = true;
+                boostEndTime = Time.time;
+                speedWhenBoostEnded = currentForwardSpeed;
+                Debug.Log($"Boost ended! Starting deceleration from speed={speedWhenBoostEnded:F1} over {boostDecelerationTime} seconds");
+            }
+            // NOTE: Don't reset deceleration variables if already decelerating!
 
             // Recharge boost over time (when not boosting)
+            // Recharge starts immediately when boost button is released
             if (currentBoostTime < maxBoostTime)
             {
                 float rechargeRate = maxBoostTime / boostRechargeTime;
