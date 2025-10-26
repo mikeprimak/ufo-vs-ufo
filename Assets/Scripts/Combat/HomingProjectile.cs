@@ -19,7 +19,7 @@ public class HomingProjectile : MonoBehaviour
 
     [Header("Explosion Settings")]
     [Tooltip("Explosion blast radius")]
-    public float blastRadius = 40f;
+    public float blastRadius = 20f;
 
     [Tooltip("Explosion damage to UFOs in blast radius")]
     public int explosionDamage = 1;

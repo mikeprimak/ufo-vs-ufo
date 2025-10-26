@@ -80,8 +80,6 @@ public class UFOParticleTrail : MonoBehaviour
         // Create CENTER particle emitter (well behind UFO)
         Vector3 centerPosition = new Vector3(0f, verticalOffset, forwardOffset - 3f);
         centerTrailParticles = CreateParticleSystem("ParticleTrail_Center", centerPosition);
-
-        Debug.Log($"[PARTICLE TRAIL] Triple particle trails created for {gameObject.name}");
     }
 
     ParticleSystem CreateParticleSystem(string name, Vector3 localPosition)

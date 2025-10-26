@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-26
-**Update Count:** 44
+**Update Count:** 46
 
 ---
 
@@ -33,6 +33,8 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Laser weapon freezing bug fixed (OnDisable cleanup)
 - ✅ UFO color materials created (Red, Blue, Green, Yellow)
 - ✅ Game end screen with stats (kills, deaths, K/D, streaks, accuracy, MVP)
+- ✅ Start screen with "Start Game" button
+- ✅ Combat log UI (kill feed showing color-coded hits and kills)
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -57,13 +59,15 @@ Assets/
 │   │   └── UFOCamera.cs - Third-person follow camera
 │   ├── UI/
 │   │   ├── BoostMeter.cs - Boost meter UI display
-│   │   └── VictoryScreenUI.cs - End-of-match statistics screen
+│   │   ├── StartScreenUI.cs - Start screen with button to begin match
+│   │   ├── VictoryScreenUI.cs - End-of-match statistics screen
+│   │   └── CombatLogUI.cs - Kill feed showing color-coded combat events
 │   ├── Combat/
 │   │   ├── WeaponManager.cs - Weapon inventory and switching
 │   │   ├── WeaponSystem.cs - Projectile weapon firing
 │   │   ├── WeaponPickup.cs - Weapon pickup boxes (supports random)
-│   │   ├── Projectile.cs - Basic projectile
-│   │   ├── HomingProjectile.cs - Homing missile
+│   │   ├── Projectile.cs - Proximity missile (auto-detonates near enemies)
+│   │   ├── HomingProjectile.cs - Homing missile (tracks targets)
 │   │   ├── LaserWeapon.cs - Laser beam weapon (fixed: OnDisable cleanup prevents freeze)
 │   │   ├── BurstWeapon.cs - Burst fire weapon
 │   │   └── StickyBomb.cs - Sticky bomb weapon
@@ -168,6 +172,14 @@ Assets/
 - Shots fired, shots hit, accuracy %
 - Damage dealt, damage taken
 
+### StartScreenUI.cs - Start Screen
+**Key Features:**
+- Shows "UFO vs UFO" title
+- "START GAME" button to begin match
+- Game waits in WaitingToStart state until button pressed
+- UFOs frozen until match starts
+- Calls GameManager.StartMatch() when clicked
+
 ### VictoryScreenUI.cs - End Screen Display
 **Shows:**
 - **Title**: "VICTORY!" (green) for winner, "DEFEAT" (red) for loser
@@ -178,6 +190,43 @@ Assets/
 - **Most damage**: Total HP dealt
 - **Rematch button**: Reload scene to play again
 - Color-coded: Cyan for human player, Orange for AI
+
+### CombatLogUI.cs - Kill Feed
+**Key Features:**
+- Displays combat events in top-left corner (vertical list)
+- **Color-coded player names**: Automatically detects UFO material color and uses color name (Red, Blue, Green, Yellow, etc.)
+- **Event types**:
+  - Hits: "Yellow hit Green!" (white text)
+  - Kills: "Red killed Blue!" (yellowish text)
+  - Suicides: "Green self-destructed!" (gray text)
+  - Weapon pickups: "Yellow picked up HomingMissile" (light gray, human player only)
+- **Auto-fading**: Messages fade out after 4 seconds
+- **Message limit**: Shows max 5 messages at once
+- **Setup**: Vertical Layout Group with TextMeshPro log entry prefab
+
+### Projectile.cs - Proximity Missile
+**Key Features:**
+- **Proximity detonation**: Auto-explodes when within 20 units of enemy UFOs
+- **Proximity trigger distance**: 20 units (check interval: 0.1s)
+- **Blast radius**: 20 units (damage + knockback)
+- **Damage**: 1 HP direct hit, 1 HP blast damage
+- Flies straight, no homing behavior
+- Owner exclusion (never damages shooter)
+- Duplicate damage prevention (one UFO can't be hit multiple times by same blast)
+
+**IMPORTANT**: Proximity trigger distance must equal blast radius for reliable damage!
+
+### HomingProjectile.cs - Homing Missile
+**Key Features:**
+- **Target tracking**: Seeks nearest enemy UFO within detection radius (100 units)
+- **Turn rate**: 180°/s, accelerates from 40 to 60 units/s
+- **Homing delay**: 0.2s after launch before tracking activates
+- **Blast radius**: 20 units on collision
+- **Damage**: 1 HP direct hit, 1 HP blast damage
+- Line-of-sight required for target acquisition
+- Prioritizes forward targets (angle-weighted scoring)
+
+**Note:** NO proximity detonation - only explodes on collision or lifetime expiration (8s)
 
 ## Scene Setup Notes
 

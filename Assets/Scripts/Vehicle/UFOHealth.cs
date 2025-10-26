@@ -175,6 +175,9 @@ public class UFOHealth : MonoBehaviour
             {
                 attackerStats.RecordDamageDealt(damageAmount);
             }
+
+            // Log hit to combat log
+            CombatLogUI.LogHit(attacker, gameObject, damageAmount);
         }
 
         // Activate invincibility frames
@@ -217,6 +220,14 @@ public class UFOHealth : MonoBehaviour
             if (killer != null && killer != gameObject)
             {
                 gameManager.RecordKill(killer);
+
+                // Log kill to combat log
+                CombatLogUI.LogKill(killer, gameObject);
+            }
+            else
+            {
+                // Log suicide/environmental death
+                CombatLogUI.LogSuicide(gameObject);
             }
         }
 

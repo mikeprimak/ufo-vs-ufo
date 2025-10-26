@@ -92,6 +92,13 @@ public class WeaponManager : MonoBehaviour
     public void PickupWeapon(WeaponType weaponType)
     {
         SetWeapon(weaponType);
+
+        // Log weapon pickup to combat log (only for human player to reduce spam)
+        PlayerStats stats = GetComponent<PlayerStats>();
+        if (stats != null && stats.isHumanPlayer && weaponType != WeaponType.None)
+        {
+            CombatLogUI.LogWeaponPickup(gameObject, weaponType.ToString());
+        }
     }
 
     /// <summary>
@@ -99,7 +106,6 @@ public class WeaponManager : MonoBehaviour
     /// </summary>
     void SetWeapon(WeaponType weaponType)
     {
-        //Debug.Log($"[WEAPON MANAGER] SetWeapon called: {weaponType} on {gameObject.name}");
         currentWeapon = weaponType;
 
         // Disable all weapons
@@ -123,7 +129,7 @@ public class WeaponManager : MonoBehaviour
                     // Set ammo BEFORE enabling (prevents Start() from interfering)
                     weaponSystem.currentAmmo = 3; // 3 missiles per pickup
                     weaponSystem.enabled = true;
-                    //Debug.Log($"[WEAPON MANAGER] Missile weapon enabled on {gameObject.name}, ammo set to 3");
+                    Debug.Log($"[WEAPON MANAGER] Missile weapon enabled on {gameObject.name}, ammo set to 3");
                 }
                 else
                 {
@@ -186,13 +192,13 @@ public class WeaponManager : MonoBehaviour
                 if (weaponSystem != null && weaponSystem.enabled)
                 {
                     weaponFired = weaponSystem.TryFire();
-                    //Debug.Log($"[WEAPON MANAGER] Missile fired: {weaponFired}, remaining ammo: {weaponSystem.currentAmmo}");
+                    Debug.Log($"[WEAPON MANAGER] Missile fired: {weaponFired}, remaining ammo: {weaponSystem.currentAmmo}");
 
                     // Check ammo regardless of whether shot fired (ammo decreases even on failed shots)
                     if (weaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
-                        //Debug.Log("[WEAPON MANAGER] Missile ammo depleted, removing weapon");
+                        Debug.Log("[WEAPON MANAGER] Missile ammo depleted, removing weapon");
                         SetWeapon(WeaponType.None);
                     }
                 }

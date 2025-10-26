@@ -37,7 +37,7 @@ public class PlayerStats : MonoBehaviour
             longestKillStreak = currentKillStreak;
         }
 
-        Debug.Log($"[STATS] {playerName} kill recorded. Total: {kills}, Streak: {currentKillStreak}");
+        // Debug.Log($"[STATS] {playerName} kill recorded. Total: {kills}, Streak: {currentKillStreak}");
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public class PlayerStats : MonoBehaviour
         deaths++;
         currentKillStreak = 0; // Reset streak on death
 
-        Debug.Log($"[STATS] {playerName} death recorded. Total: {deaths}");
+        // Debug.Log($"[STATS] {playerName} death recorded. Total: {deaths}");
     }
 
     /// <summary>

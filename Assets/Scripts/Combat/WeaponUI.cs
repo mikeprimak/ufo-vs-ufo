@@ -49,9 +49,13 @@ public class WeaponUI : MonoBehaviour
             weaponTextTMP = GetComponent<TextMeshProUGUI>();
         }
 
-        if (weaponText == null && weaponTextTMP == null)
+        if (weaponText == null && weaponTextTMP == null && weaponIcon == null)
         {
-            Debug.LogError("WeaponUI: No Text or TextMeshPro component found! Assign one in Inspector.");
+            Debug.LogError("WeaponUI: No Text, TextMeshPro, or Image component found! Assign at least one in Inspector.");
+        }
+        else if (weaponText == null && weaponTextTMP == null)
+        {
+            Debug.LogWarning("WeaponUI: No Text or TextMeshPro component found. Using icon display only.");
         }
 
         UpdateDisplay();
@@ -65,19 +69,19 @@ public class WeaponUI : MonoBehaviour
     void UpdateDisplay()
     {
         if (weaponManager == null)
+        {
             return;
+        }
 
         // Update text displays
         string displayText;
         if (weaponManager.HasWeapon())
         {
             displayText = weaponPrefix + weaponManager.GetCurrentWeaponName().ToUpper();
-            //Debug.Log($"[WEAPON UI] Has weapon: {weaponManager.GetCurrentWeaponName()}");
         }
         else
         {
             displayText = noWeaponText;
-            //Debug.Log("[WEAPON UI] No weapon");
         }
 
         // Update whichever text component exists

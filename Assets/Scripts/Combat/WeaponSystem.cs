@@ -137,23 +137,26 @@ public class WeaponSystem : MonoBehaviour
         // Spawn projectile
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, spawnRotation);
 
+        // Get the root UFO GameObject to set as owner (prevents self-hits)
+        GameObject ownerUFO = transform.root.gameObject;
+
         // Set owner to prevent self-hits (check all projectile types)
         Projectile projectileScript = projectile.GetComponent<Projectile>();
         if (projectileScript != null)
         {
-            projectileScript.SetOwner(gameObject);
+            projectileScript.SetOwner(ownerUFO);
         }
 
         HomingProjectile homingProjectileScript = projectile.GetComponent<HomingProjectile>();
         if (homingProjectileScript != null)
         {
-            homingProjectileScript.SetOwner(gameObject);
+            homingProjectileScript.SetOwner(ownerUFO);
         }
 
         StickyBomb stickyBombScript = projectile.GetComponent<StickyBomb>();
         if (stickyBombScript != null)
         {
-            stickyBombScript.SetOwner(gameObject);
+            stickyBombScript.SetOwner(ownerUFO);
         }
 
         // Consume ammo

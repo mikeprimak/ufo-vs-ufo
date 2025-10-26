@@ -8,7 +8,8 @@
       "Bash(git push)",
       "Bash(git log:*)",
       "Bash(git commit:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

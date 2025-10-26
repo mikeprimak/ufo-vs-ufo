@@ -131,6 +131,8 @@ public class WeaponPickup : MonoBehaviour
             // Determine which weapon to give
             WeaponManager.WeaponType weaponToGive = randomWeapon ? GetRandomWeaponType() : weaponType;
 
+            Debug.Log($"[WEAPON PICKUP] {other.gameObject.name} picked up {weaponToGive} from {gameObject.name} (random={randomWeapon}, position={transform.position})");
+
             // Give weapon to player
             weaponManager.PickupWeapon(weaponToGive);
 

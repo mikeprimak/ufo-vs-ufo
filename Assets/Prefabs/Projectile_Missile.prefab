@@ -149,7 +149,7 @@ MonoBehaviour:
   speed: 60
   lifetime: 8
   damage: 1
-  blastRadius: 40
+  blastRadius: 20
   explosionDamage: 1
   explosionPrefab: {fileID: 2677883429208286301, guid: 7a9c3f2e5d4b6a1c8e7f9d2b4c6a8e3f,
     type: 3}

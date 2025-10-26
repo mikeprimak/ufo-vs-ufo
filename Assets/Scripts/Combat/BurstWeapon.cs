@@ -116,10 +116,10 @@ public class BurstWeapon : MonoBehaviour
             return false;
         }
 
-        // Check ammo (KEEP THIS LOG for troubleshooting burst weapon issue)
+        // Check ammo
         if (currentAmmo < ammoPerBurst)
         {
-            Debug.Log($"[BURST] Not enough ammo! Need {ammoPerBurst}, have {currentAmmo}");
+            // Debug.Log($"[BURST] Not enough ammo! Need {ammoPerBurst}, have {currentAmmo}");
             return false;
         }
 
@@ -160,17 +160,20 @@ public class BurstWeapon : MonoBehaviour
         // Spawn projectile
         GameObject projectile = Instantiate(projectilePrefab, spawnPosition, aimDirection);
 
+        // Get the root UFO GameObject to set as owner (prevents self-hits)
+        GameObject ownerUFO = transform.root.gameObject;
+
         // Set owner to prevent self-hits (check both Projectile and HomingProjectile)
         Projectile projectileScript = projectile.GetComponent<Projectile>();
         if (projectileScript != null)
         {
-            projectileScript.SetOwner(gameObject);
+            projectileScript.SetOwner(ownerUFO);
         }
 
         HomingProjectile homingProjectileScript = projectile.GetComponent<HomingProjectile>();
         if (homingProjectileScript != null)
         {
-            homingProjectileScript.SetOwner(gameObject);
+            homingProjectileScript.SetOwner(ownerUFO);
         }
 
         // Play fire sound

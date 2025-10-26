@@ -349,7 +349,7 @@ public class UFOCamera : MonoBehaviour
         shakeTimeRemaining = shakeDuration;
         currentShakeIntensity = shakeIntensity * Mathf.Clamp01(intensity);
 
-        Debug.Log($"*** [Camera Shake] TRIGGERED! Duration: {shakeDuration}s, CurrentIntensity: {currentShakeIntensity:F2} units ***");
+        // Debug.Log($"*** [Camera Shake] TRIGGERED! Duration: {shakeDuration}s, CurrentIntensity: {currentShakeIntensity:F2} units ***");
     }
 
     /// <summary>
@@ -367,21 +367,21 @@ public class UFOCamera : MonoBehaviour
         float timeSinceLastShake = Time.time - lastShakeTime;
         if (timeSinceLastShake < shakeCooldown)
         {
-            Debug.Log($"[Camera Shake] Skipped (cooldown). Time since last: {timeSinceLastShake:F2}s, Need >= {shakeCooldown:F2}s");
+            // Debug.Log($"[Camera Shake] Skipped (cooldown). Time since last: {timeSinceLastShake:F2}s, Need >= {shakeCooldown:F2}s");
             return;
         }
 
         // Check minimum speed threshold - ignore weak impacts
         if (impactSpeed < minShakeSpeed)
         {
-            Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {minShakeSpeed:F1}");
+            // Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {minShakeSpeed:F1}");
             return;
         }
 
         // Normalize impact speed to 0-1 range
         float intensity = Mathf.Clamp01(impactSpeed / maxSpeed);
 
-        Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
+        // Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
 
         // Update last shake time
         lastShakeTime = Time.time;

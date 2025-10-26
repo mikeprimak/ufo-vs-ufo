@@ -184,7 +184,7 @@ public class LaserWeapon : MonoBehaviour
             currentLaserDirection = transform.forward;
         }
 
-        Debug.Log($"[LASER] {gameObject.name} activated laser beam for {beamDuration}s");
+        // Debug.Log($"[LASER] {gameObject.name} activated laser beam for {beamDuration}s");
 
         // Play fire sound
         if (audioSource != null && fireSound != null)
@@ -304,18 +304,18 @@ public class LaserWeapon : MonoBehaviour
         // Only deal damage once per beam activation
         if (target == lastHitTarget)
         {
-            Debug.Log($"[LASER] Target {target.name} already damaged this beam (lastHitTarget), skipping");
+            // Debug.Log($"[LASER] Target {target.name} already damaged this beam (lastHitTarget), skipping");
             return;
         }
 
         lastHitTarget = target;
-        Debug.Log($"[LASER] Attempting to apply {damage} damage to {target.name}");
+        // Debug.Log($"[LASER] Attempting to apply {damage} damage to {target.name}");
 
         // Deal damage with kill attribution
         UFOHealth health = target.GetComponent<UFOHealth>();
         if (health != null)
         {
-            Debug.Log($"[LASER] UFOHealth component found on {target.name}, dealing {damage} damage");
+            // Debug.Log($"[LASER] UFOHealth component found on {target.name}, dealing {damage} damage");
             health.TakeDamage(damage, owner); // Pass owner so kills are tracked
         }
         else
@@ -328,11 +328,11 @@ public class LaserWeapon : MonoBehaviour
         if (hitEffect != null)
         {
             hitEffect.TriggerWobble();
-            Debug.Log($"[LASER] Triggered wobble effect on {target.name}");
+            // Debug.Log($"[LASER] Triggered wobble effect on {target.name}");
         }
         else
         {
-            Debug.Log($"[LASER] No UFOHitEffect component on {target.name}");
+            // Debug.Log($"[LASER] No UFOHitEffect component on {target.name}");
         }
     }
 
@@ -342,7 +342,7 @@ public class LaserWeapon : MonoBehaviour
         lineRenderer.enabled = false;
         cooldownEndTime = Time.time + cooldown;
 
-        Debug.Log($"[LASER] {gameObject.name} deactivated laser beam, cooldown until {cooldownEndTime:F2}");
+        // Debug.Log($"[LASER] {gameObject.name} deactivated laser beam, cooldown until {cooldownEndTime:F2}");
 
         // Stop beam sound
         if (audioSource != null && audioSource.isPlaying)

@@ -24,6 +24,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("All UFOs in the match (auto-populated)")]
     public List<GameObject> allPlayers = new List<GameObject>();
 
+    [Header("Start Screen")]
+    [Tooltip("Start screen UI (optional - will be shown before match starts)")]
+    public GameObject startScreenUI;
+
     [Header("Victory Screen")]
     [Tooltip("Victory screen UI (optional - will be shown when match ends)")]
     public GameObject victoryScreenUI;
@@ -71,12 +75,17 @@ public class GameManager : MonoBehaviour
             victoryScreenUI.SetActive(false);
         }
 
-        // Disable movement for all UFOs during countdown
+        // Show start screen if available
+        if (startScreenUI != null)
+        {
+            startScreenUI.SetActive(true);
+        }
+
+        // Disable movement for all UFOs until match starts
         DisableAllUFOMovement();
 
-        // Start countdown
-        currentState = GameState.Starting;
-        stateTimer = startDelay;
+        // Stay in WaitingToStart until StartMatch() is called
+        currentState = GameState.WaitingToStart;
     }
 
     void Update()
@@ -196,6 +205,24 @@ public class GameManager : MonoBehaviour
                 Debug.Log($"{i + 1}. {sortedPlayers[i].GetSummary()}");
             }
         }
+    }
+
+    /// <summary>
+    /// Start the match (called by StartScreenUI)
+    /// </summary>
+    public void StartMatch()
+    {
+        if (currentState != GameState.WaitingToStart)
+        {
+            Debug.LogWarning("[GAME MANAGER] StartMatch called but not in WaitingToStart state");
+            return;
+        }
+
+        Debug.Log("[GAME MANAGER] Starting match countdown");
+
+        // Begin countdown
+        currentState = GameState.Starting;
+        stateTimer = startDelay;
     }
 
     /// <summary>

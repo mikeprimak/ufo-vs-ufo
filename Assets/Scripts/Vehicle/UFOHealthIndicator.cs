@@ -47,17 +47,13 @@ public class UFOHealthIndicator : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[HEALTH INDICATOR] Starting for {gameObject.name}");
-
         // Create orbs if no prefab assigned, use procedural spheres
         if (orbPrefab == null)
         {
-            Debug.Log($"[HEALTH INDICATOR] Creating procedural orbs for {gameObject.name}");
             CreateProceduralOrbs();
         }
         else
         {
-            Debug.Log($"[HEALTH INDICATOR] Creating orbs from prefab for {gameObject.name}");
             CreateOrbsFromPrefab();
         }
 
@@ -66,8 +62,6 @@ public class UFOHealthIndicator : MonoBehaviour
 
         // Initial health display - MUST activate orbs and set color
         UpdateOrbDisplay();
-
-        Debug.Log($"[HEALTH INDICATOR] Setup complete for {gameObject.name}, health: {ufoHealth.GetCurrentHealth()}");
     }
 
     void CreateProceduralOrbs()
@@ -79,8 +73,6 @@ public class UFOHealthIndicator : MonoBehaviour
             orb.name = $"HealthOrb_{i}";
             orb.transform.parent = transform;
             orb.transform.localScale = Vector3.one * orbScale;
-
-            Debug.Log($"[HEALTH INDICATOR] Created orb {i} for {gameObject.name}, scale: {orbScale}");
 
             // Remove collider (visual only)
             Collider orbCollider = orb.GetComponent<Collider>();
@@ -109,7 +101,6 @@ public class UFOHealthIndicator : MonoBehaviour
                 mat.EnableKeyword("_EMISSION");
                 mat.SetColor("_EmissionColor", fullHealthColor * 2f); // Bright emission
                 renderer.material = mat;
-                Debug.Log($"[HEALTH INDICATOR] Set material for orb {i}, color: {fullHealthColor}");
             }
 
             orbs[i] = orb;

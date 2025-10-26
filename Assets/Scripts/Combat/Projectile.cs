@@ -1,8 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// Simple projectile that flies straight forward
-/// Handles collision detection and despawning
+/// Proximity missile that flies straight forward
+/// Explodes when it gets within blast range of an enemy UFO (proximity detonation)
+/// Also explodes on direct collision or when lifetime expires
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class Projectile : MonoBehaviour
@@ -19,7 +20,7 @@ public class Projectile : MonoBehaviour
 
     [Header("Explosion Settings")]
     [Tooltip("Explosion blast radius (0 = no explosion)")]
-    public float blastRadius = 40f;
+    public float blastRadius = 20f;
 
     [Tooltip("Explosion damage to UFOs in blast radius")]
     public int explosionDamage = 1;
@@ -30,6 +31,16 @@ public class Projectile : MonoBehaviour
     [Tooltip("Explosion sound (optional)")]
     public AudioClip explosionSound;
 
+    [Header("Proximity Settings")]
+    [Tooltip("Distance at which missile explodes near enemies (0 = use blastRadius, recommend 50-80)")]
+    public float proximityTriggerDistance = 20f;
+
+    [Tooltip("How often to check proximity (seconds, lower = more responsive but higher CPU)")]
+    public float proximityCheckInterval = 0.1f;
+
+    [Tooltip("Tag to search for targets (default: Player)")]
+    public string targetTag = "Player";
+
     [Header("Visual Settings")]
     [Tooltip("Optional trail renderer reference")]
     public TrailRenderer trail;
@@ -39,6 +50,7 @@ public class Projectile : MonoBehaviour
     private GameObject owner; // Who fired this projectile
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
     private bool hasCollided = false; // Prevent multiple collision events
+    private float lastProximityCheck = 0f; // Time of last proximity check
 
     void Start()
     {
@@ -52,6 +64,9 @@ public class Projectile : MonoBehaviour
 
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * speed;
+
+        // Debug: Log owner info
+        Debug.Log($"[MISSILE] Spawned by: {(owner != null ? owner.name : "NULL OWNER")} | Proximity Distance: {(proximityTriggerDistance > 0 ? proximityTriggerDistance : blastRadius)}");
     }
 
     void Update()
@@ -60,6 +75,47 @@ public class Projectile : MonoBehaviour
         if (Time.time >= spawnTime + lifetime)
         {
             Explode();
+        }
+
+        // Check proximity at intervals (performance optimization)
+        if (Time.time >= lastProximityCheck + proximityCheckInterval)
+        {
+            lastProximityCheck = Time.time;
+            CheckProximity();
+        }
+    }
+
+    void CheckProximity()
+    {
+        // Use blastRadius as default proximity distance if not specified
+        float proximityDistance = proximityTriggerDistance > 0f ? proximityTriggerDistance : blastRadius;
+
+        // Skip proximity check if distance is 0 or negative
+        if (proximityDistance <= 0f)
+            return;
+
+        // Find all objects with target tag
+        GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
+
+        foreach (GameObject potentialTarget in potentialTargets)
+        {
+            // Get the root GameObject (in case we hit a child object)
+            GameObject rootTarget = potentialTarget.transform.root.gameObject;
+
+            // Skip the owner (compare root objects)
+            if (rootTarget == owner || rootTarget == owner?.transform.root.gameObject)
+                continue;
+
+            // Check distance
+            float distance = Vector3.Distance(transform.position, rootTarget.transform.position);
+
+            // Explode if within proximity range
+            if (distance <= proximityDistance)
+            {
+                Debug.Log($"[MISSILE] PROXIMITY DETONATION! Exploding near {rootTarget.name} at distance {distance:F2}");
+                Explode();
+                return;
+            }
         }
     }
 
