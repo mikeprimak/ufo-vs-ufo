@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 35
+**Update Count:** 36
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -33,7 +33,7 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 Assets/
 ├── Scripts/
 │   ├── Vehicle/
-│   │   ├── UFOController.cs - Main flight controller (supports AI input)
+│   │   ├── UFOController.cs - Main flight controller (supports AI input, boost system)
 │   │   ├── UFOAIController.cs - AI behavior controller (state machine)
 │   │   ├── UFOCollision.cs - Collision bounce system
 │   │   ├── UFOHealth.cs - Health and death system
@@ -42,6 +42,8 @@ Assets/
 │   │   └── UFOParticleTrail.cs - Motion trail particles (integrated GPU optimized)
 │   ├── Camera/
 │   │   └── UFOCamera.cs - Third-person follow camera
+│   ├── UI/
+│   │   └── BoostMeter.cs - Boost meter UI display
 │   ├── Combat/
 │   │   ├── WeaponManager.cs - Weapon inventory and switching
 │   │   ├── WeaponSystem.cs - Projectile weapon firing
@@ -89,13 +91,17 @@ Assets/
 - Combo Boost Duration: 3s
 - Combo Boost Fade In Time: 0.3s
 - Combo Boost Fade Out Time: 0.5s
+- Boost Speed Multiplier: 1.8x (stacks with combo boost)
+- Max Boost Time: 4 seconds
+- Boost Recharge Time: 4 seconds
 
 **Controls (Player Mode):**
 - A / Controller Button 0 → Accelerate
 - D / Controller Button 1 → Brake/Reverse
 - Arrow Keys / Left Stick → Turn left/right, Ascend/Descend
 - Q / RB (Button 5) → Barrel roll right
-- E / LB (Button 4) → Barrel roll left
+- E (keyboard only) → Barrel roll left
+- **LB (Button 4) / Jump button → Boost** (hold to boost, drains meter)
 
 **AI Input Support:**
 - Use AI Input: false (player) / true (AI controlled)
@@ -133,6 +139,15 @@ Assets/
     - No sudden speed changes - multiplier lerps smoothly between 1.0x and 1.5x
     - Combo counter resets after successful boost or timeout
     - Debug messages show combo progress in console
+- **Manual Boost System**: Hold LB/Jump button to activate speed boost
+  - 1.8x speed multiplier when active (max speed 54, acceleration 108)
+  - **Stacks with combo boost** for maximum 2.7x speed (combo 1.5x × boost 1.8x)
+  - 4 seconds of boost available per full meter
+  - Drains while held, recharges when not boosting
+  - 4 second recharge time from empty to full
+  - Visual UI meter shows boost availability (cyan → orange → red)
+  - Cannot boost when meter is empty
+  - Strategic resource management - use wisely!
 - No gravity - pure hovering flight
 - Rigidbody constraints: FreezeRotationX | FreezeRotationZ
 - Interpolation enabled to prevent jittery visuals

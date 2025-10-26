@@ -108,6 +108,16 @@ public class UFOController : MonoBehaviour
     [Tooltip("Fade out time for combo boost (seconds)")]
     public float comboBoostFadeOutTime = 0.5f;
 
+    [Header("Boost Settings")]
+    [Tooltip("Speed multiplier when boosting")]
+    public float boostSpeedMultiplier = 1.8f;
+
+    [Tooltip("Maximum boost time available (seconds)")]
+    public float maxBoostTime = 4f;
+
+    [Tooltip("Time to fully recharge boost from empty (seconds)")]
+    public float boostRechargeTime = 4f;
+
     [Header("Movement Control")]
     [Tooltip("If false, UFO cannot move (rotation still allowed)")]
     public bool movementEnabled = true;
@@ -185,10 +195,17 @@ public class UFOController : MonoBehaviour
     private float comboBoostStartTime;
     private float currentComboMultiplier; // Smoothly lerps between 1.0 and comboSpeedBoost
 
+    // Boost system
+    private float currentBoostTime; // Current boost available (0 to maxBoostTime)
+    private bool isBoosting; // Is boost currently active?
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         weaponSystem = GetComponent<WeaponSystem>();
+
+        // Initialize boost to full
+        currentBoostTime = maxBoostTime;
 
         // Configure rigidbody for arcade physics
         rb.drag = dragAmount;
@@ -364,8 +381,14 @@ public class UFOController : MonoBehaviour
             verticalInput = Input.GetAxis("Vertical");
 
             // Barrel roll input (shoulder bumpers)
-            wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
+            // LB (Button 4) is now used for boost, left roll unmapped for now
+            // wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
+            wantsLeftRoll = Input.GetKeyDown(KeyCode.E); // Only keyboard E for now
             wantsRightRoll = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+
+            // Boost input (LB / Button 4)
+            bool boostInput = Input.GetButton("Jump") || Input.GetKey(KeyCode.JoystickButton4); // Jump maps to LB
+            HandleBoost(boostInput);
         }
 
         // Process barrel rolls (shared logic for both AI and player)
@@ -393,9 +416,15 @@ public class UFOController : MonoBehaviour
         // Get current forward speed (positive = forward, negative = backward)
         currentForwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
 
-        // Calculate effective max speed (with smooth combo boost multiplier)
-        float effectiveMaxSpeed = maxSpeed * currentComboMultiplier;
-        float effectiveAcceleration = acceleration * currentComboMultiplier;
+        // Calculate effective max speed (with combo boost AND manual boost)
+        float speedMultiplier = currentComboMultiplier;
+        if (isBoosting)
+        {
+            speedMultiplier *= boostSpeedMultiplier; // Stack boost on top of combo
+        }
+
+        float effectiveMaxSpeed = maxSpeed * speedMultiplier;
+        float effectiveAcceleration = acceleration * speedMultiplier;
 
         if (accelerateInput && brakeInput)
         {
@@ -450,6 +479,32 @@ public class UFOController : MonoBehaviour
         {
             // No input - maintain momentum with natural drag (rigidbody drag handles this)
             // No active deceleration, UFO coasts
+        }
+    }
+
+    void HandleBoost(bool boostInput)
+    {
+        if (boostInput && currentBoostTime > 0f)
+        {
+            // Boost button held and boost available - activate boost
+            isBoosting = true;
+
+            // Drain boost over time
+            currentBoostTime -= Time.deltaTime;
+            currentBoostTime = Mathf.Max(0f, currentBoostTime);
+        }
+        else
+        {
+            // Boost button not held or boost depleted - deactivate boost
+            isBoosting = false;
+
+            // Recharge boost over time (when not boosting)
+            if (currentBoostTime < maxBoostTime)
+            {
+                float rechargeRate = maxBoostTime / boostRechargeTime;
+                currentBoostTime += rechargeRate * Time.deltaTime;
+                currentBoostTime = Mathf.Min(maxBoostTime, currentBoostTime);
+            }
         }
     }
 
@@ -646,6 +701,38 @@ public class UFOController : MonoBehaviour
     public bool IsComboBoostActive()
     {
         return Time.time < comboBoostEndTime;
+    }
+
+    /// <summary>
+    /// Get current boost amount (0 to maxBoostTime)
+    /// </summary>
+    public float GetCurrentBoost()
+    {
+        return currentBoostTime;
+    }
+
+    /// <summary>
+    /// Get maximum boost amount
+    /// </summary>
+    public float GetMaxBoost()
+    {
+        return maxBoostTime;
+    }
+
+    /// <summary>
+    /// Get boost percentage (0 to 1)
+    /// </summary>
+    public float GetBoostPercent()
+    {
+        return currentBoostTime / maxBoostTime;
+    }
+
+    /// <summary>
+    /// Check if boost is currently active
+    /// </summary>
+    public bool IsBoosting()
+    {
+        return isBoosting;
     }
 
     void EnforceHeightLimits()
