@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 36
+**Update Count:** 37
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -99,8 +99,10 @@ Assets/
 - A / Controller Button 0 → Accelerate
 - D / Controller Button 1 → Brake/Reverse
 - Arrow Keys / Left Stick → Turn left/right, Ascend/Descend
-- Q / RB (Button 5) → Barrel roll right
-- E (keyboard only) → Barrel roll left
+- **Q / RB (Button 5) → Barrel Roll** (direction based on stick/dpad input)
+  - Stick left + RB = Barrel roll left (with lateral dodge)
+  - Stick right + RB = Barrel roll right (with lateral dodge)
+  - Neutral + RB = Barrel roll in place (visual spin only, no movement)
 - **LB (Button 4) / Jump button → Boost** (hold to boost, drains meter)
 
 **AI Input Support:**
@@ -125,8 +127,11 @@ Assets/
   - Allows aggressive evasive climbs/dives while barrel rolling forward
   - Barrel roll lateral movement doesn't cancel vertical speed boost
 - **Barrel roll dodge mechanic**: Fast lateral dash with 360° roll animation
+  - **Single button (RB)** with directional control from stick/dpad
+  - **Directional rolls**: Stick left/right + RB = lateral dodge in that direction
+  - **In-place roll**: Neutral stick + RB = visual 360° spin without movement
   - Primary evasion mechanic for dodging projectiles
-  - Maintains forward momentum, adds lateral velocity
+  - Maintains forward momentum, adds lateral velocity (directional only)
   - No cooldown - can be chained back-to-back
   - Input buffering: Queue next roll 0.2s before current finishes
   - Full control during roll (can accelerate, turn, ascend/descend)

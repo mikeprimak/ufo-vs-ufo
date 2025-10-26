@@ -182,10 +182,12 @@ public class UFOController : MonoBehaviour
     private bool isBarrelRolling;
     private float barrelRollEndTime;
     private float barrelRollCooldownEndTime;
-    private float barrelRollDirection; // 1 = right, -1 = left
+    private float barrelRollDirection; // 1 = right, -1 = left, 0 = in-place
     private float barrelRollStartTime;
     private bool hasBufferedRoll; // Is there a queued roll?
     private float bufferedRollDirection; // Direction of queued roll
+    private bool isInPlaceRoll; // True if barrel roll has no lateral movement
+    private bool nextRollIsInPlace; // Flag for next roll to be in-place
 
     // Combo system
     private int consecutiveBarrelRolls;
@@ -380,11 +382,31 @@ public class UFOController : MonoBehaviour
             // Arrow keys for vertical movement (Up/Down) + Controller Left Stick Y-axis
             verticalInput = Input.GetAxis("Vertical");
 
-            // Barrel roll input (shoulder bumpers)
-            // LB (Button 4) is now used for boost, left roll unmapped for now
-            // wantsLeftRoll = Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E);
-            wantsLeftRoll = Input.GetKeyDown(KeyCode.E); // Only keyboard E for now
-            wantsRightRoll = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+            // Barrel roll input - RB only, direction from stick/dpad
+            bool barrelRollPressed = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+
+            if (barrelRollPressed)
+            {
+                // Determine direction from horizontal input (stick/dpad)
+                if (Mathf.Abs(turnInput) > 0.1f)
+                {
+                    // Directional input detected - barrel roll with lateral movement
+                    if (turnInput > 0.1f)
+                    {
+                        wantsRightRoll = true; // Pushing right
+                    }
+                    else
+                    {
+                        wantsLeftRoll = true; // Pushing left
+                    }
+                }
+                else
+                {
+                    // No directional input - barrel roll in place (no lateral movement)
+                    wantsRightRoll = true; // Trigger the roll
+                    nextRollIsInPlace = true; // Flag for next roll to be in-place
+                }
+            }
 
             // Boost input (LB / Button 4)
             bool boostInput = Input.GetButton("Jump") || Input.GetKey(KeyCode.JoystickButton4); // Jump maps to LB
@@ -395,11 +417,22 @@ public class UFOController : MonoBehaviour
 
         if (wantsLeftRoll || wantsRightRoll)
         {
-            float desiredDirection = wantsLeftRoll ? -1f : 1f;
+            // Determine direction (use right=1 for in-place rolls)
+            float desiredDirection;
+            if (nextRollIsInPlace)
+            {
+                desiredDirection = 1f; // Default to right spin for in-place
+            }
+            else
+            {
+                desiredDirection = wantsLeftRoll ? -1f : 1f;
+            }
 
             // If not currently rolling and off cooldown, start immediately
             if (!isBarrelRolling && Time.time >= barrelRollCooldownEndTime)
             {
+                isInPlaceRoll = nextRollIsInPlace; // Transfer flag to active roll
+                nextRollIsInPlace = false; // Reset next roll flag
                 StartBarrelRoll(desiredDirection);
             }
             // If currently rolling and within buffer window, queue the next roll
@@ -883,6 +916,7 @@ public class UFOController : MonoBehaviour
         if (Time.time >= barrelRollEndTime)
         {
             isBarrelRolling = false;
+            isInPlaceRoll = false; // Reset in-place flag
 
             // If there's a buffered roll, start it immediately
             if (hasBufferedRoll)
@@ -893,21 +927,25 @@ public class UFOController : MonoBehaviour
             return;
         }
 
-        // Apply lateral dodge force
-        // Calculate impulse needed to travel barrelRollDistance over duration
-        float dodgeSpeed = barrelRollDistance / barrelRollDuration;
+        // Apply lateral dodge force (skip if in-place roll)
+        if (!isInPlaceRoll)
+        {
+            // Calculate impulse needed to travel barrelRollDistance over duration
+            float dodgeSpeed = barrelRollDistance / barrelRollDuration;
 
-        // Get the UFO's right vector (local X-axis) for lateral movement
-        Vector3 dodgeDirection = transform.right * barrelRollDirection;
+            // Get the UFO's right vector (local X-axis) for lateral movement
+            Vector3 dodgeDirection = transform.right * barrelRollDirection;
 
-        // Apply continuous force during the roll to maintain dodge speed
-        // Use velocity change mode for immediate response
-        Vector3 lateralVelocity = dodgeDirection * dodgeSpeed;
-        Vector3 currentLateralVelocity = Vector3.Project(rb.velocity, transform.right);
-        Vector3 neededVelocity = lateralVelocity - currentLateralVelocity;
+            // Apply continuous force during the roll to maintain dodge speed
+            // Use velocity change mode for immediate response
+            Vector3 lateralVelocity = dodgeDirection * dodgeSpeed;
+            Vector3 currentLateralVelocity = Vector3.Project(rb.velocity, transform.right);
+            Vector3 neededVelocity = lateralVelocity - currentLateralVelocity;
 
-        // Apply strong force for fast, snappy dodge movement
-        rb.AddForce(neededVelocity * 15f, ForceMode.Acceleration);
+            // Apply strong force for fast, snappy dodge movement
+            rb.AddForce(neededVelocity * 15f, ForceMode.Acceleration);
+        }
+        // If in-place roll, UFO just spins without lateral movement (visual only)
     }
 }
 
