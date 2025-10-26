@@ -121,6 +121,13 @@ public class UFOHealth : MonoBehaviour
 
         Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage. Health: {currentHealth}/{maxHealth}");
 
+        // Track damage taken in stats
+        PlayerStats stats = GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            stats.RecordDamageTaken(damageAmount);
+        }
+
         // Activate invincibility frames
         isInvincible = true;
         invincibilityEndTime = Time.time + invincibilityDuration;
@@ -136,14 +143,82 @@ public class UFOHealth : MonoBehaviour
     }
 
     /// <summary>
+    /// Apply damage to this UFO and track who dealt it (for kill tracking)
+    /// </summary>
+    public void TakeDamage(int damageAmount, GameObject attacker)
+    {
+        if (isDead) return;
+        if (isInvincible)
+        {
+            Debug.Log($"[UFO HEALTH] {gameObject.name} is invincible! Damage blocked.");
+            return;
+        }
+
+        // Reduce health
+        currentHealth -= damageAmount;
+        currentHealth = Mathf.Max(0, currentHealth);
+
+        Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage from {(attacker != null ? attacker.name : "unknown")}. Health: {currentHealth}/{maxHealth}");
+
+        // Track damage in stats
+        PlayerStats stats = GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            stats.RecordDamageTaken(damageAmount);
+        }
+
+        // Track damage dealt by attacker
+        if (attacker != null)
+        {
+            PlayerStats attackerStats = attacker.GetComponent<PlayerStats>();
+            if (attackerStats != null)
+            {
+                attackerStats.RecordDamageDealt(damageAmount);
+            }
+        }
+
+        // Activate invincibility frames
+        isInvincible = true;
+        invincibilityEndTime = Time.time + invincibilityDuration;
+        nextBlinkTime = Time.time;
+
+        // Check if dead
+        if (currentHealth <= 0)
+        {
+            Die(attacker);
+        }
+    }
+
+    /// <summary>
     /// Kill this UFO - spawn explosion, disable controls, enable gravity physics
     /// </summary>
     void Die()
+    {
+        Die(null);
+    }
+
+    /// <summary>
+    /// Kill this UFO and track who killed it
+    /// </summary>
+    void Die(GameObject killer)
     {
         if (isDead)
             return; // Already dead
 
         isDead = true;
+
+        // Notify GameManager of death
+        GameManager gameManager = FindObjectOfType<GameManager>();
+        if (gameManager != null)
+        {
+            gameManager.RecordDeath(gameObject);
+
+            // If killed by another player, record kill for them
+            if (killer != null && killer != gameObject)
+            {
+                gameManager.RecordKill(killer);
+            }
+        }
 
         // Spawn death explosion effect
         if (deathExplosionPrefab != null)

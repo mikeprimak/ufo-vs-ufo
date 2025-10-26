@@ -210,11 +210,11 @@ public class HomingProjectile : MonoBehaviour
             // Store the root UFO that was directly hit (to skip in explosion)
             directHitTarget = rootObject;
 
-            // Hit another UFO - deal direct hit damage
+            // Hit another UFO - deal direct hit damage with kill attribution
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(damage);
+                health.TakeDamage(damage, owner); // Pass owner so kills are tracked
             }
 
             // Trigger wobble effect
@@ -258,11 +258,11 @@ public class HomingProjectile : MonoBehaviour
                 // Mark this UFO as damaged
                 damagedUFOs.Add(rootUFO);
 
-                // Deal explosion damage
+                // Deal explosion damage with kill attribution
                 UFOHealth health = rootUFO.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage);
+                    health.TakeDamage(explosionDamage, owner); // Pass owner so kills are tracked
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);

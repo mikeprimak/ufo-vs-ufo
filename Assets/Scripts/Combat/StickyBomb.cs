@@ -118,11 +118,11 @@ public class StickyBomb : MonoBehaviour
         // Check if hit a UFO
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Deal contact damage but don't explode
+            // Deal contact damage but don't explode, with kill attribution
             UFOHealth health = collision.gameObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(contactDamage);
+                health.TakeDamage(contactDamage, owner); // Pass owner so kills are tracked
             }
 
             Debug.Log($"[STICKY BOMB] Hit UFO {collision.gameObject.name} for {contactDamage} contact damage");
@@ -192,11 +192,11 @@ public class StickyBomb : MonoBehaviour
         {
             if (hit.CompareTag("Player"))
             {
-                // Deal flat damage to everyone in radius (no falloff)
+                // Deal flat damage to everyone in radius (no falloff), with kill attribution
                 UFOHealth health = hit.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage);
+                    health.TakeDamage(explosionDamage, owner); // Pass owner so kills are tracked
                 }
 
                 float distance = Vector3.Distance(transform.position, hit.transform.position);

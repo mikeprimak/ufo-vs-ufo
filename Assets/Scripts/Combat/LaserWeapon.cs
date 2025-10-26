@@ -75,6 +75,17 @@ public class LaserWeapon : MonoBehaviour
         audioSource.loop = false;
     }
 
+    void OnDisable()
+    {
+        // CRITICAL FIX: Clean up laser when component is disabled
+        // (e.g., during weapon switch or barrel roll)
+        // This prevents the laser beam from freezing in space
+        if (isActive)
+        {
+            DeactivateLaser();
+        }
+    }
+
     void Update()
     {
         // Check for fire input
@@ -300,12 +311,12 @@ public class LaserWeapon : MonoBehaviour
         lastHitTarget = target;
         Debug.Log($"[LASER] Attempting to apply {damage} damage to {target.name}");
 
-        // Deal damage
+        // Deal damage with kill attribution
         UFOHealth health = target.GetComponent<UFOHealth>();
         if (health != null)
         {
             Debug.Log($"[LASER] UFOHealth component found on {target.name}, dealing {damage} damage");
-            health.TakeDamage(damage);
+            health.TakeDamage(damage, owner); // Pass owner so kills are tracked
         }
         else
         {
