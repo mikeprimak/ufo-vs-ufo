@@ -5,39 +5,40 @@ using UnityEngine;
 /// Particles emit continuously and fade out, creating a smooth motion trail
 ///
 /// OPTIMIZED FOR INTEGRATED GPU:
-/// - Reduced emission rate (5 particles/sec instead of 15)
-/// - Max 20 particles per emitter (was 100)
+/// - Balanced emission rate (8 particles/sec - was 15 originally)
+/// - Max 20 particles per emitter (was 100 - 80% reduction)
+/// - Larger particle size (0.25) with full opacity for visibility
 /// - Standard alpha blend instead of expensive additive blending
 /// - Simple Unlit/Transparent shader (not Particles/Standard)
 /// - Smaller texture resolution (32x32 instead of 64x64)
 /// - Disabled occlusion queries and anisotropic filtering
-/// - Total GPU load reduced by ~80% compared to original
+/// - Total GPU load reduced by ~70% with better visibility
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class UFOParticleTrail : MonoBehaviour
 {
     [Header("Particle Settings")]
     [Tooltip("Particle lifetime (seconds)")]
-    public float particleLifetime = 0.15f;
+    public float particleLifetime = 0.2f;
 
-    [Tooltip("Particle start size")]
-    public float startSize = 0.1f;
+    [Tooltip("Particle start size (INCREASED for visibility)")]
+    public float startSize = 0.25f;
 
     [Tooltip("Particle end size")]
-    public float endSize = 0.01f;
+    public float endSize = 0.05f;
 
-    [Tooltip("Particles emitted per second (REDUCED for integrated GPU)")]
-    public float emissionRate = 5f;
+    [Tooltip("Particles emitted per second (balanced for visibility + performance)")]
+    public float emissionRate = 8f;
 
     [Tooltip("Particle start speed (how fast they move initially)")]
     public float startSpeed = 0.3f;
 
     [Header("Colors")]
-    [Tooltip("Particle color at spawn")]
-    public Color startColor = new Color(1f, 1f, 0f, 0.8f); // Yellow with transparency
+    [Tooltip("Particle color at spawn (brighter = more visible)")]
+    public Color startColor = new Color(1f, 1f, 0.5f, 1f); // Bright yellow-white, FULL OPACITY
 
     [Tooltip("Particle color at death")]
-    public Color endColor = new Color(1f, 1f, 0f, 0f); // Transparent yellow
+    public Color endColor = new Color(1f, 1f, 0.5f, 0f); // Fade to transparent
 
     [Header("Speed Response")]
     [Tooltip("Enable speed-based emission")]

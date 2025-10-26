@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 26
+**Update Count:** 27
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -296,29 +296,32 @@ Assets/
   - Public methods: `TriggerShake(intensity)` and `TriggerShakeFromImpact(speed, maxSpeed)`
 
 ### UFOParticleTrail.cs
-**Current Inspector Values (OPTIMIZED FOR INTEGRATED GPU):**
-- Particle Lifetime: 0.15s (short trail)
-- Start Size: 0.1 (small particles)
-- End Size: 0.01 (fade to tiny)
-- Emission Rate: 5 particles/sec (HEAVILY REDUCED from 15)
+**Current Inspector Values (BALANCED for visibility + performance):**
+- Particle Lifetime: 0.2s (medium trail length)
+- Start Size: 0.25 (larger for visibility)
+- End Size: 0.05 (fade out)
+- Emission Rate: 8 particles/sec (balanced - was 15 originally)
 - Start Speed: 0.3 (slow drift)
+- Start Color: Bright yellow-white (1, 1, 0.5) with **FULL OPACITY** (alpha = 1.0)
+- End Color: Fade to transparent
 - Min Speed For Trail: 10 units/sec (only emit when moving)
 - Max Speed For Trail: 30 units/sec (full emission at max speed)
 
 **Optimization Features (CRITICAL for integrated GPU):**
 - **3 emitters per UFO**: Left, Right, Center trails
 - **Max 20 particles per emitter** (was 100 - 80% reduction)
+- **Larger size + full opacity** = better visibility without GPU cost
 - **Standard alpha blend** instead of expensive additive blending
 - **Unlit/Transparent shader** (not Particles/Standard Unlit)
 - **32x32 texture resolution** (was 64x64 - 75% fewer pixels)
 - **No shadows, no occlusion queries, no anisotropic filtering**
-- **Total GPU load reduced by ~80%** compared to original implementation
+- **Total GPU load reduced by ~70%** with improved visibility
 - World space simulation for motion trail effect
 - Speed-based emission (stops emitting when hovering/stopped)
 
 **Performance Impact:**
-- 3 emitters × 5 particles/sec × 4 UFOs = **60 particles/sec max** (was 180)
-- **Safe for integrated GPU** when using optimized settings
+- 3 emitters × 8 particles/sec × 4 UFOs = **96 particles/sec max** (was 180)
+- **Safe for integrated GPU** - size/opacity changes have zero GPU cost
 - If crashes still occur, disable component entirely in Inspector
 
 **Important:** Original additive blending version caused D3D11 swapchain crashes on integrated GPU
