@@ -128,45 +128,50 @@ public class CombatLogUI : MonoBehaviour
     {
         if (player == null) return Color.white;
 
-        // Try to get color from material (works for all UFOs)
-        Renderer renderer = player.GetComponentInChildren<Renderer>();
-        if (renderer != null && renderer.sharedMaterial != null)
-        {
-            // Get base color from material (URP uses _BaseColor)
-            if (renderer.sharedMaterial.HasProperty("_BaseColor"))
-            {
-                Color color = renderer.sharedMaterial.GetColor("_BaseColor");
-                // Return RGB only (ignore alpha)
-                return new Color(color.r, color.g, color.b, 1f);
-            }
-            // Legacy/Built-in render pipeline uses _Color
-            else if (renderer.sharedMaterial.HasProperty("_Color"))
-            {
-                Color color = renderer.sharedMaterial.color;
-                return new Color(color.r, color.g, color.b, 1f);
-            }
-        }
-
-        // Fallback: try multiple renderers (in case UFO_Visual has the material)
+        // Get all renderers and find the most saturated (colorful) material
+        // This ensures we get the UFO body color, not the gray dome
         Renderer[] renderers = player.GetComponentsInChildren<Renderer>();
+        Color mostSaturatedColor = Color.white;
+        float highestSaturation = 0f;
+
         foreach (Renderer r in renderers)
         {
             if (r != null && r.sharedMaterial != null)
             {
+                Color color = Color.white;
+
+                // Get base color from material (URP uses _BaseColor)
                 if (r.sharedMaterial.HasProperty("_BaseColor"))
                 {
-                    Color color = r.sharedMaterial.GetColor("_BaseColor");
-                    // Skip transparent/black materials
-                    if (color.r > 0.1f || color.g > 0.1f || color.b > 0.1f)
-                    {
-                        return new Color(color.r, color.g, color.b, 1f);
-                    }
+                    color = r.sharedMaterial.GetColor("_BaseColor");
+                }
+                // Legacy/Built-in render pipeline uses _Color
+                else if (r.sharedMaterial.HasProperty("_Color"))
+                {
+                    color = r.sharedMaterial.color;
+                }
+                else
+                {
+                    continue; // Skip if no color property
+                }
+
+                // Calculate color saturation (how colorful vs gray it is)
+                // Saturation = max(r,g,b) - min(r,g,b)
+                float max = Mathf.Max(color.r, Mathf.Max(color.g, color.b));
+                float min = Mathf.Min(color.r, Mathf.Min(color.g, color.b));
+                float saturation = max - min;
+
+                // Prefer more saturated (colorful) materials
+                // This will pick Red/Green/Blue/Yellow over gray dome
+                if (saturation > highestSaturation)
+                {
+                    highestSaturation = saturation;
+                    mostSaturatedColor = new Color(color.r, color.g, color.b, 1f);
                 }
             }
         }
 
-        // Default fallback
-        return Color.white;
+        return mostSaturatedColor;
     }
 
     /// <summary>
@@ -177,15 +182,22 @@ public class CombatLogUI : MonoBehaviour
     {
         if (player == null) return "<color=white>Unknown</color>";
 
-        Color color = GetPlayerColor(player);
+        // First, check if UFO has explicit color identity component (most reliable)
+        UFOColorIdentity colorIdentity = player.GetComponent<UFOColorIdentity>();
+        if (colorIdentity != null)
+        {
+            string colorName = colorIdentity.GetColorName();
+            Color color = colorIdentity.GetDisplayColor();
+            string colorHex = ColorUtility.ToHtmlStringRGB(color);
+            return $"<color=#{colorHex}>{colorName}</color>";
+        }
 
-        // Determine color name from the color
-        string colorName = GetColorName(color);
+        // Fallback: try to detect color from material
+        Color detectedColor = GetPlayerColor(player);
+        string detectedColorName = GetColorName(detectedColor);
+        string detectedColorHex = ColorUtility.ToHtmlStringRGB(detectedColor);
 
-        // Convert color to hex for TextMeshPro rich text
-        string colorHex = ColorUtility.ToHtmlStringRGB(color);
-
-        return $"<color=#{colorHex}>{colorName}</color>";
+        return $"<color=#{detectedColorHex}>{detectedColorName}</color>";
     }
 
     /// <summary>
@@ -198,49 +210,68 @@ public class CombatLogUI : MonoBehaviour
         float g = color.g;
         float b = color.b;
 
-        // Red - high R, low G and B
-        if (r > 0.7f && g < 0.3f && b < 0.3f)
-            return "Red";
+        // Find which component is dominant
+        float max = Mathf.Max(r, Mathf.Max(g, b));
+        float min = Mathf.Min(r, Mathf.Min(g, b));
+        float saturation = max - min;
 
-        // Green - high G, low R and B
-        if (g > 0.7f && r < 0.3f && b < 0.3f)
-            return "Green";
+        // Gray/White/Black - low saturation (all components similar)
+        if (saturation < 0.2f)
+        {
+            if (max > 0.8f)
+                return "White";
+            else if (max < 0.3f)
+                return "Black";
+            else
+                return "Gray";
+        }
 
-        // Blue - high B, low R and G
-        if (b > 0.7f && r < 0.3f && g < 0.3f)
-            return "Blue";
-
-        // Yellow - high R and G, low B
+        // Determine color based on which component(s) are dominant
+        // Yellow - BOTH R and G are high and close together, B is low
         if (r > 0.7f && g > 0.7f && b < 0.3f)
             return "Yellow";
 
-        // Cyan - high G and B, low R
-        if (r < 0.3f && g > 0.7f && b > 0.7f)
+        // Cyan - BOTH G and B are high, R is low
+        if (r < 0.3f && g > 0.6f && b > 0.6f)
             return "Cyan";
 
-        // Magenta/Pink - high R and B, low G
+        // Magenta - BOTH R and B are high, G is low
         if (r > 0.7f && g < 0.3f && b > 0.7f)
             return "Magenta";
 
-        // Orange - high R, medium G, low B
-        if (r > 0.7f && g > 0.3f && g < 0.7f && b < 0.3f)
+        // Orange - R is highest, G is medium, B is low
+        if (r > 0.7f && g > 0.3f && g < 0.8f && b < 0.3f)
             return "Orange";
 
-        // Purple - medium R, low G, high B
-        if (r > 0.3f && r < 0.7f && g < 0.3f && b > 0.7f)
+        // Purple - B is high, R is medium, G is low
+        if (r > 0.3f && r < 0.7f && g < 0.4f && b > 0.7f)
             return "Purple";
 
-        // White - all high
-        if (r > 0.8f && g > 0.8f && b > 0.8f)
-            return "White";
-
-        // Black/Gray - all low/medium
-        if (r < 0.3f && g < 0.3f && b < 0.3f)
-            return "Black";
-
-        // Gray - all medium
-        if (Mathf.Abs(r - g) < 0.2f && Mathf.Abs(g - b) < 0.2f && Mathf.Abs(r - b) < 0.2f)
-            return "Gray";
+        // Primary colors - check which single component is dominant
+        if (r > g && r > b)
+        {
+            // Red is dominant
+            if (g < 0.3f && b < 0.3f)
+                return "Red";
+            else
+                return "Orange"; // Fallback for reddish colors
+        }
+        else if (g > r && g > b)
+        {
+            // Green is dominant
+            if (r < 0.3f && b < 0.4f)
+                return "Green";
+            else
+                return "Yellow"; // Fallback for greenish-yellow
+        }
+        else if (b > r && b > g)
+        {
+            // Blue is dominant
+            if (r < 0.3f && g < 0.5f)
+                return "Blue";
+            else
+                return "Purple"; // Fallback for bluish colors
+        }
 
         // Default fallback
         return "Unknown";

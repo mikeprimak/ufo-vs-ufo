@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-26
-**Update Count:** 46
+**Update Count:** 47
 
 ---
 
@@ -31,10 +31,12 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Random weapon pickup boxes (mystery boxes)
 - ✅ AI enemy implementation with state machine
 - ✅ Laser weapon freezing bug fixed (OnDisable cleanup)
-- ✅ UFO color materials created (Red, Blue, Green, Yellow)
+- ✅ UFO visual redesign: Unity primitive spheres (body + dome) instead of Blender model
+- ✅ UFO color materials created (Red, Blue, Green, Yellow) + dome glass material
 - ✅ Game end screen with stats (kills, deaths, K/D, streaks, accuracy, MVP)
 - ✅ Start screen with "Start Game" button
 - ✅ Combat log UI (kill feed showing color-coded hits and kills)
+- ✅ Canvas scaling fixed for all resolutions (1920x1080 reference)
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -52,6 +54,8 @@ Assets/
 │   │   ├── UFOAIController.cs - AI behavior controller (state machine)
 │   │   ├── UFOCollision.cs - Collision bounce system
 │   │   ├── UFOHealth.cs - Health and death system
+│   │   ├── UFOColorIdentity.cs - Explicit color assignment for combat log
+│   │   ├── UFOHealthIndicator.cs - Health orb display (orbiting spheres)
 │   │   ├── UFOHoverWobble.cs - Hover bobbing effect (not in use)
 │   │   ├── UFOThrusterEffects.cs - Particle effects (not set up)
 │   │   └── UFOParticleTrail.cs - Motion trail particles (integrated GPU optimized)
@@ -120,6 +124,20 @@ Assets/
 - **Blink feedback** during i-frames (8 blinks/sec)
 - **Death system**: Becomes physics wreck, spawns explosion, auto-cleanup
 - Prevents burst weapons from instant-killing
+
+### UFOColorIdentity.cs - Color Assignment
+**Key Features:**
+- Explicit color name assignment for each UFO (e.g., "Red", "Blue", "Green", "Yellow")
+- Display color for UI formatting (RGB values)
+- Used by CombatLogUI for reliable player identification
+- **Setup**: Add to each UFO, set colorName and displayColor in Inspector
+
+### UFOHealthIndicator.cs - Health Orbs
+**Key Features:**
+- 3 glowing orbs orbit above UFO showing current HP
+- Color changes based on health: Green (3 HP) → Yellow (2 HP) → Red (1 HP)
+- Orbs disappear as health decreases
+- Configurable: height (1), radius (1.5), speed (100), scale (0.4)
 
 ### UFOAIController.cs - AI Behavior
 **State Machine:**
@@ -194,7 +212,8 @@ Assets/
 ### CombatLogUI.cs - Kill Feed
 **Key Features:**
 - Displays combat events in top-left corner (vertical list)
-- **Color-coded player names**: Automatically detects UFO material color and uses color name (Red, Blue, Green, Yellow, etc.)
+- **Color detection**: Uses UFOColorIdentity component (hardcoded) for reliable color names
+- **Fallback**: Auto-detects color from most saturated material if no UFOColorIdentity
 - **Event types**:
   - Hits: "Yellow hit Green!" (white text)
   - Kills: "Red killed Blue!" (yellowish text)
@@ -202,7 +221,8 @@ Assets/
   - Weapon pickups: "Yellow picked up HomingMissile" (light gray, human player only)
 - **Auto-fading**: Messages fade out after 4 seconds
 - **Message limit**: Shows max 5 messages at once
-- **Setup**: Vertical Layout Group with TextMeshPro log entry prefab
+- **Canvas Scaler**: 1920x1080 reference, scales with screen size
+- **Setup**: Vertical Layout Group with TextMeshPro log entry prefab (500x30px, 24pt font)
 
 ### Projectile.cs - Proximity Missile
 **Key Features:**
@@ -230,7 +250,19 @@ Assets/
 
 ## Scene Setup Notes
 
-**Hierarchy:** UFO_Player (Rigidbody + Sphere Collider) → UFO_Visual (visual tilting container) → UFO_Body + DirectionIndicator
+**Hierarchy:**
+```
+UFO_Player (Rigidbody + Sphere Collider + UFOColorIdentity)
+└── UFO_Visual (visual tilting container)
+    ├── UFO_Body (Sphere primitive, flattened 3x1x3, team color material)
+    ├── UFO_Dome (Sphere primitive, 1.2x1.2x1.2, glass material)
+    └── DirectionIndicator
+```
+
+**UFO Visual Design:**
+- **Body**: Flattened sphere primitive (Scale: 3, 1, 3) with team color (Red/Blue/Green/Yellow)
+- **Dome**: Sphere primitive (Scale: 1.2, 1.2, 1.2, Y-offset: 0.44) with UFO_Dome_Glass material
+- **No colliders on children** - only parent has physics collider
 
 **Physics Materials:**
 - UFO_Bouncy: Friction 0, Bounce 0.5 (UFO + walls)
