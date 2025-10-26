@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-25
-**Update Count:** 27
+**Update Count:** 28
 
 ## Project Overview
 N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP template).
@@ -179,6 +179,32 @@ Assets/
 - Player retains acceleration/turning control throughout
 
 **Important:** Wobble feature was attempted but removed due to conflicts with banking
+
+### UFOHealth.cs
+**Current Inspector Values:**
+- Max Health: 3 HP (default)
+- Invincibility Duration: 0.5 seconds (i-frames after taking damage)
+- Death Explosion Prefab: (optional visual effect)
+- Wreck Lifetime: 10 seconds (how long wreck stays before cleanup)
+- Death Sound: (optional audio clip)
+
+**Features:**
+- **Invincibility Frames (i-frames)**: 0.5s immunity after taking damage
+  - Prevents rapid-fire weapons (burst, laser) from instant-killing
+  - First hit deals damage, subsequent hits blocked during i-frame window
+  - Allows counterplay and dodge opportunities
+  - Debug logging shows when damage is blocked
+- **Death System**: When HP reaches 0, UFO becomes physics wreck
+  - Disables flight controls (UFOController)
+  - Disables collision system (UFOCollision)
+  - Enables gravity and tumbling physics
+  - Spawns explosion effect (if assigned)
+  - Plays death sound (if assigned)
+  - Auto-cleanup after wreck lifetime expires
+- **Health Management**: Get/Set health, heal, reset for respawns
+- **Public API**: IsDead(), IsInvincible(), GetCurrentHealth(), etc.
+
+**Important:** I-frames prevent burst weapon from dealing all 3 damage in one burst (was instant death)
 
 ### UFOAIController.cs
 **Current Inspector Values:**

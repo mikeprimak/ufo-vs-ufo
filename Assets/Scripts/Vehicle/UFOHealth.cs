@@ -10,6 +10,9 @@ public class UFOHealth : MonoBehaviour
     [Tooltip("Maximum health points (default: 3)")]
     public int maxHealth = 3;
 
+    [Tooltip("Invincibility duration after taking damage (seconds)")]
+    public float invincibilityDuration = 0.5f;
+
     [Header("Death Settings")]
     [Tooltip("Explosion effect prefab to spawn on death (optional)")]
     public GameObject deathExplosionPrefab;
@@ -27,6 +30,10 @@ public class UFOHealth : MonoBehaviour
     // Is this UFO dead?
     private bool isDead = false;
 
+    // Invincibility frames
+    private bool isInvincible = false;
+    private float invincibilityEndTime = 0f;
+
     // Components
     private Rigidbody rb;
     private UFOController controller;
@@ -43,6 +50,15 @@ public class UFOHealth : MonoBehaviour
         collision = GetComponent<UFOCollision>();
     }
 
+    void Update()
+    {
+        // Update invincibility frames
+        if (isInvincible && Time.time >= invincibilityEndTime)
+        {
+            isInvincible = false;
+        }
+    }
+
     /// <summary>
     /// Apply damage to this UFO
     /// </summary>
@@ -53,9 +69,22 @@ public class UFOHealth : MonoBehaviour
             return; // Already dead, ignore further damage
         }
 
+        // Check invincibility frames - prevent rapid-fire damage
+        if (isInvincible)
+        {
+            Debug.Log($"[UFO HEALTH] {gameObject.name} is invincible! Damage blocked.");
+            return;
+        }
+
         // Reduce health
         currentHealth -= damageAmount;
         currentHealth = Mathf.Max(0, currentHealth); // Clamp to 0
+
+        Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage. Health: {currentHealth}/{maxHealth}");
+
+        // Activate invincibility frames
+        isInvincible = true;
+        invincibilityEndTime = Time.time + invincibilityDuration;
 
         // Check if dead
         if (currentHealth <= 0)
@@ -142,6 +171,14 @@ public class UFOHealth : MonoBehaviour
     public bool IsDead()
     {
         return isDead;
+    }
+
+    /// <summary>
+    /// Check if UFO is currently invincible (i-frames active)
+    /// </summary>
+    public bool IsInvincible()
+    {
+        return isInvincible;
     }
 
     /// <summary>
