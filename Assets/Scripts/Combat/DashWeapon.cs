@@ -285,7 +285,7 @@ public class DashWeapon : MonoBehaviour
             UFOHealth health = hitObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(rammingDamage, owner);
+                health.TakeDamage(rammingDamage, owner, "Dash");
                 Debug.Log($"[DASH] {gameObject.name} rammed {hitObject.name} for {rammingDamage} damage!");
             }
         }

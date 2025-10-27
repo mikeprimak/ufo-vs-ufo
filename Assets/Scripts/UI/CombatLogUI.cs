@@ -290,7 +290,13 @@ public class CombatLogUI : MonoBehaviour
         string victimName = instance.GetColoredPlayerName(victim);
 
         string message;
-        if (!string.IsNullOrEmpty(weaponName))
+
+        // Special formatting for death explosions
+        if (weaponName == "Death Explosion")
+        {
+            message = $"{attackerName} exploded and hit {victimName}!";
+        }
+        else if (!string.IsNullOrEmpty(weaponName))
         {
             message = $"{attackerName} hit {victimName} with {weaponName}!";
         }
@@ -313,7 +319,13 @@ public class CombatLogUI : MonoBehaviour
         string victimName = instance.GetColoredPlayerName(victim);
 
         string message;
-        if (!string.IsNullOrEmpty(weaponName))
+
+        // Special formatting for death explosions
+        if (weaponName == "Death Explosion")
+        {
+            message = $"{killerName} exploded and killed {victimName}!";
+        }
+        else if (!string.IsNullOrEmpty(weaponName))
         {
             message = $"{killerName} killed {victimName} with {weaponName}!";
         }
