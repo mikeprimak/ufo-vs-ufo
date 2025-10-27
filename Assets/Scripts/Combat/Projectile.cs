@@ -51,8 +51,8 @@ public class Projectile : MonoBehaviour
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
     private bool hasCollided = false; // Prevent multiple collision events
     private float lastProximityCheck = 0f; // Time of last proximity check
-    private string weaponName = "Missile"; // Weapon name for combat log
-    private string explosionWeaponName = "Missile Explosion"; // Explosion name for combat log
+    private string weaponName = "Proximity Missile"; // Weapon name for combat log
+    private string explosionWeaponName = "Proximity Missile"; // Explosion name for combat log (same as weapon name)
 
     void Start()
     {
