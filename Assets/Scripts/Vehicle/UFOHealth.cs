@@ -30,6 +30,22 @@ public class UFOHealth : MonoBehaviour
     [Tooltip("How long the wreck stays on screen before cleanup (seconds)")]
     public float wreckLifetime = 10f;
 
+    [Header("Death Explosion Settings")]
+    [Tooltip("Enable large explosion 2 seconds after death")]
+    public bool enableGroundExplosion = true;
+
+    [Tooltip("Explosion prefab to spawn at UFO position")]
+    public GameObject groundExplosionPrefab;
+
+    [Tooltip("Blast radius for explosion damage")]
+    public float groundExplosionRadius = 60f;
+
+    [Tooltip("Damage dealt by explosion")]
+    public int groundExplosionDamage = 1;
+
+    [Tooltip("Sound to play on explosion")]
+    public AudioClip groundExplosionSound;
+
     [Header("Audio")]
     [Tooltip("Sound to play when UFO dies/explodes")]
     public AudioClip deathSound;
@@ -39,6 +55,11 @@ public class UFOHealth : MonoBehaviour
 
     // Is this UFO dead?
     private bool isDead = false;
+
+    // Death explosion state
+    private bool hasExplodedOnGround = false;
+    private GameObject lastKiller = null; // Track who killed this UFO for explosion attribution
+    private float deathTime = 0f; // Time when UFO died (for timer-based explosion)
 
     // Invincibility frames
     private bool isInvincible = false;
@@ -86,14 +107,26 @@ public class UFOHealth : MonoBehaviour
             {
                 isInvincible = false;
 
-                Debug.Log($"[UFO HEALTH] {gameObject.name} invincibility expired at {Time.time}");
-
                 // Ensure renderer is visible when i-frames end
                 if (ufoRenderer != null)
                 {
                     ufoRenderer.enabled = true;
                     isVisible = true;
                 }
+            }
+        }
+
+        // Trigger explosion 2 seconds after death
+        if (isDead && !hasExplodedOnGround && enableGroundExplosion)
+        {
+            if (Time.time - deathTime >= 2f)
+            {
+                hasExplodedOnGround = true;
+
+                // Break apart UFO at the moment of explosion
+                BreakApartUFO();
+
+                TriggerGroundExplosion(transform.position);
             }
         }
     }
@@ -111,15 +144,12 @@ public class UFOHealth : MonoBehaviour
         // Check invincibility frames - prevent rapid-fire damage
         if (isInvincible)
         {
-            Debug.Log($"[UFO HEALTH] {gameObject.name} is invincible! Damage blocked.");
             return;
         }
 
         // Reduce health
         currentHealth -= damageAmount;
         currentHealth = Mathf.Max(0, currentHealth); // Clamp to 0
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage. Health: {currentHealth}/{maxHealth}");
 
         // Track damage taken in stats
         PlayerStats stats = GetComponent<PlayerStats>();
@@ -132,8 +162,6 @@ public class UFOHealth : MonoBehaviour
         isInvincible = true;
         invincibilityEndTime = Time.time + invincibilityDuration;
         nextBlinkTime = Time.time; // Start blinking immediately
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} invincibility activated for {invincibilityDuration} seconds (until {invincibilityEndTime})");
 
         // Check if dead
         if (currentHealth <= 0)
@@ -150,15 +178,12 @@ public class UFOHealth : MonoBehaviour
         if (isDead) return;
         if (isInvincible)
         {
-            Debug.Log($"[UFO HEALTH] {gameObject.name} is invincible! Damage blocked.");
             return;
         }
 
         // Reduce health
         currentHealth -= damageAmount;
         currentHealth = Mathf.Max(0, currentHealth);
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} took {damageAmount} damage from {(attacker != null ? attacker.name : "unknown")}. Health: {currentHealth}/{maxHealth}");
 
         // Track damage in stats
         PlayerStats stats = GetComponent<PlayerStats>();
@@ -209,6 +234,8 @@ public class UFOHealth : MonoBehaviour
             return; // Already dead
 
         isDead = true;
+        lastKiller = killer; // Store killer for explosion attribution
+        deathTime = Time.time; // Record death time for timer-based explosion
 
         // Notify GameManager of death
         GameManager gameManager = FindObjectOfType<GameManager>();
@@ -244,6 +271,8 @@ public class UFOHealth : MonoBehaviour
             AudioSource.PlayClipAtPoint(deathSound, transform.position, 1f);
         }
 
+        // Don't break apart yet - wait until the explosion at 2 seconds
+
         // Disable flight controls
         if (controller != null)
         {
@@ -260,17 +289,23 @@ public class UFOHealth : MonoBehaviour
         if (rb != null)
         {
             rb.useGravity = true;
-            rb.drag = 0.5f; // Add some air resistance
-            rb.angularDrag = 0.5f; // Add rotational drag
+            rb.drag = 2f; // More air resistance for slower, controlled fall
+            rb.angularDrag = 3f; // Heavy rotational drag to reduce spinning
 
-            // Unfreeze rotation so it can tumble
+            // Unfreeze rotation so it can tumble slightly
             rb.constraints = RigidbodyConstraints.None;
 
-            // Add a small upward impulse for dramatic effect
-            rb.AddForce(Vector3.up * 3f, ForceMode.Impulse);
+            // NO upward impulse - just let it drop naturally
+            // Kill most of the current velocity for a clean death drop
+            rb.velocity = rb.velocity * 0.3f; // Keep 30% of momentum
 
-            // Add random spin
-            rb.AddTorque(Random.insideUnitSphere * 5f, ForceMode.Impulse);
+            // Very gentle random tumble (not crazy spinning)
+            Vector3 gentleTumble = new Vector3(
+                Random.Range(-1f, 1f),
+                Random.Range(-0.5f, 0.5f),
+                Random.Range(-1f, 1f)
+            );
+            rb.AddTorque(gentleTumble, ForceMode.Impulse);
         }
 
         // Set wreck to cleanup after timeout
@@ -319,8 +354,6 @@ public class UFOHealth : MonoBehaviour
 
         currentHealth += healAmount;
         currentHealth = Mathf.Min(currentHealth, maxHealth); // Clamp to max
-
-        Debug.Log($"[UFO HEALTH] {gameObject.name} healed {healAmount}. Health: {currentHealth}/{maxHealth}");
     }
 
     /// <summary>
@@ -330,6 +363,172 @@ public class UFOHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         isDead = false;
-        Debug.Log($"[UFO HEALTH] {gameObject.name} health reset to {maxHealth}");
+        hasExplodedOnGround = false;
+        lastKiller = null;
+    }
+
+    /// <summary>
+    /// Called when UFO collides with something
+    /// NOTE: Death explosion uses timer-based triggering in Update() instead of collision detection
+    /// </summary>
+    void OnCollisionEnter(Collision collision)
+    {
+        // Death explosion is handled by timer in Update() method
+    }
+
+    /// <summary>
+    /// Trigger large explosion with area damage at UFO position
+    /// </summary>
+    void TriggerGroundExplosion(Vector3 explosionPoint)
+    {
+        // Spawn explosion visual effect
+        if (groundExplosionPrefab != null)
+        {
+            GameObject explosion = Instantiate(groundExplosionPrefab, explosionPoint, Quaternion.identity);
+            // Scale up the explosion to match the large blast radius (60 units / 20 = 3x scale)
+            float scale = groundExplosionRadius / 20f;
+            explosion.transform.localScale = Vector3.one * scale;
+            Destroy(explosion, 5f);
+        }
+        else
+        {
+            // Create a fallback visual if no prefab assigned
+            GameObject fallbackSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            fallbackSphere.name = "GroundExplosion_Fallback";
+            fallbackSphere.transform.position = explosionPoint;
+            fallbackSphere.transform.localScale = Vector3.one * groundExplosionRadius * 2f; // Diameter = 120 units
+
+            // Make it bright and visible
+            Renderer renderer = fallbackSphere.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material.color = new Color(1f, 0.5f, 0f, 0.5f); // Orange, semi-transparent
+                renderer.material.SetFloat("_Mode", 3); // Transparent mode
+                renderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                renderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                renderer.material.SetInt("_ZWrite", 0);
+                renderer.material.DisableKeyword("_ALPHATEST_ON");
+                renderer.material.EnableKeyword("_ALPHABLEND_ON");
+                renderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                renderer.material.renderQueue = 3000;
+            }
+
+            // Remove collider so it doesn't interfere
+            Collider col = fallbackSphere.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+
+            Destroy(fallbackSphere, 1f);
+        }
+
+        // Play ground explosion sound
+        if (groundExplosionSound != null)
+        {
+            AudioSource.PlayClipAtPoint(groundExplosionSound, explosionPoint, 1.5f); // Louder for dramatic effect
+        }
+
+        // Deal damage to all UFOs in blast radius
+        Collider[] hitColliders = Physics.OverlapSphere(explosionPoint, groundExplosionRadius);
+        System.Collections.Generic.HashSet<GameObject> damagedUFOs = new System.Collections.Generic.HashSet<GameObject>();
+
+        foreach (Collider hit in hitColliders)
+        {
+            // Check if we hit a UFO (root object with Player tag)
+            if (hit.transform.root.CompareTag("Player"))
+            {
+                GameObject rootUFO = hit.transform.root.gameObject;
+
+                // Skip this UFO (the one that exploded)
+                if (rootUFO == gameObject)
+                    continue;
+
+                // Skip if already damaged this UFO
+                if (damagedUFOs.Contains(rootUFO))
+                    continue;
+
+                damagedUFOs.Add(rootUFO);
+
+                // Deal damage with attribution to the killer (if any)
+                UFOHealth health = rootUFO.GetComponent<UFOHealth>();
+                if (health != null)
+                {
+                    if (lastKiller != null)
+                    {
+                        health.TakeDamage(groundExplosionDamage, lastKiller);
+                    }
+                    else
+                    {
+                        health.TakeDamage(groundExplosionDamage);
+                    }
+                }
+
+                // Apply massive knockback force
+                Rigidbody targetRb = rootUFO.GetComponent<Rigidbody>();
+                if (targetRb != null)
+                {
+                    Vector3 explosionDirection = (rootUFO.transform.position - explosionPoint).normalized;
+                    float distance = Vector3.Distance(explosionPoint, rootUFO.transform.position);
+                    float damageFalloff = 1f - (distance / groundExplosionRadius);
+                    float explosionForce = 80f * damageFalloff; // Much stronger than regular explosion
+                    targetRb.AddForce(explosionDirection * explosionForce, ForceMode.Impulse);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Break apart UFO gently at explosion - dome and body separate and fall apart meekly
+    /// </summary>
+    void BreakApartUFO()
+    {
+        // Find UFO_Visual container (contains UFO_Body and UFO_Dome)
+        Transform ufoVisual = transform.Find("UFO_Visual");
+        if (ufoVisual == null)
+            return;
+
+        // Find the dome and body
+        Transform dome = ufoVisual.Find("UFO_Dome");
+        Transform body = ufoVisual.Find("UFO_Body");
+        if (dome == null)
+            return;
+
+        // Detach dome from parent (make it independent)
+        dome.SetParent(null);
+
+        // Add Rigidbody to dome so it becomes a physics object
+        Rigidbody domeRb = dome.gameObject.AddComponent<Rigidbody>();
+        domeRb.mass = 0.3f; // Very light
+        domeRb.drag = 2f; // High air resistance so it doesn't fly far
+        domeRb.angularDrag = 1f; // Some rotational drag
+        domeRb.useGravity = true;
+
+        // Add sphere collider to dome
+        SphereCollider domeCollider = dome.gameObject.AddComponent<SphereCollider>();
+        domeCollider.radius = 0.6f;
+
+        // Gentle separation forces - small upward and sideways drift
+        Vector3 gentleSeparation = new Vector3(
+            Random.Range(-0.5f, 0.5f),  // Small horizontal X
+            Random.Range(0.5f, 1f),      // Small upward lift
+            Random.Range(-0.5f, 0.5f)    // Small horizontal Z
+        );
+        domeRb.AddForce(gentleSeparation * 3f, ForceMode.Impulse); // Gentle force
+
+        // Gentle lazy tumble for dome
+        Vector3 gentleDomeSpin = new Vector3(
+            Random.Range(-2f, 2f),
+            Random.Range(-2f, 2f),
+            Random.Range(-2f, 2f)
+        );
+        domeRb.AddTorque(gentleDomeSpin, ForceMode.Impulse);
+
+        // Give body a small push in opposite direction (so they separate slightly)
+        if (rb != null)
+        {
+            Vector3 bodyPush = -gentleSeparation * 0.5f; // Half the dome's force, opposite direction
+            rb.AddForce(bodyPush * 3f, ForceMode.Impulse);
+        }
+
+        // Clean up dome after wreck lifetime (same as body)
+        Destroy(dome.gameObject, wreckLifetime);
     }
 }
