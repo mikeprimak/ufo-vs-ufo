@@ -51,6 +51,8 @@ public class Projectile : MonoBehaviour
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
     private bool hasCollided = false; // Prevent multiple collision events
     private float lastProximityCheck = 0f; // Time of last proximity check
+    private string weaponName = "Missile"; // Weapon name for combat log
+    private string explosionWeaponName = "Missile Explosion"; // Explosion name for combat log
 
     void Start()
     {
@@ -139,7 +141,7 @@ public class Projectile : MonoBehaviour
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(damage, owner, "Missile"); // Pass owner and weapon name
+                health.TakeDamage(damage, owner, weaponName); // Pass owner and weapon name
             }
 
             // Trigger wobble effect
@@ -194,7 +196,7 @@ public class Projectile : MonoBehaviour
                 UFOHealth health = rootUFO.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage, owner, "Missile Explosion"); // Pass owner and weapon name
+                    health.TakeDamage(explosionDamage, owner, explosionWeaponName); // Pass owner and weapon name
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);
@@ -243,5 +245,14 @@ public class Projectile : MonoBehaviour
     public void SetOwner(GameObject ownerObject)
     {
         owner = ownerObject;
+    }
+
+    /// <summary>
+    /// Set custom weapon names for combat log (e.g., "Laser Burst" instead of "Missile")
+    /// </summary>
+    public void SetWeaponNames(string directHitName, string explosionName)
+    {
+        weaponName = directHitName;
+        explosionWeaponName = explosionName;
     }
 }

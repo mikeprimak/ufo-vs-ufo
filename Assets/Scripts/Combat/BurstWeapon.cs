@@ -168,6 +168,8 @@ public class BurstWeapon : MonoBehaviour
         if (projectileScript != null)
         {
             projectileScript.SetOwner(ownerUFO);
+            // Set custom weapon names for combat log
+            projectileScript.SetWeaponNames("Laser Burst", "Laser Burst");
         }
 
         HomingProjectile homingProjectileScript = projectile.GetComponent<HomingProjectile>();
