@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-26
-**Update Count:** 47
+**Update Count:** 49
 
 ---
 
@@ -37,6 +37,10 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Start screen with "Start Game" button
 - ✅ Combat log UI (kill feed showing color-coded hits and kills)
 - ✅ Canvas scaling fixed for all resolutions (1920x1080 reference)
+- ✅ Death camera zoom out (40 units) for dramatic effect
+- ✅ Death explosion system: 2-second timer triggers 60-unit blast radius with massive knockback
+- ✅ UFO breakup effect: Dome and body gently separate at explosion moment
+- ✅ Camera collision detection (prevents clipping through walls)
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -122,8 +126,34 @@ Assets/
 **Key Features:**
 - **3 HP default**, 3-second invincibility frames after damage
 - **Blink feedback** during i-frames (8 blinks/sec)
-- **Death system**: Becomes physics wreck, spawns explosion, auto-cleanup
+- **Death system**: Natural physics death with gentle tumble
+  - Reduces velocity to 30% on death (no acrobatics)
+  - UFO stays intact while falling (body + dome together)
+  - Gentle random tumble (not crazy spinning)
+  - High drag (2.0) and angular drag (3.0) for controlled fall
+  - Becomes physics wreck, spawns small explosion, auto-cleanup
+- **Death explosion (2 seconds after death)**:
+  - Timer-based trigger (no collision detection needed)
+  - 60-unit blast radius at UFO position (wherever it is)
+  - Deals 1 HP damage to all UFOs in range
+  - Applies massive knockback (80 force, vs 30 for regular explosions)
+  - Properly attributes kills to original killer
+  - Auto-scales explosion visual based on radius (3x missile size)
+- **UFO breakup effect** (at explosion moment):
+  - Dome detaches and becomes independent physics object
+  - Gentle separation: dome drifts up slightly (0.5-1 unit) with small sideways drift (±0.5)
+  - Body gets small opposite push so pieces drift apart slowly
+  - High drag (2.0) prevents pieces flying off screen
+  - Lazy tumbling on both pieces (not dramatic)
+  - Both pieces cleaned up after wreck lifetime (10s)
 - Prevents burst weapons from instant-killing
+
+**Death Explosion Setup:**
+- `enableGroundExplosion` - Enable/disable feature (default: true)
+- `groundExplosionPrefab` - **REQUIRED**: Assign ExplosionEffect.prefab from Assets/Prefabs/
+- `groundExplosionRadius` - 60 units (3x larger than missiles)
+- `groundExplosionDamage` - 1 HP damage
+- **Fallback visual**: If no prefab assigned, creates orange semi-transparent sphere (120 unit diameter)
 
 ### UFOColorIdentity.cs - Color Assignment
 **Key Features:**
@@ -161,8 +191,26 @@ Assets/
 - **FOV kick**: Widens on acceleration, narrows on brake, max boost during combo
 - **Camera shake**: Impact-based shake (intensity scales with speed)
   - **CRITICAL FIX**: Shake applied AFTER smoothing, not before (was being dampened)
+- **Death camera**: Elevated bird's eye view when player dies
+  - Positions camera 15 units behind and 25 units above falling UFO
+  - Locks to direction UFO was facing when it died (no spinning)
+  - Smoothly looks down at UFO as it falls to ground
+  - Completely separate from normal camera logic (early return)
+- **Camera collision detection**: Prevents clipping through walls using SphereCast
+  - Fast pull-in when obstructed (10 speed)
+  - Slow recovery when clear (5 speed)
+  - 0.5 unit collision sphere radius for padding
+  - Minimum 1 unit distance from target
+  - Debug visualization in Scene view (green = clear, red = obstructed)
 - Dynamic vertical tilt when ascending/descending
 - All effects have zero GPU cost
+
+**Camera Collision Setup:**
+- `enableCameraCollision` - Enable/disable (default: true)
+- `cameraCollisionRadius` - Sphere size for padding (default: 0.5)
+- `collisionLayers` - Layers to check (default: all layers)
+- `collisionPullInSpeed` - How fast camera pulls in when blocked (default: 10)
+- `collisionRecoverySpeed` - How fast camera returns when clear (default: 5)
 
 ### UFOParticleTrail.cs - Motion Trails
 **Optimizations (Critical for Integrated GPU):**
