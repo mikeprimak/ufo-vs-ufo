@@ -173,7 +173,7 @@ public class UFOHealth : MonoBehaviour
     /// <summary>
     /// Apply damage to this UFO and track who dealt it (for kill tracking)
     /// </summary>
-    public void TakeDamage(int damageAmount, GameObject attacker)
+    public void TakeDamage(int damageAmount, GameObject attacker, string weaponName = "")
     {
         if (isDead) return;
         if (isInvincible)
@@ -200,9 +200,6 @@ public class UFOHealth : MonoBehaviour
             {
                 attackerStats.RecordDamageDealt(damageAmount);
             }
-
-            // Log hit to combat log
-            CombatLogUI.LogHit(attacker, gameObject, damageAmount);
         }
 
         // Activate invincibility frames
@@ -210,10 +207,18 @@ public class UFOHealth : MonoBehaviour
         invincibilityEndTime = Time.time + invincibilityDuration;
         nextBlinkTime = Time.time;
 
-        // Check if dead
+        // Check if dead - log kill instead of hit
         if (currentHealth <= 0)
         {
-            Die(attacker);
+            Die(attacker, weaponName);
+        }
+        else
+        {
+            // Only log hit if UFO survives (not a kill)
+            if (attacker != null)
+            {
+                CombatLogUI.LogHit(attacker, gameObject, damageAmount, weaponName);
+            }
         }
     }
 
@@ -222,13 +227,13 @@ public class UFOHealth : MonoBehaviour
     /// </summary>
     void Die()
     {
-        Die(null);
+        Die(null, "");
     }
 
     /// <summary>
     /// Kill this UFO and track who killed it
     /// </summary>
-    void Die(GameObject killer)
+    void Die(GameObject killer, string weaponName = "")
     {
         if (isDead)
             return; // Already dead
@@ -248,8 +253,8 @@ public class UFOHealth : MonoBehaviour
             {
                 gameManager.RecordKill(killer);
 
-                // Log kill to combat log
-                CombatLogUI.LogKill(killer, gameObject);
+                // Log kill to combat log with weapon name
+                CombatLogUI.LogKill(killer, gameObject, weaponName);
             }
             else
             {
@@ -453,11 +458,11 @@ public class UFOHealth : MonoBehaviour
                 {
                     if (lastKiller != null)
                     {
-                        health.TakeDamage(groundExplosionDamage, lastKiller);
+                        health.TakeDamage(groundExplosionDamage, lastKiller, "Death Explosion");
                     }
                     else
                     {
-                        health.TakeDamage(groundExplosionDamage);
+                        health.TakeDamage(groundExplosionDamage, gameObject, "Death Explosion");
                     }
                 }
 

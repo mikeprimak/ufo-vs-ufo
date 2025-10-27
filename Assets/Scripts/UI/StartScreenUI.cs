@@ -14,6 +14,9 @@ public class StartScreenUI : MonoBehaviour
     [Tooltip("Optional title text")]
     public TMPro.TextMeshProUGUI titleText;
 
+    [Tooltip("Optional instruction text for controller/keyboard input")]
+    public TMPro.TextMeshProUGUI instructionText;
+
     private GameManager gameManager;
 
     void Start()
@@ -39,6 +42,25 @@ public class StartScreenUI : MonoBehaviour
         if (titleText != null)
         {
             titleText.text = "UFO vs UFO";
+        }
+
+        // Set instruction text if available
+        if (instructionText != null)
+        {
+            instructionText.text = "Press A To Begin";
+        }
+    }
+
+    void Update()
+    {
+        // Check for gamepad input to start the game
+        // Button 0 = A button (Xbox), Button 7 = Start button
+        if (Input.GetButtonDown("Jump") || // Space bar or gamepad A button
+            Input.GetKeyDown(KeyCode.Return) || // Enter key
+            Input.GetKeyDown(KeyCode.JoystickButton0) || // A button (Xbox) / Cross (PS)
+            Input.GetKeyDown(KeyCode.JoystickButton7)) // Start button
+        {
+            OnStartButtonClicked();
         }
     }
 

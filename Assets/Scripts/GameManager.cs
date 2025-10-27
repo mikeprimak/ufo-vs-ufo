@@ -149,12 +149,13 @@ public class GameManager : MonoBehaviour
 
             if (winner != null)
             {
-                Debug.Log($"[GAME MANAGER] MATCH OVER! Winner: {winner.name}");
+                Debug.Log($"[GAME MANAGER] *** MATCH OVER! *** Winner: {winner.name}");
             }
             else
             {
-                Debug.Log("[GAME MANAGER] MATCH OVER! No survivors (draw)");
+                Debug.Log("[GAME MANAGER] *** MATCH OVER! *** No survivors (draw)");
             }
+            Debug.Log($"[GAME MANAGER] Victory screen will show in {endDelay} seconds...");
         }
     }
 
@@ -168,12 +169,25 @@ public class GameManager : MonoBehaviour
             // Show victory screen after delay
             if (victoryScreenUI != null && !victoryScreenUI.activeSelf)
             {
+                Debug.Log("[GAME MANAGER] *** SHOWING VICTORY SCREEN NOW ***");
                 ShowVictoryScreen();
+            }
+            else if (victoryScreenUI == null)
+            {
+                Debug.LogError("[GAME MANAGER] Victory screen UI is NULL! Cannot show victory screen.");
             }
 
             // Match cleanup/restart logic goes here
-            Debug.Log("[GAME MANAGER] Match ended, showing victory screen");
             // TODO: Add restart logic, return to menu, etc.
+        }
+        else
+        {
+            // Show countdown every second
+            int secondsRemaining = Mathf.CeilToInt(stateTimer);
+            if (Time.frameCount % 60 == 0) // Roughly once per second
+            {
+                Debug.Log($"[GAME MANAGER] Victory screen in {secondsRemaining} seconds...");
+            }
         }
     }
 

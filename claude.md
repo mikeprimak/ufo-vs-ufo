@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
 **Last Updated:** 2025-10-26
-**Update Count:** 49
+**Update Count:** 51
 
 ---
 
@@ -41,6 +41,16 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Death explosion system: 2-second timer triggers 60-unit blast radius with massive knockback
 - ✅ UFO breakup effect: Dome and body gently separate at explosion moment
 - ✅ Camera collision detection (prevents clipping through walls)
+- ✅ Combat log weapon names: Shows weapon used in hit/kill messages
+- ✅ Combat log deduplication: Only shows kill message, not both hit and kill
+- ✅ Minimap system: Circular rotating overhead view with UFO blips
+- ✅ Dash weapon: Speed boost + ramming damage + blue force field visual
+- ✅ Start screen gamepad support (A button, Start, Space, Enter)
+- ✅ Laser weapon: Blue color, 2x range (200 units)
+- ✅ Weapon pickup animations: Enhanced spinning/bobbing, 5x scale
+- ✅ Particle trail adjustments: Tighter positioning, better visibility
+- ✅ Manual boost disabled (only combo boost from barrel rolls remains)
+- ✅ Barrel roll buffer window: 0.4 seconds for easier chaining
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -69,16 +79,18 @@ Assets/
 │   │   ├── BoostMeter.cs - Boost meter UI display
 │   │   ├── StartScreenUI.cs - Start screen with button to begin match
 │   │   ├── VictoryScreenUI.cs - End-of-match statistics screen
-│   │   └── CombatLogUI.cs - Kill feed showing color-coded combat events
+│   │   ├── CombatLogUI.cs - Kill feed showing color-coded combat events
+│   │   └── MinimapUI.cs - Circular rotating minimap with UFO blips
 │   ├── Combat/
 │   │   ├── WeaponManager.cs - Weapon inventory and switching
 │   │   ├── WeaponSystem.cs - Projectile weapon firing
 │   │   ├── WeaponPickup.cs - Weapon pickup boxes (supports random)
 │   │   ├── Projectile.cs - Proximity missile (auto-detonates near enemies)
 │   │   ├── HomingProjectile.cs - Homing missile (tracks targets)
-│   │   ├── LaserWeapon.cs - Laser beam weapon (fixed: OnDisable cleanup prevents freeze)
+│   │   ├── LaserWeapon.cs - Laser beam weapon (blue, 200 range, OnDisable cleanup)
 │   │   ├── BurstWeapon.cs - Burst fire weapon
-│   │   └── StickyBomb.cs - Sticky bomb weapon
+│   │   ├── StickyBomb.cs - Sticky bomb weapon
+│   │   └── DashWeapon.cs - Dash weapon (3x speed boost, ramming damage, force field)
 │   ├── GameManager.cs - Match flow, win conditions, stats tracking
 │   ├── PlayerStats.cs - Individual player statistics (kills, deaths, streaks, accuracy)
 │   └── Arena/ (empty - future)
@@ -101,9 +113,10 @@ Assets/
 - Banking/pitch visual effects (UFO_Visual child)
 - **Barrel roll dodge**: Directional evasion (Q/RB + stick direction)
   - No cooldown, can chain back-to-back
+  - Buffer window: 0.4 seconds (was 0.2s - easier chaining)
   - Combo system: 3 rolls in 2s = 1.5x speed boost for 3s
-- **Manual boost**: Hold LB to boost (1.8x speed, drains meter)
-  - Stacks with combo boost (max 2.7x speed)
+- **Manual boost**: DISABLED (was LB to boost, now removed)
+  - Only combo boost from barrel rolls remains
 - Fast vertical movement (3x speed when moving only up/down)
 - AI input support for enemy control
 
@@ -111,7 +124,7 @@ Assets/
 - A/D or Buttons 0/1: Accelerate/Brake
 - Arrows/Left Stick: Turn, Ascend/Descend
 - Q/RB (Button 5): Barrel Roll (direction from stick)
-- LB (Button 4): Boost
+- LB (Button 4): (UNMAPPED - manual boost removed)
 
 ### UFOCollision.cs - Bounce System
 **Key Features:**
@@ -219,7 +232,13 @@ Assets/
 - Standard alpha blend (not additive), Unlit/Transparent shader
 - 32x32 texture, no shadows/occlusion
 - **70% GPU load reduction** vs original
-- Speed-based emission (10-30 units/sec threshold)
+- Speed-based emission (7-30 units/sec threshold, was 10-30)
+
+**Trail Positioning (Updated):**
+- Lateral offset: 2.4 (left/right trail distance)
+- Forward offset: -1 (rear position)
+- Vertical offset: -0.5 (below UFO center)
+- Center trail: (0, -0.5, -3.5) - further back than side trails
 
 ### GameManager.cs - Match Flow & Stats
 **Key Features:**
@@ -241,10 +260,13 @@ Assets/
 ### StartScreenUI.cs - Start Screen
 **Key Features:**
 - Shows "UFO vs UFO" title
-- "START GAME" button to begin match
-- Game waits in WaitingToStart state until button pressed
+- "Press A To Begin" instruction text
+- **Gamepad support**: A button, Start button (Xbox/PlayStation)
+- **Keyboard support**: Space bar, Enter key
+- **Mouse support**: Click "START GAME" button
+- Game waits in WaitingToStart state until input received
 - UFOs frozen until match starts
-- Calls GameManager.StartMatch() when clicked
+- Calls GameManager.StartMatch() when activated
 
 ### VictoryScreenUI.cs - End Screen Display
 **Shows:**
@@ -263,14 +285,48 @@ Assets/
 - **Color detection**: Uses UFOColorIdentity component (hardcoded) for reliable color names
 - **Fallback**: Auto-detects color from most saturated material if no UFOColorIdentity
 - **Event types**:
-  - Hits: "Yellow hit Green!" (white text)
-  - Kills: "Red killed Blue!" (yellowish text)
+  - Hits: "Yellow hit Green with Missile!" (white text, shows weapon name)
+  - Kills: "Red killed Blue with Laser!" (yellowish text, shows weapon name)
   - Suicides: "Green self-destructed!" (gray text)
   - Weapon pickups: "Yellow picked up HomingMissile" (light gray, human player only)
+- **Deduplication**: When a hit kills a UFO, only kill message appears (not both hit + kill)
 - **Auto-fading**: Messages fade out after 4 seconds
 - **Message limit**: Shows max 5 messages at once
 - **Canvas Scaler**: 1920x1080 reference, scales with screen size
 - **Setup**: Vertical Layout Group with TextMeshPro log entry prefab (500x30px, 24pt font)
+
+**Weapon Names Tracked:**
+- Missile, Missile Explosion
+- Homing Missile, Homing Missile Explosion
+- Laser
+- Sticky Bomb, Sticky Bomb Explosion
+- Death Explosion (from dead UFO exploding)
+
+### MinimapUI.cs - Circular Rotating Minimap
+**Key Features:**
+- **Circular 2D overhead view** of play area
+- **Rotating compass**: "Up" on minimap is always player's forward direction
+- **UFO blips**: Color-coded dots showing all UFO positions
+  - Player blip: Cyan (configurable)
+  - Enemy blips: Match UFO team colors (uses UFOColorIdentity)
+- **Range detection**:
+  - In-range UFOs: Show at actual position (scaled)
+  - Out-of-range UFOs: Clamped to edge of minimap circle (semi-transparent)
+- **Performance**: Updates every 0.1s (not every frame)
+- **Auto-cleanup**: Dead UFOs automatically removed from minimap
+
+**Configuration:**
+- `detectionRange` - 100 units (UFOs beyond this show on edge)
+- `minimapRadius` - 75 pixels (circle size)
+- `worldToMinimapScale` - 0.5 (zoom level: higher = closer view)
+- `blipSize` - 8 pixels (size of UFO dots)
+- `updateInterval` - 0.1 seconds (refresh rate)
+
+**Setup Requirements:**
+- Circular minimap background with Mask component
+- BlipContainer (child RectTransform that rotates)
+- Blip prefab (small circle Image, 8x8 pixels)
+- Position: Bottom-right corner recommended (X=-100, Y=100)
 
 ### Projectile.cs - Proximity Missile
 **Key Features:**
@@ -295,6 +351,48 @@ Assets/
 - Prioritizes forward targets (angle-weighted scoring)
 
 **Note:** NO proximity detonation - only explodes on collision or lifetime expiration (8s)
+
+### LaserWeapon.cs - Laser Beam
+**Key Features:**
+- **Color**: Blue (was red)
+- **Range**: 200 units (was 100 - doubled for longer reach)
+- **Duration**: 2 seconds continuous beam
+- **Damage**: 1 HP (single hit per beam activation)
+- **Cooldown**: 1 second after beam ends
+- **Visual**: Line renderer with scaled width based on distance
+- **Critical fix**: OnDisable cleanup prevents beam freezing during barrel rolls/weapon switches
+
+**Performance optimized for integrated GPU:**
+- 2 vertices per corner/cap (minimal geometry)
+- No shadows, no lighting data
+- Unlit/Color shader
+
+### DashWeapon.cs - Dash (NEW)
+**Key Features:**
+- **Speed boost**: 3x forward speed multiplier for 6 seconds
+- **Ramming damage**: 1 HP when colliding with other UFOs during dash
+- **Blue force field**: Semi-transparent sphere (size 4, distance 2 in front)
+- **Mechanics**:
+  - Temporarily boosts UFO max speed to 3x (e.g., 30 → 90)
+  - Reduces drag by 50% for faster acceleration
+  - Applies continuous forward force to reach target speed
+  - Only boosts forward velocity (vertical/lateral control unchanged)
+- **Auto-cleanup**: Weapon disables when dash ends
+- **Force field visual**: Auto-created blue semi-transparent sphere using Unlit/Transparent shader
+
+**Setup:**
+- Add DashWeapon component to UFO
+- Link in WeaponManager's "Dash Weapon" field
+- Force field auto-creates on Start
+
+### WeaponPickup.cs - Pickup Boxes
+**Key Features:**
+- **Animations**: Spin (90°/sec) and bob (speed 3, height 0.5)
+- **Scale**: 5x size (set manually in Transform, not auto-scaled by script)
+- **Trigger size**: 1x multiplier (matches visual size)
+- **Respawn**: 15 seconds default
+- **Random weapons**: Enable randomWeapon to give random weapon type
+- **AI reservation system**: Prevents multiple AIs from claiming same pickup
 
 ## Scene Setup Notes
 

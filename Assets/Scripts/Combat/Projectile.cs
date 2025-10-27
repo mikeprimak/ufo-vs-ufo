@@ -64,9 +64,6 @@ public class Projectile : MonoBehaviour
 
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * speed;
-
-        // Debug: Log owner info
-        Debug.Log($"[MISSILE] Spawned by: {(owner != null ? owner.name : "NULL OWNER")} | Proximity Distance: {(proximityTriggerDistance > 0 ? proximityTriggerDistance : blastRadius)}");
     }
 
     void Update()
@@ -112,7 +109,6 @@ public class Projectile : MonoBehaviour
             // Explode if within proximity range
             if (distance <= proximityDistance)
             {
-                Debug.Log($"[MISSILE] PROXIMITY DETONATION! Exploding near {rootTarget.name} at distance {distance:F2}");
                 Explode();
                 return;
             }
@@ -143,7 +139,7 @@ public class Projectile : MonoBehaviour
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(damage, owner); // Pass owner so kills are tracked
+                health.TakeDamage(damage, owner, "Missile"); // Pass owner and weapon name
             }
 
             // Trigger wobble effect
@@ -198,7 +194,7 @@ public class Projectile : MonoBehaviour
                 UFOHealth health = rootUFO.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage, owner); // Pass owner so kills are tracked
+                    health.TakeDamage(explosionDamage, owner, "Missile Explosion"); // Pass owner and weapon name
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);

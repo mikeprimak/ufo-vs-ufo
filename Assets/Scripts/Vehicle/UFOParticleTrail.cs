@@ -31,7 +31,7 @@ public class UFOParticleTrail : MonoBehaviour
     public float emissionRate = 8f;
 
     [Tooltip("Particle start speed (how fast they move initially)")]
-    public float startSpeed = 0.3f;
+    public float startSpeed = 0.5f;
 
     [Header("Colors")]
     [Tooltip("Particle color at spawn (brighter = more visible)")]
@@ -45,20 +45,20 @@ public class UFOParticleTrail : MonoBehaviour
     public bool enableSpeedResponse = true;
 
     [Tooltip("Minimum speed to emit particles (units/s)")]
-    public float minSpeedForTrail = 10f;
+    public float minSpeedForTrail = 7f;
 
     [Tooltip("Speed at which emission is at maximum")]
     public float maxSpeedForTrail = 30f;
 
     [Header("Trail Position")]
     [Tooltip("Left/right distance from UFO center")]
-    public float lateralOffset = 4f;
+    public float lateralOffset = 2.4f;
 
     [Tooltip("Forward/back offset from UFO center (negative = rear)")]
-    public float forwardOffset = -3f;
+    public float forwardOffset = -1f;
 
     [Tooltip("Up/down offset from UFO center")]
-    public float verticalOffset = -1f;
+    public float verticalOffset = -0.5f;
 
     private ParticleSystem leftTrailParticles;
     private ParticleSystem rightTrailParticles;
@@ -78,7 +78,7 @@ public class UFOParticleTrail : MonoBehaviour
         rightTrailParticles = CreateParticleSystem("ParticleTrail_Right", rightPosition);
 
         // Create CENTER particle emitter (well behind UFO)
-        Vector3 centerPosition = new Vector3(0f, verticalOffset, forwardOffset - 3f);
+        Vector3 centerPosition = new Vector3(0f, verticalOffset, forwardOffset - 2.5f);
         centerTrailParticles = CreateParticleSystem("ParticleTrail_Center", centerPosition);
     }
 

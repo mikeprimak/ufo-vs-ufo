@@ -87,7 +87,7 @@ public class UFOController : MonoBehaviour
     public float barrelRollCooldown = 0f;
 
     [Tooltip("How early you can buffer the next barrel roll (seconds before current one ends)")]
-    public float barrelRollBufferWindow = 0.2f;
+    public float barrelRollBufferWindow = 0.4f;
 
     [Header("Boost Settings")]
     [Tooltip("Speed to reach in first second of boost")]
@@ -347,9 +347,9 @@ public class UFOController : MonoBehaviour
                 }
             }
 
-            // Boost input (LB / Button 4 only)
-            bool boostInput = Input.GetKey(KeyCode.JoystickButton4); // LB only
-            HandleBoost(boostInput);
+            // Boost input (DISABLED - manual boost removed)
+            // bool boostInput = Input.GetKey(KeyCode.JoystickButton4); // LB only
+            HandleBoost(false); // Manual boost disabled
         }
 
         // Process barrel rolls (shared logic for both AI and player)
@@ -456,12 +456,6 @@ public class UFOController : MonoBehaviour
             // Clamp to max boost speed
             targetBoostSpeed = Mathf.Min(targetBoostSpeed, maxBoostSpeed);
 
-            // Debug: Log every 0.5 seconds
-            if (Time.frameCount % 30 == 0)
-            {
-                Debug.Log($"[BOOST] Duration={boostDuration:F2}s, TargetSpeed={targetBoostSpeed:F1}, CurrentSpeed={currentForwardSpeed:F1}, BoostMeter={currentBoostTime:F2}s");
-            }
-
             // Calculate acceleration needed to reach target speed
             float speedDifference = targetBoostSpeed - currentForwardSpeed;
 
@@ -489,15 +483,12 @@ public class UFOController : MonoBehaviour
             {
                 // Deceleration complete - return to normal physics
                 isDeceleratingFromBoost = false;
-                Debug.Log("Boost deceleration complete!");
             }
             else
             {
                 // Calculate target speed: smoothly lerp from boost speed to max normal speed
                 float decayProgress = timeSinceBoostEnded / boostDecelerationTime;
                 float targetSpeed = Mathf.Lerp(speedWhenBoostEnded, maxSpeed, decayProgress);
-
-                Debug.Log($"Decelerating: Progress={decayProgress:F2}, TargetSpeed={targetSpeed:F1}, CurrentSpeed={currentForwardSpeed:F1}");
 
                 // Apply controlled deceleration directly to velocity
                 // Set velocity exactly to target speed to override drag/physics interference
@@ -550,7 +541,6 @@ public class UFOController : MonoBehaviour
                 isBoosting = true;
                 boostStartTime = Time.time;
                 isDeceleratingFromBoost = false;
-                Debug.Log($"[BOOST START] Initial BoostMeter={currentBoostTime:F2}s, StartTime={boostStartTime:F2}");
             }
 
             // NOTE: Meter drain moved to FixedUpdate to sync with boost duration timing
@@ -565,7 +555,6 @@ public class UFOController : MonoBehaviour
                 isDeceleratingFromBoost = true;
                 boostEndTime = Time.time;
                 speedWhenBoostEnded = currentForwardSpeed;
-                Debug.Log($"Boost ended! Starting deceleration from speed={speedWhenBoostEnded:F1} over {boostDecelerationTime} seconds");
             }
             // NOTE: Don't reset deceleration variables if already decelerating!
 
@@ -753,13 +742,11 @@ public class UFOController : MonoBehaviour
             // Use visual model's world rotation (includes pitch and yaw)
             Vector3 visualForward = visualModel.TransformDirection(Vector3.forward);
             aimDirection = visualForward;
-            Debug.Log($"Visual Model Aim - Direction: {visualForward}");
         }
         // OPTION 3: Fallback to horizontal forward
         else
         {
             aimDirection = transform.forward;
-            Debug.Log("Fallback Aim - Horizontal only");
         }
 
         // Create rotation from aim direction

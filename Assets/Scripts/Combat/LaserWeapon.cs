@@ -11,7 +11,7 @@ public class LaserWeapon : MonoBehaviour
     public float beamDuration = 2f;
 
     [Tooltip("Maximum range of the laser beam")]
-    public float beamRange = 100f;
+    public float beamRange = 200f;
 
     [Tooltip("Width of the laser beam at the start (near UFO)")]
     public float beamStartWidth = 0.5f;
@@ -27,7 +27,7 @@ public class LaserWeapon : MonoBehaviour
 
     [Header("Visual Settings")]
     [Tooltip("Color of the laser beam")]
-    public Color beamColor = Color.red;
+    public Color beamColor = Color.blue;
 
     [Tooltip("Material for the laser beam (uses default if not assigned)")]
     public Material beamMaterial;
@@ -315,12 +315,7 @@ public class LaserWeapon : MonoBehaviour
         UFOHealth health = target.GetComponent<UFOHealth>();
         if (health != null)
         {
-            // Debug.Log($"[LASER] UFOHealth component found on {target.name}, dealing {damage} damage");
-            health.TakeDamage(damage, owner); // Pass owner so kills are tracked
-        }
-        else
-        {
-            Debug.LogWarning($"[LASER] No UFOHealth component found on {target.name}! Cannot deal damage.");
+            health.TakeDamage(damage, owner, "Laser"); // Pass owner and weapon name
         }
 
         // Trigger wobble effect

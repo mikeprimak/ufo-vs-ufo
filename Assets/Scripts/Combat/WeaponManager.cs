@@ -23,6 +23,9 @@ public class WeaponManager : MonoBehaviour
     [Tooltip("Reference to StickyBomb weapon system")]
     public WeaponSystem stickyBombWeaponSystem;
 
+    [Tooltip("Reference to Dash weapon")]
+    public DashWeapon dashWeapon;
+
     [Header("Current Weapon")]
     public WeaponType currentWeapon = WeaponType.None;
 
@@ -42,6 +45,9 @@ public class WeaponManager : MonoBehaviour
     [Tooltip("Icon sprite for Sticky Bomb weapon")]
     public Sprite stickyBombIcon;
 
+    [Tooltip("Icon sprite for Dash weapon")]
+    public Sprite dashIcon;
+
     [Header("AI Control")]
     [Tooltip("If true, AI can trigger weapon firing via TryFireWeaponAI()")]
     public bool allowAIControl = false;
@@ -56,7 +62,8 @@ public class WeaponManager : MonoBehaviour
         HomingMissile,
         Laser,
         Burst,
-        StickyBomb
+        StickyBomb,
+        Dash
     }
 
     void Start()
@@ -129,11 +136,6 @@ public class WeaponManager : MonoBehaviour
                     // Set ammo BEFORE enabling (prevents Start() from interfering)
                     weaponSystem.currentAmmo = 3; // 3 missiles per pickup
                     weaponSystem.enabled = true;
-                    Debug.Log($"[WEAPON MANAGER] Missile weapon enabled on {gameObject.name}, ammo set to 3");
-                }
-                else
-                {
-                    Debug.LogError($"[WEAPON MANAGER] Missile weapon: weaponSystem is null on {gameObject.name}!");
                 }
                 break;
 
@@ -167,9 +169,12 @@ public class WeaponManager : MonoBehaviour
                     stickyBombWeaponSystem.currentAmmo = 1; // Only 1 sticky bomb
                     stickyBombWeaponSystem.enabled = true;
                 }
-                else
+                break;
+
+            case WeaponType.Dash:
+                if (dashWeapon != null)
                 {
-                    Debug.LogError("StickyBomb weapon: stickyBombWeaponSystem is null!");
+                    dashWeapon.enabled = true;
                 }
                 break;
 
@@ -192,13 +197,11 @@ public class WeaponManager : MonoBehaviour
                 if (weaponSystem != null && weaponSystem.enabled)
                 {
                     weaponFired = weaponSystem.TryFire();
-                    Debug.Log($"[WEAPON MANAGER] Missile fired: {weaponFired}, remaining ammo: {weaponSystem.currentAmmo}");
 
                     // Check ammo regardless of whether shot fired (ammo decreases even on failed shots)
                     if (weaponSystem.currentAmmo <= 0)
                     {
                         // Used up the weapon
-                        Debug.Log("[WEAPON MANAGER] Missile ammo depleted, removing weapon");
                         SetWeapon(WeaponType.None);
                     }
                 }
@@ -259,6 +262,21 @@ public class WeaponManager : MonoBehaviour
                 }
                 break;
 
+            case WeaponType.Dash:
+                if (dashWeapon != null && dashWeapon.enabled)
+                {
+                    weaponFired = dashWeapon.TryFire();
+
+                    // Dash activates immediately and lasts for duration
+                    // Will auto-disable when duration ends
+                    if (weaponFired)
+                    {
+                        // Weapon activated successfully
+                        // Will be removed when dash ends (handled in DashWeapon)
+                    }
+                }
+                break;
+
             case WeaponType.None:
                 // No weapon equipped
                 break;
@@ -306,6 +324,10 @@ public class WeaponManager : MonoBehaviour
                 return "Laser";
             case WeaponType.Burst:
                 return "Burst Cannon";
+            case WeaponType.StickyBomb:
+                return "Sticky Bomb";
+            case WeaponType.Dash:
+                return "Dash";
             case WeaponType.None:
                 return "No Weapon";
             default:
@@ -338,6 +360,8 @@ public class WeaponManager : MonoBehaviour
                 return burstIcon;
             case WeaponType.StickyBomb:
                 return stickyBombIcon;
+            case WeaponType.Dash:
+                return dashIcon;
             case WeaponType.None:
             default:
                 return null; // No icon for no weapon

@@ -280,30 +280,48 @@ public class CombatLogUI : MonoBehaviour
     // ===== PUBLIC STATIC METHODS FOR LOGGING EVENTS =====
 
     /// <summary>
-    /// Log a hit event (attacker damaged victim)
+    /// Log a hit event (attacker damaged victim with weapon)
     /// </summary>
-    public static void LogHit(GameObject attacker, GameObject victim, int damage)
+    public static void LogHit(GameObject attacker, GameObject victim, int damage, string weaponName = "")
     {
         if (instance == null) return;
 
         string attackerName = instance.GetColoredPlayerName(attacker);
         string victimName = instance.GetColoredPlayerName(victim);
 
-        string message = $"{attackerName} hit {victimName}!";
+        string message;
+        if (!string.IsNullOrEmpty(weaponName))
+        {
+            message = $"{attackerName} hit {victimName} with {weaponName}!";
+        }
+        else
+        {
+            message = $"{attackerName} hit {victimName}!";
+        }
+
         instance.AddLogEntry(message, Color.white);
     }
 
     /// <summary>
-    /// Log a kill event (killer eliminated victim)
+    /// Log a kill event (killer eliminated victim with weapon)
     /// </summary>
-    public static void LogKill(GameObject killer, GameObject victim)
+    public static void LogKill(GameObject killer, GameObject victim, string weaponName = "")
     {
         if (instance == null) return;
 
         string killerName = instance.GetColoredPlayerName(killer);
         string victimName = instance.GetColoredPlayerName(victim);
 
-        string message = $"{killerName} killed {victimName}!";
+        string message;
+        if (!string.IsNullOrEmpty(weaponName))
+        {
+            message = $"{killerName} killed {victimName} with {weaponName}!";
+        }
+        else
+        {
+            message = $"{killerName} killed {victimName}!";
+        }
+
         instance.AddLogEntry(message, new Color(1f, 1f, 0.5f)); // Yellowish for kills
     }
 

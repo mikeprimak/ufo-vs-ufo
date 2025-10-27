@@ -214,7 +214,7 @@ public class HomingProjectile : MonoBehaviour
             UFOHealth health = rootObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(damage, owner); // Pass owner so kills are tracked
+                health.TakeDamage(damage, owner, "Homing Missile"); // Pass owner and weapon name
             }
 
             // Trigger wobble effect
@@ -262,7 +262,7 @@ public class HomingProjectile : MonoBehaviour
                 UFOHealth health = rootUFO.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage, owner); // Pass owner so kills are tracked
+                    health.TakeDamage(explosionDamage, owner, "Homing Missile Explosion"); // Pass owner and weapon name
                 }
 
                 float distance = Vector3.Distance(transform.position, rootUFO.transform.position);

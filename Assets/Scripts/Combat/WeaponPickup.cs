@@ -25,14 +25,17 @@ public class WeaponPickup : MonoBehaviour
     public float rotationSpeed = 90f;
 
     [Tooltip("Bob up/down speed")]
-    public float bobSpeed = 1f;
+    public float bobSpeed = 3f;
 
     [Tooltip("Bob height")]
     public float bobHeight = 0.5f;
 
     [Header("Pickup Settings")]
+    [Tooltip("Visual scale multiplier for pickup box")]
+    public float visualScale = 1.5f;
+
     [Tooltip("Trigger collider radius multiplier (increase for easier pickup)")]
-    public float triggerSizeMultiplier = 2f;
+    public float triggerSizeMultiplier = 1f;
 
     private MeshRenderer pickupRenderer;
     private Collider pickupCollider;

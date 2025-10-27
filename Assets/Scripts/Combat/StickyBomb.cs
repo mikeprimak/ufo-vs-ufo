@@ -122,7 +122,7 @@ public class StickyBomb : MonoBehaviour
             UFOHealth health = collision.gameObject.GetComponent<UFOHealth>();
             if (health != null)
             {
-                health.TakeDamage(contactDamage, owner); // Pass owner so kills are tracked
+                health.TakeDamage(contactDamage, owner, "Sticky Bomb"); // Pass owner and weapon name
             }
 
             Debug.Log($"[STICKY BOMB] Hit UFO {collision.gameObject.name} for {contactDamage} contact damage");
@@ -196,7 +196,7 @@ public class StickyBomb : MonoBehaviour
                 UFOHealth health = hit.GetComponent<UFOHealth>();
                 if (health != null)
                 {
-                    health.TakeDamage(explosionDamage, owner); // Pass owner so kills are tracked
+                    health.TakeDamage(explosionDamage, owner, "Sticky Bomb Explosion"); // Pass owner and weapon name
                 }
 
                 float distance = Vector3.Distance(transform.position, hit.transform.position);

@@ -101,6 +101,35 @@ public class UFOCamera : MonoBehaviour
     [Tooltip("Minimum time between shakes (seconds)")]
     public float shakeCooldown = 0.3f;
 
+    [Header("Death Camera Settings")]
+    [Tooltip("Enable dramatic camera zoom out when player UFO dies")]
+    public bool enableDeathZoom = true;
+
+    [Tooltip("Distance behind UFO when dead")]
+    public float deathCameraDistance = 15f;
+
+    [Tooltip("Height above UFO when dead (bird's eye view)")]
+    public float deathCameraHeight = 25f;
+
+    [Tooltip("How quickly camera moves to death position")]
+    public float deathCameraSpeed = 3f;
+
+    [Header("Camera Collision Settings")]
+    [Tooltip("Enable camera collision detection to prevent clipping through walls")]
+    public bool enableCameraCollision = true;
+
+    [Tooltip("Radius of camera collision sphere (larger = more padding from walls)")]
+    public float cameraCollisionRadius = 0.5f;
+
+    [Tooltip("Layers to check for camera collision (usually walls/environment)")]
+    public LayerMask collisionLayers = -1; // Default: all layers
+
+    [Tooltip("How quickly camera pulls in when obstructed")]
+    public float collisionPullInSpeed = 10f;
+
+    [Tooltip("How quickly camera returns to desired distance when clear")]
+    public float collisionRecoverySpeed = 5f;
+
     private Camera cam;
     private Vector3 currentVelocity;
     private Rigidbody targetRigidbody;
@@ -118,6 +147,15 @@ public class UFOCamera : MonoBehaviour
     private Vector3 shakeOffset;
     private float lastShakeTime;
 
+    // Death camera state
+    private bool isTargetDead = false;
+    private UFOHealth targetHealth;
+    private Vector3 deathCameraTargetPosition; // Fixed position for death camera
+    private Quaternion lastAliveRotation; // Rotation when UFO died (for camera angle)
+
+    // Camera collision state
+    private float adjustedDistance; // Distance after collision adjustment
+
     void Start()
     {
         cam = GetComponent<Camera>();
@@ -130,6 +168,7 @@ public class UFOCamera : MonoBehaviour
 
         // Initialize current distance to normal distance
         currentDistance = distance;
+        adjustedDistance = distance;
 
         if (target == null)
         {
@@ -141,6 +180,8 @@ public class UFOCamera : MonoBehaviour
             targetRigidbody = target.GetComponent<Rigidbody>();
             // Try to get UFOController for input detection
             ufoController = target.GetComponent<UFOController>();
+            // Try to get UFOHealth for death detection
+            targetHealth = target.GetComponent<UFOHealth>();
 
             // IMMEDIATELY position camera behind UFO (no lerp delay)
             Vector3 initialPosition = target.position - (target.forward * distance) + (Vector3.up * height);
@@ -161,6 +202,13 @@ public class UFOCamera : MonoBehaviour
     {
         if (target == null)
             return;
+
+        // Check if target UFO died this frame
+        if (enableDeathZoom && targetHealth != null && targetHealth.IsDead() && !isTargetDead)
+        {
+            isTargetDead = true;
+            lastAliveRotation = target.rotation; // Remember which way UFO was facing when it died
+        }
 
         // Get UFO's vertical velocity and forward speed
         float verticalVelocity = 0f;
@@ -201,6 +249,27 @@ public class UFOCamera : MonoBehaviour
         // Smoothly lerp current turn zoom out
         currentTurnZoomOut = Mathf.Lerp(currentTurnZoomOut, targetTurnZoomOut, turnZoomSpeed * Time.deltaTime);
 
+        // === DEATH CAMERA MODE (completely different behavior) ===
+        if (isTargetDead && enableDeathZoom)
+        {
+            // Death camera: fixed elevated position behind UFO, looking down at the falling wreck
+            // Calculate death camera position: behind and high above UFO
+            Vector3 deathDirection = lastAliveRotation * -Vector3.forward; // Behind where UFO was facing when it died
+            Vector3 targetDeathPosition = target.position + (deathDirection * deathCameraDistance) + (Vector3.up * deathCameraHeight);
+
+            // Smoothly move to death camera position
+            transform.position = Vector3.Lerp(transform.position, targetDeathPosition, deathCameraSpeed * Time.deltaTime);
+
+            // Always look directly at the UFO (not following its rotation)
+            Vector3 lookAtTarget = target.position + Vector3.up * 2f; // Look at center of UFO, slightly above
+            Quaternion deathCameraRotation = Quaternion.LookRotation(lookAtTarget - transform.position);
+            transform.rotation = Quaternion.Slerp(transform.rotation, deathCameraRotation, deathCameraSpeed * Time.deltaTime);
+
+            // Early return - skip all normal camera logic
+            return;
+        }
+
+        // === NORMAL CAMERA MODE (alive UFO) ===
         // Determine if UFO is reversing and adjust camera accordingly
         bool isReversing = forwardSpeed < reverseSpeedThreshold;
         float baseDistance = isReversing ? reverseDistance : distance;
@@ -294,10 +363,54 @@ public class UFOCamera : MonoBehaviour
             shakeOffset = Vector3.zero;
         }
 
-        // Calculate desired position behind and above the UFO
-        // Camera rotates WITH the UFO's yaw for tighter turn tracking
-        // Apply dynamic vertical offset and current distance (which adjusts for reverse)
-        Vector3 desiredPosition = target.position - (target.forward * currentDistance) + (Vector3.up * (height + currentVerticalOffset));
+        // === CAMERA COLLISION SYSTEM ===
+        // Raycast from target to desired camera position to check for obstructions
+        Vector3 targetToCamera = -target.forward * currentDistance;
+        Vector3 desiredCameraOffset = targetToCamera + (Vector3.up * (height + currentVerticalOffset));
+        Vector3 desiredPosition = target.position + desiredCameraOffset;
+
+        // Check for obstructions between target and desired camera position
+        if (enableCameraCollision)
+        {
+            Vector3 rayDirection = desiredCameraOffset.normalized;
+            float desiredDistanceFromTarget = desiredCameraOffset.magnitude;
+
+            // Raycast with sphere to detect walls/obstacles
+            RaycastHit hit;
+            if (Physics.SphereCast(target.position, cameraCollisionRadius, rayDirection, out hit, desiredDistanceFromTarget, collisionLayers))
+            {
+                // Camera is obstructed - pull it closer to avoid clipping through walls
+                float safeDistance = hit.distance - cameraCollisionRadius; // Add padding
+                safeDistance = Mathf.Max(safeDistance, 1f); // Minimum distance of 1 unit
+
+                // Smoothly pull camera in when obstructed (fast)
+                adjustedDistance = Mathf.Lerp(adjustedDistance, safeDistance, collisionPullInSpeed * Time.deltaTime);
+
+                // Recalculate position with adjusted distance
+                Vector3 adjustedOffset = rayDirection * adjustedDistance;
+                desiredPosition = target.position + adjustedOffset;
+
+                // Debug visualization (uncomment to see in Scene view)
+                #if UNITY_EDITOR
+                Debug.DrawLine(target.position, hit.point, Color.red);
+                Debug.DrawLine(hit.point, desiredPosition, Color.yellow);
+                #endif
+            }
+            else
+            {
+                // No obstruction - smoothly return to desired distance (slower)
+                adjustedDistance = Mathf.Lerp(adjustedDistance, desiredDistanceFromTarget, collisionRecoverySpeed * Time.deltaTime);
+
+                // Use adjusted distance for smooth recovery
+                Vector3 adjustedOffset = rayDirection * adjustedDistance;
+                desiredPosition = target.position + adjustedOffset;
+
+                // Debug visualization (uncomment to see in Scene view)
+                #if UNITY_EDITOR
+                Debug.DrawLine(target.position, desiredPosition, Color.green);
+                #endif
+            }
+        }
 
         // Smoothly move camera to desired position (WITHOUT shake - that's applied after)
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
@@ -306,6 +419,7 @@ public class UFOCamera : MonoBehaviour
         // This ensures shake is visible and not dampened by camera smoothing
         transform.position += shakeOffset;
 
+        // Camera rotation (normal mode only - death mode handles rotation above)
         // Camera tracks UFO's physics rotation (not visual banking from UFO_Visual)
         // Extract only the Y rotation (yaw) from the target to keep horizon level
         Vector3 targetEuler = target.eulerAngles;
@@ -341,15 +455,10 @@ public class UFOCamera : MonoBehaviour
     public void TriggerShake(float intensity = 1.0f)
     {
         if (!enableCameraShake)
-        {
-            Debug.LogWarning("[Camera Shake] DISABLED - enableCameraShake is false!");
             return;
-        }
 
         shakeTimeRemaining = shakeDuration;
         currentShakeIntensity = shakeIntensity * Mathf.Clamp01(intensity);
-
-        // Debug.Log($"*** [Camera Shake] TRIGGERED! Duration: {shakeDuration}s, CurrentIntensity: {currentShakeIntensity:F2} units ***");
     }
 
     /// <summary>
@@ -366,22 +475,14 @@ public class UFOCamera : MonoBehaviour
         // Check cooldown - don't shake if too soon after last shake
         float timeSinceLastShake = Time.time - lastShakeTime;
         if (timeSinceLastShake < shakeCooldown)
-        {
-            // Debug.Log($"[Camera Shake] Skipped (cooldown). Time since last: {timeSinceLastShake:F2}s, Need >= {shakeCooldown:F2}s");
             return;
-        }
 
         // Check minimum speed threshold - ignore weak impacts
         if (impactSpeed < minShakeSpeed)
-        {
-            // Debug.Log($"[Camera Shake] Skipped (too weak). Impact: {impactSpeed:F1}, Need >= {minShakeSpeed:F1}");
             return;
-        }
 
         // Normalize impact speed to 0-1 range
         float intensity = Mathf.Clamp01(impactSpeed / maxSpeed);
-
-        // Debug.Log($"[Camera Shake] Impact: {impactSpeed:F1} units/s, Intensity: {intensity:F2}, Shake Amount: {shakeIntensity * intensity:F3} units");
 
         // Update last shake time
         lastShakeTime = Time.time;
