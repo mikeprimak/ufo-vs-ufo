@@ -636,10 +636,29 @@ public class UFOController : MonoBehaviour
 
             float verticalDirection = Mathf.Sign(verticalInput);
 
-            // Detect direction change - reset vertical speed for new direction
-            if (verticalDirection != lastVerticalDirection)
+            // Detect direction change - reset vertical speed ONLY if changing up/down direction
+            // If resuming same direction (e.g., was climbing, still climbing), keep current ramp progress
+            if (verticalDirection != lastVerticalDirection && lastVerticalDirection != 0f)
             {
+                // True direction reversal (up to down or vice versa) - reset
                 currentVerticalSpeed = 0f;
+                lastVerticalDirection = verticalDirection;
+            }
+            else if (lastVerticalDirection == 0f)
+            {
+                // Was at zero (no input), now starting input
+                // Check current vertical velocity to see if we're continuing momentum
+                if (Mathf.Abs(rb.velocity.y) > 0.5f && Mathf.Sign(rb.velocity.y) == verticalDirection)
+                {
+                    // Continuing in same direction as current vertical velocity - start at higher ramp value
+                    // Scale the starting ramp based on current vertical velocity magnitude
+                    currentVerticalSpeed = Mathf.Clamp01(Mathf.Abs(rb.velocity.y) / 10f);
+                }
+                else
+                {
+                    // New direction or no significant momentum - start fresh
+                    currentVerticalSpeed = 0f;
+                }
                 lastVerticalDirection = verticalDirection;
             }
 
@@ -659,6 +678,13 @@ public class UFOController : MonoBehaviour
 
             // Apply ramped vertical input to all calculations below
             float rampedVerticalInput = verticalInput * currentVerticalSpeed;
+
+            // Apply exponential curve to reduce sensitivity at low inputs while preserving full range
+            // This makes small taps create smaller pitch changes, but full input still reaches maximum
+            // Power of 1.2 gives subtle reduction: 10% → 6.3%, 50% → 46.4%, 100% → 100%
+            float inputMagnitude = Mathf.Abs(rampedVerticalInput);
+            float curvedInput = Mathf.Pow(inputMagnitude, 1.2f) * Mathf.Sign(rampedVerticalInput);
+            rampedVerticalInput = curvedInput;
 
             // Apply smooth gradient for speed boost based on forward speed
             // Barrel roll lateral movement doesn't count toward threshold

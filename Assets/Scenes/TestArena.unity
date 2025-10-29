@@ -1329,6 +1329,7 @@ GameObject:
   - component: {fileID: 451632590}
   - component: {fileID: 451632591}
   - component: {fileID: 451632592}
+  - component: {fileID: 451632593}
   m_Layer: 0
   m_Name: UFO_Player
   m_TagString: Player
@@ -1469,6 +1470,8 @@ MonoBehaviour:
   turnSpeed: 180
   turnAcceleration: 3
   pitchSpeed: 100
+  verticalAcceleration: 1.5
+  minForwardSpeedForRamping: 0.1
   verticalSpeed: 8
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
@@ -1794,6 +1797,27 @@ MonoBehaviour:
   forceFieldSize: 4
   dashSound: {fileID: 0}
   dashLoopSound: {fileID: 0}
+--- !u!114 &451632593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451632571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f65ec564313adcd40994db6d7d31c512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ufoController: {fileID: 0}
+  reticleDistance: 50
+  reticleSize: 1
+  reticleColor: {r: 0, g: 1, b: 0.5, a: 0.8}
+  smoothSpeed: 15
+  reticleObject: {fileID: 0}
+  hideWhenCantFire: 0
+  pulseSpeed: 2
+  pulseAmount: 0.2
 --- !u!1 &518588617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2960,6 +2984,8 @@ MonoBehaviour:
   turnSpeed: 180
   turnAcceleration: 3
   pitchSpeed: 100
+  verticalAcceleration: 1.5
+  minForwardSpeedForRamping: 0.1
   verticalSpeed: 8
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
@@ -3426,6 +3452,8 @@ MonoBehaviour:
   turnSpeed: 180
   turnAcceleration: 3
   pitchSpeed: 100
+  verticalAcceleration: 1.5
+  minForwardSpeedForRamping: 0.1
   verticalSpeed: 8
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
@@ -6081,6 +6109,8 @@ MonoBehaviour:
   turnSpeed: 180
   turnAcceleration: 3
   pitchSpeed: 100
+  verticalAcceleration: 1.5
+  minForwardSpeedForRamping: 0.1
   verticalSpeed: 8
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
