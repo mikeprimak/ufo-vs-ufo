@@ -30,6 +30,12 @@ public class UFOController : MonoBehaviour
     [Tooltip("How fast the UFO rotates up/down")]
     public float pitchSpeed = 100f;
 
+    [Tooltip("How quickly vertical input ramps up when moving forward for precise aiming (higher = faster ramp)")]
+    public float verticalAcceleration = 1.5f;
+
+    [Tooltip("Minimum forward speed to trigger vertical ramping (below this = instant vertical control)")]
+    public float minForwardSpeedForRamping = 0.1f;
+
     [Header("Vertical Movement")]
     [Tooltip("Speed of ascending/descending")]
     public float verticalSpeed = 8f;
@@ -159,6 +165,10 @@ public class UFOController : MonoBehaviour
     // Turn ramping for precise aiming
     private float currentTurnSpeed;
     private float lastTurnDirection;
+
+    // Vertical ramping for precise aiming
+    private float currentVerticalSpeed;
+    private float lastVerticalDirection;
 
     // Visual feedback
     private float currentBankAngle;
@@ -616,10 +626,39 @@ public class UFOController : MonoBehaviour
 
         if (Mathf.Abs(verticalInput) > 0.1f)
         {
-            // Calculate forward/backward speed (ignore lateral barrel roll movement)
+            // Calculate forward/backward speed first (ignore lateral barrel roll movement)
             // Project velocity onto forward direction to get only forward/back speed
             float forwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
             float absForwardSpeed = Mathf.Abs(forwardSpeed);
+
+            // Determine if we should apply ramping based on forward motion
+            bool isMovingForward = absForwardSpeed >= minForwardSpeedForRamping;
+
+            float verticalDirection = Mathf.Sign(verticalInput);
+
+            // Detect direction change - reset vertical speed for new direction
+            if (verticalDirection != lastVerticalDirection)
+            {
+                currentVerticalSpeed = 0f;
+                lastVerticalDirection = verticalDirection;
+            }
+
+            // Apply ramping only when moving forward (for aiming precision)
+            // When hovering/stationary, give instant vertical control
+            if (isMovingForward)
+            {
+                // Gradually ramp up vertical input speed (ease-in)
+                // Starts slow for precision aiming, reaches full speed after brief hold
+                currentVerticalSpeed = Mathf.Lerp(currentVerticalSpeed, 1f, verticalAcceleration * Time.fixedDeltaTime);
+            }
+            else
+            {
+                // Instant response when not moving forward (hovering, stationary)
+                currentVerticalSpeed = 1f;
+            }
+
+            // Apply ramped vertical input to all calculations below
+            float rampedVerticalInput = verticalInput * currentVerticalSpeed;
 
             // Apply smooth gradient for speed boost based on forward speed
             // Barrel roll lateral movement doesn't count toward threshold
@@ -666,7 +705,7 @@ public class UFOController : MonoBehaviour
                 targetVerticalSpeed = Mathf.Max(targetVerticalSpeed, effectiveVerticalSpeed);
 
                 // Apply the calculated vertical velocity
-                rb.velocity = new Vector3(rb.velocity.x, targetVerticalSpeed * Mathf.Sign(verticalInput), rb.velocity.z);
+                rb.velocity = new Vector3(rb.velocity.x, targetVerticalSpeed * Mathf.Sign(rampedVerticalInput), rb.velocity.z);
             }
             else
             {
@@ -674,9 +713,15 @@ public class UFOController : MonoBehaviour
                 // Use a higher multiplier (2x) to enable aggressive forward+up/down flight paths
                 float activeFlightMultiplier = 2f;
                 float effectiveVerticalSpeed = verticalSpeed * speedMultiplier * activeFlightMultiplier;
-                Vector3 verticalMove = Vector3.up * verticalInput * effectiveVerticalSpeed;
+                Vector3 verticalMove = Vector3.up * rampedVerticalInput * effectiveVerticalSpeed;
                 rb.velocity = new Vector3(rb.velocity.x, verticalMove.y, rb.velocity.z);
             }
+        }
+        else
+        {
+            // No vertical input - reset for next vertical movement
+            currentVerticalSpeed = 0f;
+            lastVerticalDirection = 0f;
         }
     }
 
@@ -720,11 +765,11 @@ public class UFOController : MonoBehaviour
                     // Scale pitch angles for natural aiming feel
                     if (pitchAngle > 0) // Ascending
                     {
-                        pitchAngle *= 0.75f; // Reduce upward angle to 75%
+                        pitchAngle *= 1.0f; // Full upward angle (100%)
                     }
                     else // Descending
                     {
-                        pitchAngle *= 0.5f; // Keep downward angle at 50%
+                        pitchAngle *= 0.8f; // Downward angle at 80%
                     }
                 }
                 // else: pure vertical = pitchAngle stays 0 (horizontal shot)
@@ -852,6 +897,7 @@ public class UFOController : MonoBehaviour
         if (horizontalSpeed >= minSpeedForPitch)
         {
             // Ascending = nose up (positive pitch), Descending = nose down (negative pitch)
+            // Use raw verticalInput for visual pitch (visual should match stick position)
             targetPitchAngle = -verticalInput * visualPitchAmount;
 
         }

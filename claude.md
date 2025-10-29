@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
-**Last Updated:** 2025-10-26
-**Update Count:** 51
+**Last Updated:** 2025-10-29
+**Update Count:** 57
 
 ---
 
@@ -51,6 +51,9 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Particle trail adjustments: Tighter positioning, better visibility
 - ✅ Manual boost disabled (only combo boost from barrel rolls remains)
 - ✅ Barrel roll buffer window: 0.4 seconds for easier chaining
+- ✅ Aim indicator: 3D reticle shows where UFO weapons are currently aimed
+- ✅ Vertical input ramping: Up/down aiming now has ease-in like left/right turning
+- ✅ Increased max pitch: Steeper climbs/dives (ascending 100%, descending 80%)
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -80,7 +83,8 @@ Assets/
 │   │   ├── StartScreenUI.cs - Start screen with button to begin match
 │   │   ├── VictoryScreenUI.cs - End-of-match statistics screen
 │   │   ├── CombatLogUI.cs - Kill feed showing color-coded combat events
-│   │   └── MinimapUI.cs - Circular rotating minimap with UFO blips
+│   │   ├── MinimapUI.cs - Circular rotating minimap with UFO blips
+│   │   └── AimIndicator.cs - 3D reticle showing weapon aim direction
 │   ├── Combat/
 │   │   ├── WeaponManager.cs - Weapon inventory and switching
 │   │   ├── WeaponSystem.cs - Projectile weapon firing
@@ -111,6 +115,21 @@ Assets/
 **Key Features:**
 - Arcade physics with tight turns and responsive controls
 - Banking/pitch visual effects (UFO_Visual child)
+- **Turn ramping system**: Gradual ease-in for precise aiming
+  - Starts at 0% sensitivity for fine adjustments
+  - Ramps to 100% over ~0.3s when holding direction
+  - Resets instantly on direction change or release
+  - Controlled by `turnAcceleration` (default: 3)
+- **Vertical ramping system**: Conditional ease-in for up/down aiming
+  - **Only active when moving forward** (speed >= 0.1 units/sec)
+  - When hovering/stationary: instant vertical control (no ramping)
+  - When flying forward: slow ramp for precision target acquisition
+  - Makes aiming much easier, prevents over-correction
+  - Controlled by `verticalAcceleration` (default: 1.5 - half speed of turn ramp)
+  - Forward threshold: `minForwardSpeedForRamping` (default: 0.1)
+- **Velocity-based aim pitch**: Weapon aim calculated from actual velocity
+  - Ascending: 100% of velocity angle (full pitch up)
+  - Descending: 80% of velocity angle (slightly reduced pitch down)
 - **Barrel roll dodge**: Directional evasion (Q/RB + stick direction)
   - No cooldown, can chain back-to-back
   - Buffer window: 0.4 seconds (was 0.2s - easier chaining)
@@ -327,6 +346,36 @@ Assets/
 - BlipContainer (child RectTransform that rotates)
 - Blip prefab (small circle Image, 8x8 pixels)
 - Position: Bottom-right corner recommended (X=-100, Y=100)
+
+### AimIndicator.cs - 3D Aim Reticle
+**Key Features:**
+- **3D reticle**: Floating crosshair in world space showing where weapons will fire
+- **Auto-positioning**: Uses UFOController.GetAimDirection() for accurate aim tracking
+- **Smooth movement**: Lerps to new position (configurable speed)
+- **Auto-created visual**: Generates reticle geometry automatically (outer ring, center dot, tick marks)
+- **Customizable appearance**: Color, size, distance, and pulse effect
+- **Optional visibility control**: Can hide when weapon can't fire
+
+**Configuration:**
+- `reticleDistance` - 50 units (how far ahead to show reticle)
+- `reticleSize` - 1.0 (scale multiplier)
+- `reticleColor` - Cyan-green (default, Color can be changed at runtime)
+- `smoothSpeed` - 15 (how quickly reticle tracks aim changes)
+- `hideWhenCantFire` - false (set true to show only when weapon ready)
+- `pulseSpeed` - 2.0 (breathing effect speed, 0 = no pulse)
+- `pulseAmount` - 0.2 (pulse intensity, 0-1)
+
+**Setup:**
+- Add AimIndicator component to UFO_Player
+- UFOController reference auto-assigned if on same GameObject
+- Reticle auto-creates on Start (no prefabs needed)
+- Use SetReticleColor() to change color per weapon type
+- Use SetReticleDistance() to adjust for weapon range
+
+**Performance:**
+- Zero GPU cost (simple Unlit/Color shader)
+- No shadows, no physics colliders
+- Minimal geometry (5 primitives total)
 
 ### Projectile.cs - Proximity Missile
 **Key Features:**

@@ -369,6 +369,37 @@ public class WeaponManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Check if the current weapon can fire (for aim indicator visibility)
+    /// </summary>
+    public bool CanCurrentWeaponFire()
+    {
+        switch (currentWeapon)
+        {
+            case WeaponType.Missile:
+                return weaponSystem != null && weaponSystem.enabled && weaponSystem.CanFire();
+
+            case WeaponType.HomingMissile:
+                return homingWeaponSystem != null && homingWeaponSystem.enabled && homingWeaponSystem.CanFire();
+
+            case WeaponType.Laser:
+                return laserWeapon != null && laserWeapon.enabled && laserWeapon.CanFire();
+
+            case WeaponType.Burst:
+                return burstWeapon != null && burstWeapon.enabled && burstWeapon.CanFire();
+
+            case WeaponType.StickyBomb:
+                return stickyBombWeaponSystem != null && stickyBombWeaponSystem.enabled && stickyBombWeaponSystem.CanFire();
+
+            case WeaponType.Dash:
+                return dashWeapon != null && dashWeapon.enabled && dashWeapon.CanFire();
+
+            case WeaponType.None:
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
     /// AI method to try firing current weapon
     /// </summary>
     public void TryFireWeaponAI()
