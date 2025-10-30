@@ -10,7 +10,7 @@ public class Projectile : MonoBehaviour
 {
     [Header("Projectile Settings")]
     [Tooltip("Speed of the projectile")]
-    public float speed = 50f;
+    public float speed = 75f;
 
     [Tooltip("How long before projectile destroys itself (seconds)")]
     public float lifetime = 5f;
