@@ -9,10 +9,10 @@ public class UFOController : MonoBehaviour
 {
     [Header("Movement Settings")]
     [Tooltip("Maximum speed the UFO can reach")]
-    public float maxSpeed = 30f;
+    public float maxSpeed = 90f;
 
     [Tooltip("How quickly the UFO accelerates")]
-    public float acceleration = 60f;
+    public float acceleration = 180f;
 
     [Tooltip("How quickly the UFO decelerates when not accelerating")]
     public float deceleration = 20f;
@@ -38,7 +38,7 @@ public class UFOController : MonoBehaviour
 
     [Header("Vertical Movement")]
     [Tooltip("Speed of ascending/descending")]
-    public float verticalSpeed = 8f;
+    public float verticalSpeed = 24f;
 
     [Tooltip("Vertical speed multiplier when moving ONLY up/down (no horizontal movement)")]
     public float pureVerticalSpeedMultiplier = 3f;
@@ -54,7 +54,7 @@ public class UFOController : MonoBehaviour
 
     [Header("Reverse Settings")]
     [Tooltip("Maximum reverse speed")]
-    public float maxReverseSpeed = 20f;
+    public float maxReverseSpeed = 60f;
 
     [Header("Physics")]
     [Tooltip("Natural momentum drag (higher = stops faster, lower = more gliding)")]
@@ -97,13 +97,13 @@ public class UFOController : MonoBehaviour
 
     [Header("Boost Settings")]
     [Tooltip("Speed to reach in first second of boost")]
-    public float boostFirstSecondSpeed = 60f;
+    public float boostFirstSecondSpeed = 180f;
 
     [Tooltip("Additional speed gained per second after first second")]
-    public float boostSpeedGainPerSecond = 20f;
+    public float boostSpeedGainPerSecond = 60f;
 
     [Tooltip("Maximum speed achievable during boost")]
-    public float maxBoostSpeed = 120f;
+    public float maxBoostSpeed = 360f;
 
     [Tooltip("Time to decelerate from boost speed back to normal speed (seconds)")]
     public float boostDecelerationTime = 4f;

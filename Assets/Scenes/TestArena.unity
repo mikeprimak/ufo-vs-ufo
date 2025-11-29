@@ -1463,8 +1463,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b10f5ca4c774547ab789a9a08979ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 30
-  acceleration: 60
+  maxSpeed: 90
+  acceleration: 180
   deceleration: 20
   brakeForce: 80
   turnSpeed: 180
@@ -1472,12 +1472,12 @@ MonoBehaviour:
   pitchSpeed: 100
   verticalAcceleration: 1.5
   minForwardSpeedForRamping: 0.1
-  verticalSpeed: 8
+  verticalSpeed: 24
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
   maxHeight: 100
   minHeight: 0.5
-  maxReverseSpeed: 20
+  maxReverseSpeed: 60
   dragAmount: 2
   autoLevelSpeed: 2
   visualModel: {fileID: 755738915}
@@ -1490,9 +1490,9 @@ MonoBehaviour:
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
   barrelRollBufferWindow: 0.2
-  boostFirstSecondSpeed: 60
-  boostSpeedGainPerSecond: 20
-  maxBoostSpeed: 120
+  boostFirstSecondSpeed: 180
+  boostSpeedGainPerSecond: 60
+  maxBoostSpeed: 360
   boostDecelerationTime: 4
   maxBoostTime: 4
   boostRechargeTime: 4
@@ -1811,7 +1811,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ufoController: {fileID: 0}
   reticleDistance: 50
-  reticleSize: 1
+  reticleSize: -0.3
   reticleColor: {r: 0, g: 1, b: 0.5, a: 0.8}
   smoothSpeed: 15
   reticleObject: {fileID: 0}
@@ -2977,8 +2977,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b10f5ca4c774547ab789a9a08979ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 30
-  acceleration: 60
+  maxSpeed: 90
+  acceleration: 180
   deceleration: 20
   brakeForce: 80
   turnSpeed: 180
@@ -2986,12 +2986,12 @@ MonoBehaviour:
   pitchSpeed: 100
   verticalAcceleration: 1.5
   minForwardSpeedForRamping: 0.1
-  verticalSpeed: 8
+  verticalSpeed: 24
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
   maxHeight: 100
   minHeight: 0.5
-  maxReverseSpeed: 20
+  maxReverseSpeed: 60
   dragAmount: 2
   autoLevelSpeed: 2
   visualModel: {fileID: 384117775}
@@ -3004,9 +3004,9 @@ MonoBehaviour:
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
   barrelRollBufferWindow: 0.2
-  boostFirstSecondSpeed: 60
-  boostSpeedGainPerSecond: 10
-  maxBoostSpeed: 60
+  boostFirstSecondSpeed: 180
+  boostSpeedGainPerSecond: 30
+  maxBoostSpeed: 180
   boostDecelerationTime: 1.5
   maxBoostTime: 4
   boostRechargeTime: 4
@@ -3445,8 +3445,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b10f5ca4c774547ab789a9a08979ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 30
-  acceleration: 60
+  maxSpeed: 90
+  acceleration: 180
   deceleration: 20
   brakeForce: 80
   turnSpeed: 180
@@ -3454,12 +3454,12 @@ MonoBehaviour:
   pitchSpeed: 100
   verticalAcceleration: 1.5
   minForwardSpeedForRamping: 0.1
-  verticalSpeed: 8
+  verticalSpeed: 24
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
   maxHeight: 100
   minHeight: 0.5
-  maxReverseSpeed: 20
+  maxReverseSpeed: 60
   dragAmount: 2
   autoLevelSpeed: 2
   visualModel: {fileID: 999856865}
@@ -3472,9 +3472,9 @@ MonoBehaviour:
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
   barrelRollBufferWindow: 0.2
-  boostFirstSecondSpeed: 60
-  boostSpeedGainPerSecond: 10
-  maxBoostSpeed: 60
+  boostFirstSecondSpeed: 180
+  boostSpeedGainPerSecond: 30
+  maxBoostSpeed: 180
   boostDecelerationTime: 1.5
   maxBoostTime: 4
   boostRechargeTime: 4
@@ -6102,8 +6102,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b10f5ca4c774547ab789a9a08979ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 30
-  acceleration: 60
+  maxSpeed: 90
+  acceleration: 180
   deceleration: 20
   brakeForce: 80
   turnSpeed: 180
@@ -6111,12 +6111,12 @@ MonoBehaviour:
   pitchSpeed: 100
   verticalAcceleration: 1.5
   minForwardSpeedForRamping: 0.1
-  verticalSpeed: 8
+  verticalSpeed: 24
   pureVerticalSpeedMultiplier: 3
   pureVerticalThreshold: 10
   maxHeight: 100
   minHeight: 0.5
-  maxReverseSpeed: 20
+  maxReverseSpeed: 60
   dragAmount: 2
   autoLevelSpeed: 2
   visualModel: {fileID: 1867461010}
@@ -6129,9 +6129,9 @@ MonoBehaviour:
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
   barrelRollBufferWindow: 0.2
-  boostFirstSecondSpeed: 60
-  boostSpeedGainPerSecond: 10
-  maxBoostSpeed: 60
+  boostFirstSecondSpeed: 180
+  boostSpeedGainPerSecond: 30
+  maxBoostSpeed: 180
   boostDecelerationTime: 1.5
   maxBoostTime: 4
   boostRechargeTime: 4
@@ -6326,7 +6326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 6
+  weaponType: 1
   respawns: 1
   respawnTime: 3
   rotationSpeed: 90
