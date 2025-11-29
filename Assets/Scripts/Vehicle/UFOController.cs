@@ -658,7 +658,9 @@ public class UFOController : MonoBehaviour
     // Snap to level state
     private bool isSnappingToLevel = false;
     private float snapToLevelStartTime;
-    private float snapToLevelDuration = 0.3f;
+    [Header("Snap to Level")]
+    [Tooltip("Duration of snap-to-level animation in seconds")]
+    [SerializeField] private float snapToLevelDuration = 0.5f;
     private Quaternion snapStartRotation;
     private Quaternion snapTargetRotation;
     private Vector3 snapStartVelocity;
@@ -694,11 +696,12 @@ public class UFOController : MonoBehaviour
         float elapsed = Time.time - snapToLevelStartTime;
         float t = Mathf.Clamp01(elapsed / snapToLevelDuration);
 
-        // Use smooth step for nice easing
-        t = Mathf.SmoothStep(0f, 1f, t);
+        // Use ease-out-cubic for smooth deceleration (starts fast, ends slow)
+        // Formula: 1 - (1-t)^3
+        float eased = 1f - Mathf.Pow(1f - t, 3f);
 
         // Smoothly rotate to level
-        Quaternion newRotation = Quaternion.Slerp(snapStartRotation, snapTargetRotation, t);
+        Quaternion newRotation = Quaternion.Slerp(snapStartRotation, snapTargetRotation, eased);
         rb.MoveRotation(newRotation);
 
         // Smoothly transition velocity to horizontal
@@ -718,7 +721,7 @@ public class UFOController : MonoBehaviour
             targetVelocity = snapTargetRotation * Vector3.forward * speed;
         }
 
-        rb.velocity = Vector3.Lerp(snapStartVelocity, targetVelocity, t);
+        rb.velocity = Vector3.Lerp(snapStartVelocity, targetVelocity, eased);
 
         // Check if complete
         if (t >= 1f)

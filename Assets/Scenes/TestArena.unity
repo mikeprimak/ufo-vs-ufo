@@ -154,8 +154,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomWeapon: 1
-  weaponType: 5
+  randomWeapon: 0
+  weaponType: 1
   respawns: 1
   respawnTime: 10
   rotationSpeed: 90
@@ -1554,6 +1554,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: f513db5f616a17b4d84c2521e16aad0d,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 3
@@ -1600,6 +1602,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: 7a8e6b309e658354d8f878a5d31a50ef,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.5
   currentAmmo: 0
   maxAmmo: 1
@@ -1646,6 +1650,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 5859866530454126337, guid: e51dd6957305a2e42bd6ef271a37dc20,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -2079,7 +2085,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 3
+  weaponType: 2
   respawns: 1
   respawnTime: 2
   rotationSpeed: 90
@@ -2605,8 +2611,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomWeapon: 1
-  weaponType: 3
+  randomWeapon: 0
+  weaponType: 1
   respawns: 1
   respawnTime: 15
   rotationSpeed: 90
@@ -2812,6 +2818,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 5859866530454126337, guid: e51dd6957305a2e42bd6ef271a37dc20,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -2832,6 +2840,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: 7a8e6b309e658354d8f878a5d31a50ef,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.5
   currentAmmo: 0
   maxAmmo: 1
@@ -2927,6 +2937,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: f513db5f616a17b4d84c2521e16aad0d,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -3280,6 +3292,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 5859866530454126337, guid: e51dd6957305a2e42bd6ef271a37dc20,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -3300,6 +3314,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: 7a8e6b309e658354d8f878a5d31a50ef,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.5
   currentAmmo: 0
   maxAmmo: 1
@@ -3395,6 +3411,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: f513db5f616a17b4d84c2521e16aad0d,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -5379,8 +5397,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc41b4a11ca72de4dae4370299701ea3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  randomWeapon: 1
-  weaponType: 4
+  randomWeapon: 0
+  weaponType: 2
   respawns: 1
   respawnTime: 15
   rotationSpeed: 90
@@ -5937,6 +5955,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 5859866530454126337, guid: e51dd6957305a2e42bd6ef271a37dc20,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -5957,6 +5977,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: 7a8e6b309e658354d8f878a5d31a50ef,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.5
   currentAmmo: 0
   maxAmmo: 1
@@ -6052,6 +6074,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 9191723643175361914, guid: f513db5f616a17b4d84c2521e16aad0d,
     type: 3}
   firePoint: {fileID: 0}
+  spawnForwardOffset: 15
+  spawnVerticalOffset: -1.5
   fireRate: 0.3
   currentAmmo: 0
   maxAmmo: 1
@@ -6326,7 +6350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 1
+  weaponType: 2
   respawns: 1
   respawnTime: 3
   rotationSpeed: 90

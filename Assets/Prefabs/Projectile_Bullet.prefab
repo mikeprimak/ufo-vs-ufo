@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startSpeed: 90
-  maxSpeed: 200
+  maxSpeed: 300
   acceleration: 150
   lifetime: 10
   damage: 1
@@ -164,10 +164,12 @@ MonoBehaviour:
   missileColor: {r: 0.3, g: 0.3, b: 0.35, a: 1}
   noseConeColor: {r: 0.8, g: 0.2, b: 0.1, a: 1}
   missileScale: 1
+  enableParticleTrail: 1
+  trailColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.8}
   showTrajectory: 1
   trajectoryColor: {r: 1, g: 0, b: 0, a: 1}
-  dotSize: 0.5
-  dotSpacing: 5
+  dotSize: 0.2
+  dotSpacing: 10
   trajectoryLayers:
     serializedVersion: 2
     m_Bits: 4294967295

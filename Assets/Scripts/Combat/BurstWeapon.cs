@@ -30,7 +30,7 @@ public class BurstWeapon : MonoBehaviour
     public float firePointOffset = 3f;
 
     [Tooltip("Forward distance from UFO center for fire points")]
-    public float forwardOffset = 15f;
+    public float forwardOffset = 5f;
 
     [Header("Ammo Settings")]
     [Tooltip("Current ammo available")]

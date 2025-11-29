@@ -9,7 +9,7 @@ public class HomingProjectile : MonoBehaviour
 {
     [Header("Projectile Settings")]
     [Tooltip("Initial speed of the missile")]
-    public float speed = 40f;
+    public float speed = 120f;
 
     [Tooltip("How long before missile destroys itself (seconds)")]
     public float lifetime = 8f;
@@ -19,7 +19,17 @@ public class HomingProjectile : MonoBehaviour
 
     [Header("Explosion Settings")]
     [Tooltip("Explosion blast radius")]
-    public float blastRadius = 20f;
+    public float blastRadius = 10f;
+
+    [Header("Proximity Settings")]
+    [Tooltip("Distance at which missile explodes near enemies")]
+    public float proximityTriggerDistance = 2f;
+
+    [Tooltip("How often to check proximity (seconds)")]
+    public float proximityCheckInterval = 0.1f;
+
+    [Tooltip("Delay before proximity detection activates (seconds) - prevents self-hits at launch")]
+    public float proximityArmingDelay = 0.3f;
 
     [Tooltip("Explosion damage to UFOs in blast radius")]
     public int explosionDamage = 1;
@@ -32,13 +42,13 @@ public class HomingProjectile : MonoBehaviour
 
     [Header("Homing Settings")]
     [Tooltip("How quickly missile turns toward target (degrees per second)")]
-    public float turnRate = 180f;
+    public float turnRate = 90f;
 
     [Tooltip("How quickly missile accelerates toward max speed")]
-    public float acceleration = 20f;
+    public float acceleration = 60f;
 
     [Tooltip("Maximum speed the missile can reach")]
-    public float maxSpeed = 60f;
+    public float maxSpeed = 120f;
 
     [Tooltip("Detection radius to find targets")]
     public float detectionRadius = 100f;
@@ -48,6 +58,22 @@ public class HomingProjectile : MonoBehaviour
 
     [Tooltip("How long after launch before homing activates (seconds)")]
     public float homingDelay = 0.2f;
+
+    [Header("U-Turn Settings")]
+    [Tooltip("Enable U-turn behavior when no target is ahead")]
+    public bool enableUTurn = true;
+
+    [Tooltip("Minimum speed during U-turn (slows down to this)")]
+    public float uTurnMinSpeed = 10f;
+
+    [Tooltip("How quickly missile decelerates for U-turn")]
+    public float uTurnDeceleration = 60f;
+
+    [Tooltip("Turn rate multiplier during U-turn (faster turning)")]
+    public float uTurnTurnMultiplier = 2f;
+
+    [Tooltip("Angle threshold to consider U-turn complete (degrees from 180)")]
+    public float uTurnCompleteAngle = 30f;
 
     [Header("Visual Settings")]
     [Tooltip("Optional trail renderer reference")]
@@ -98,6 +124,15 @@ public class HomingProjectile : MonoBehaviour
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
     private bool hasCollided = false; // Prevent multiple collision events
 
+    // U-turn state
+    private bool isDoingUTurn = false;
+    private Vector3 uTurnStartDirection; // Direction we were facing when U-turn started
+    private bool hasSlowedForUTurn = false; // Track if we've reached min speed
+
+    // Proximity detection
+    private float lastProximityCheck = 0f;
+    private GameObject ownerRoot = null; // Cached root of owner for reliable comparisons
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -130,6 +165,13 @@ public class HomingProjectile : MonoBehaviour
 
     void CreateMissileVisual()
     {
+        // Hide any existing mesh on the root object (e.g., default sphere from prefab)
+        MeshRenderer existingRenderer = GetComponent<MeshRenderer>();
+        if (existingRenderer != null)
+        {
+            existingRenderer.enabled = false;
+        }
+
         // Create single unlit material for entire missile
         Material missileMat = new Material(Shader.Find("Unlit/Color"));
         missileMat.color = missileColor;
@@ -143,8 +185,8 @@ public class HomingProjectile : MonoBehaviour
         body.transform.localPosition = Vector3.zero;
         // Rotate cylinder to point forward (cylinders are vertical by default)
         body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        // Long and thin: 3x length for sleek missile look
-        body.transform.localScale = new Vector3(0.3f * scale, 3f * scale, 0.3f * scale);
+        // Long and thin: 2x length for sleek missile look
+        body.transform.localScale = new Vector3(0.3f * scale, 2f * scale, 0.3f * scale);
         Destroy(body.GetComponent<Collider>()); // No extra colliders
         body.GetComponent<Renderer>().material = missileMat;
         body.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -153,8 +195,8 @@ public class HomingProjectile : MonoBehaviour
         GameObject nose = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         nose.name = "MissileNose";
         nose.transform.SetParent(transform);
-        // Position at front of longer body
-        nose.transform.localPosition = new Vector3(0f, 0f, 3.2f * scale);
+        // Position at front of body
+        nose.transform.localPosition = new Vector3(0f, 0f, 2.1f * scale);
         // Stretched sphere to make a cone shape
         nose.transform.localScale = new Vector3(0.3f * scale, 0.3f * scale, 0.6f * scale);
         Destroy(nose.GetComponent<Collider>());
@@ -165,7 +207,7 @@ public class HomingProjectile : MonoBehaviour
         float finLength = 0.5f * scale;
         float finWidth = 0.02f * scale;
         float finHeight = 0.35f * scale;
-        float finBackOffset = -2.8f * scale; // Position at rear of longer body
+        float finBackOffset = -1.85f * scale; // Position at rear of body
         float finOutwardOffset = 0.2f * scale;
 
         for (int i = 0; i < 4; i++)
@@ -194,7 +236,7 @@ public class HomingProjectile : MonoBehaviour
         GameObject exhaust = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         exhaust.name = "MissileExhaust";
         exhaust.transform.SetParent(transform);
-        exhaust.transform.localPosition = new Vector3(0f, 0f, -3.1f * scale);
+        exhaust.transform.localPosition = new Vector3(0f, 0f, -2.05f * scale);
         exhaust.transform.localScale = new Vector3(0.2f * scale, 0.2f * scale, 0.2f * scale);
         Destroy(exhaust.GetComponent<Collider>());
         exhaust.GetComponent<Renderer>().material = missileMat;
@@ -211,7 +253,7 @@ public class HomingProjectile : MonoBehaviour
     {
         GameObject trailObj = new GameObject("MissileTrail");
         trailObj.transform.SetParent(transform);
-        trailObj.transform.localPosition = new Vector3(0f, 0f, -3.2f * scale); // Behind exhaust
+        trailObj.transform.localPosition = new Vector3(0f, 0f, -2.1f * scale); // Behind exhaust
 
         ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
         var main = ps.main;
@@ -383,6 +425,52 @@ public class HomingProjectile : MonoBehaviour
         {
             homingActive = true;
         }
+
+        // Check proximity at intervals (performance optimization)
+        if (Time.time >= lastProximityCheck + proximityCheckInterval)
+        {
+            lastProximityCheck = Time.time;
+            CheckProximity();
+        }
+    }
+
+    void CheckProximity()
+    {
+        // Skip if proximity distance not set
+        if (proximityTriggerDistance <= 0f)
+            return;
+
+        // Don't check proximity until arming delay has passed (prevents self-hits at launch)
+        if (Time.time < spawnTime + proximityArmingDelay)
+            return;
+
+        // Find all objects with target tag
+        GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
+
+        foreach (GameObject potentialTarget in potentialTargets)
+        {
+            // Get the root GameObject (in case we hit a child object)
+            GameObject rootTarget = potentialTarget.transform.root.gameObject;
+
+            // Skip the owner (check both owner and cached ownerRoot for safety)
+            if (rootTarget == owner || rootTarget == ownerRoot)
+                continue;
+
+            // Skip dead UFOs
+            UFOHealth health = rootTarget.GetComponent<UFOHealth>();
+            if (health != null && health.IsDead())
+                continue;
+
+            // Check distance
+            float distance = Vector3.Distance(transform.position, rootTarget.transform.position);
+
+            // Explode if within proximity range
+            if (distance <= proximityTriggerDistance)
+            {
+                Explode();
+                return;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -396,21 +484,158 @@ public class HomingProjectile : MonoBehaviour
             FindNearestTarget();
         }
 
-        // If we have a target, home in on it
+        // If we have a target, home in on it and cancel any U-turn
         if (target != null)
         {
-            HomeTowardTarget();
-        }
+            // Cancel U-turn if we found a target
+            if (isDoingUTurn)
+            {
+                isDoingUTurn = false;
+                hasSlowedForUTurn = false;
+            }
 
-        // Accelerate up to max speed
-        if (currentSpeed < maxSpeed)
+            HomeTowardTarget();
+
+            // Accelerate up to max speed
+            if (currentSpeed < maxSpeed)
+            {
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
+        }
+        else if (enableUTurn)
         {
-            currentSpeed += acceleration * Time.fixedDeltaTime;
-            currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            // No target found - check if we should do a U-turn
+            HandleUTurn();
+        }
+        else
+        {
+            // U-turn disabled, just keep accelerating forward
+            if (currentSpeed < maxSpeed)
+            {
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
         }
 
         // Apply velocity in current forward direction
         rb.velocity = transform.forward * currentSpeed;
+    }
+
+    void HandleUTurn()
+    {
+        // Check if there's any potential target behind us
+        Transform behindTarget = FindAnyTarget();
+
+        if (behindTarget == null)
+        {
+            // No targets anywhere - just fly straight
+            if (currentSpeed < maxSpeed)
+            {
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
+            return;
+        }
+
+        // Check if target is behind us (more than 90 degrees off forward)
+        Vector3 toTarget = (behindTarget.position - transform.position).normalized;
+        float angleToTarget = Vector3.Angle(transform.forward, toTarget);
+
+        // If target is roughly ahead (within 90 degrees), don't U-turn, just seek normally
+        if (angleToTarget < 90f)
+        {
+            // Target is ahead but we don't have line-of-sight (or outside detection range)
+            // Just keep going and hope to reacquire
+            if (currentSpeed < maxSpeed)
+            {
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
+            return;
+        }
+
+        // Target is behind us - initiate or continue U-turn
+        if (!isDoingUTurn)
+        {
+            // Start the U-turn
+            isDoingUTurn = true;
+            uTurnStartDirection = transform.forward;
+            hasSlowedForUTurn = false;
+        }
+
+        // Phase 1: Slow down
+        if (!hasSlowedForUTurn)
+        {
+            currentSpeed -= uTurnDeceleration * Time.fixedDeltaTime;
+            if (currentSpeed <= uTurnMinSpeed)
+            {
+                currentSpeed = uTurnMinSpeed;
+                hasSlowedForUTurn = true;
+            }
+        }
+
+        // Phase 2: Turn toward target (faster turn rate during U-turn)
+        Vector3 directionToTarget = toTarget;
+        Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+        float rotationStep = turnRate * uTurnTurnMultiplier * Time.fixedDeltaTime;
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationStep);
+
+        // Check if U-turn is complete (now facing roughly toward target)
+        float currentAngleToTarget = Vector3.Angle(transform.forward, toTarget);
+        if (currentAngleToTarget < uTurnCompleteAngle)
+        {
+            // U-turn complete - accelerate and try to acquire target normally
+            isDoingUTurn = false;
+            hasSlowedForUTurn = false;
+
+            // Speed back up
+            if (currentSpeed < maxSpeed)
+            {
+                currentSpeed += acceleration * Time.fixedDeltaTime;
+                currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Find any valid target regardless of line-of-sight (for U-turn decision)
+    /// </summary>
+    Transform FindAnyTarget()
+    {
+        GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
+
+        float nearestDistance = float.MaxValue;
+        Transform nearestTarget = null;
+
+        foreach (GameObject potentialTarget in potentialTargets)
+        {
+            // Get the root object for reliable comparison
+            GameObject rootTarget = potentialTarget.transform.root.gameObject;
+
+            // Skip the owner (check both owner and ownerRoot)
+            if (rootTarget == owner || rootTarget == ownerRoot)
+                continue;
+
+            // Skip dead UFOs
+            UFOHealth health = potentialTarget.GetComponent<UFOHealth>();
+            if (health != null && health.IsDead())
+                continue;
+
+            float distance = Vector3.Distance(transform.position, potentialTarget.transform.position);
+
+            // Use larger detection radius for U-turn decisions
+            if (distance > detectionRadius * 2f)
+                continue;
+
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestTarget = potentialTarget.transform;
+            }
+        }
+
+        return nearestTarget;
     }
 
     void HomeTowardTarget()
@@ -436,8 +661,11 @@ public class HomingProjectile : MonoBehaviour
 
         foreach (GameObject potentialTarget in potentialTargets)
         {
-            // Skip the owner
-            if (potentialTarget == owner)
+            // Get the root object for reliable comparison
+            GameObject rootTarget = potentialTarget.transform.root.gameObject;
+
+            // Skip the owner (check both owner and ownerRoot)
+            if (rootTarget == owner || rootTarget == ownerRoot)
                 continue;
 
             // Check distance
@@ -487,12 +715,12 @@ public class HomingProjectile : MonoBehaviour
             return;
         hasCollided = true;
 
-        // Don't hit the UFO that fired this projectile
-        if (collision.gameObject == owner)
-            return;
-
-        // Always get the root object first
+        // Always get the root object first (handles hitting child objects like UFO_Body)
         GameObject rootObject = collision.gameObject.transform.root.gameObject;
+
+        // Don't hit the UFO that fired this projectile (check both owner and ownerRoot)
+        if (rootObject == owner || rootObject == ownerRoot)
+            return;
 
         // Check if we hit a UFO
         if (rootObject.CompareTag("Player"))
@@ -533,8 +761,8 @@ public class HomingProjectile : MonoBehaviour
             {
                 GameObject rootUFO = hit.transform.root.gameObject;
 
-                // Skip the owner
-                if (rootUFO == owner)
+                // Skip the owner (check both owner and ownerRoot)
+                if (rootUFO == owner || rootUFO == ownerRoot)
                     continue;
 
                 // Skip the directly hit UFO (already took collision damage)
@@ -601,6 +829,11 @@ public class HomingProjectile : MonoBehaviour
     public void SetOwner(GameObject ownerObject)
     {
         owner = ownerObject;
+        // Cache the root object for reliable comparisons
+        if (owner != null)
+        {
+            ownerRoot = owner.transform.root.gameObject;
+        }
     }
 
     // Debug visualization in editor
@@ -615,6 +848,15 @@ public class HomingProjectile : MonoBehaviour
         {
             Gizmos.color = Color.red;
             Gizmos.DrawLine(transform.position, target.position);
+        }
+
+        // Show U-turn state
+        if (isDoingUTurn)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, 3f);
+            // Draw original direction we're turning from
+            Gizmos.DrawRay(transform.position, uTurnStartDirection * 10f);
         }
     }
 }

@@ -122,6 +122,13 @@ public class Projectile : MonoBehaviour
 
     void CreateMissileVisual()
     {
+        // Hide any existing mesh on the root object (e.g., default sphere from prefab)
+        MeshRenderer existingRenderer = GetComponent<MeshRenderer>();
+        if (existingRenderer != null)
+        {
+            existingRenderer.enabled = false;
+        }
+
         // Create single unlit material for entire missile
         Material missileMat = new Material(Shader.Find("Unlit/Color"));
         missileMat.color = missileColor;
@@ -135,8 +142,8 @@ public class Projectile : MonoBehaviour
         body.transform.localPosition = Vector3.zero;
         // Rotate cylinder to point forward (cylinders are vertical by default)
         body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        // Long and thin: 3x length for sleek missile look
-        body.transform.localScale = new Vector3(0.3f * scale, 3f * scale, 0.3f * scale);
+        // Long and thin: 2x length for sleek missile look
+        body.transform.localScale = new Vector3(0.3f * scale, 2f * scale, 0.3f * scale);
         Destroy(body.GetComponent<Collider>()); // No extra colliders
         body.GetComponent<Renderer>().material = missileMat;
         body.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -145,8 +152,8 @@ public class Projectile : MonoBehaviour
         GameObject nose = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         nose.name = "MissileNose";
         nose.transform.SetParent(transform);
-        // Position at front of longer body
-        nose.transform.localPosition = new Vector3(0f, 0f, 3.2f * scale);
+        // Position at front of body
+        nose.transform.localPosition = new Vector3(0f, 0f, 2.1f * scale);
         // Stretched sphere to make a cone shape
         nose.transform.localScale = new Vector3(0.3f * scale, 0.3f * scale, 0.6f * scale);
         Destroy(nose.GetComponent<Collider>());
@@ -157,7 +164,7 @@ public class Projectile : MonoBehaviour
         float finLength = 0.5f * scale;
         float finWidth = 0.02f * scale;
         float finHeight = 0.35f * scale;
-        float finBackOffset = -2.8f * scale; // Position at rear of longer body
+        float finBackOffset = -1.85f * scale; // Position at rear of body
         float finOutwardOffset = 0.2f * scale;
 
         for (int i = 0; i < 4; i++)
@@ -186,7 +193,7 @@ public class Projectile : MonoBehaviour
         GameObject exhaust = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         exhaust.name = "MissileExhaust";
         exhaust.transform.SetParent(transform);
-        exhaust.transform.localPosition = new Vector3(0f, 0f, -3.1f * scale);
+        exhaust.transform.localPosition = new Vector3(0f, 0f, -2.05f * scale);
         exhaust.transform.localScale = new Vector3(0.2f * scale, 0.2f * scale, 0.2f * scale);
         Destroy(exhaust.GetComponent<Collider>());
         exhaust.GetComponent<Renderer>().material = missileMat;
@@ -203,7 +210,7 @@ public class Projectile : MonoBehaviour
     {
         GameObject trailObj = new GameObject("MissileTrail");
         trailObj.transform.SetParent(transform);
-        trailObj.transform.localPosition = new Vector3(0f, 0f, -3.2f * scale); // Behind exhaust
+        trailObj.transform.localPosition = new Vector3(0f, 0f, -2.1f * scale); // Behind exhaust
 
         ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
         var main = ps.main;
