@@ -14,10 +14,10 @@ public class UFOCamera : MonoBehaviour
 
     [Header("Camera Position")]
     [Tooltip("Distance behind the UFO")]
-    public float distance = 10f;
+    public float distance = 25f;
 
     [Tooltip("Height above the UFO")]
-    public float height = 5f;
+    public float height = 8f;
 
     [Tooltip("How smoothly the camera follows position (lower = smoother, higher = tighter)")]
     public float smoothSpeed = 5f;

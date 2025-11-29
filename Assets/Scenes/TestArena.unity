@@ -4378,8 +4378,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 451632576}
-  distance: 10
-  height: 5
+  distance: 25
+  height: 8
   smoothSpeed: 5
   rotationSmoothing: 0.8
   lookDownAngle: 10
