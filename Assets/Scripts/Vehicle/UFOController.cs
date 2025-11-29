@@ -266,15 +266,13 @@ public class UFOController : MonoBehaviour
         if (movementEnabled)
         {
             HandleMovement();
-            HandleVerticalMovement();
+            // HandleVerticalMovement() removed - pitch rotation handles vertical flight
             EnforceHeightLimits();
             HandleBarrelRoll(); // Barrel roll physics
         }
 
         HandleRotation(); // Always allow rotation, even during countdown
-
-        // Keep UFO level (prevent tilting from impacts)
-        AutoLevel();
+        HandlePitchRotation(); // Handle vertical aiming (pitch)
 
         // Track input state for next frame
         wasAcceleratingLastFrame = accelerateInput;
@@ -429,11 +427,10 @@ public class UFOController : MonoBehaviour
             }
 
             // Clamp to max forward speed (but not during deceleration)
+            // True 3D flight: velocity follows UFO's facing direction (including pitch)
             if (!isDeceleratingFromBoost && currentForwardSpeed > effectiveMaxSpeed)
             {
-                Vector3 horizontalVelocity = rb.velocity;
-                horizontalVelocity.y = 0;
-                rb.velocity = transform.forward * effectiveMaxSpeed + Vector3.up * rb.velocity.y;
+                rb.velocity = transform.forward * effectiveMaxSpeed;
             }
         }
 
@@ -478,9 +475,10 @@ public class UFOController : MonoBehaviour
             }
 
             // Hard clamp to max boost speed (safety)
+            // True 3D flight: velocity follows UFO's facing direction
             if (currentForwardSpeed > maxBoostSpeed)
             {
-                rb.velocity = transform.forward * maxBoostSpeed + Vector3.up * rb.velocity.y;
+                rb.velocity = transform.forward * maxBoostSpeed;
             }
         }
         // Handle smooth deceleration when boost ends
@@ -501,8 +499,8 @@ public class UFOController : MonoBehaviour
                 float targetSpeed = Mathf.Lerp(speedWhenBoostEnded, maxSpeed, decayProgress);
 
                 // Apply controlled deceleration directly to velocity
-                // Set velocity exactly to target speed to override drag/physics interference
-                rb.velocity = transform.forward * targetSpeed + Vector3.up * rb.velocity.y;
+                // True 3D flight: velocity follows UFO's facing direction
+                rb.velocity = transform.forward * targetSpeed;
             }
         }
         else if (brakeInput)
@@ -528,9 +526,10 @@ public class UFOController : MonoBehaviour
             }
 
             // Clamp to max reverse speed
+            // True 3D flight: velocity follows UFO's facing direction
             if (currentForwardSpeed < -maxReverseSpeed)
             {
-                rb.velocity = transform.forward * -maxReverseSpeed + Vector3.up * rb.velocity.y;
+                rb.velocity = -transform.forward * maxReverseSpeed;
             }
         }
         else
@@ -606,6 +605,41 @@ public class UFOController : MonoBehaviour
             // No turn input - reset for next turn
             currentTurnSpeed = 0f;
             lastTurnDirection = 0f;
+        }
+    }
+
+    void HandlePitchRotation()
+    {
+        if (Mathf.Abs(verticalInput) > 0.1f)
+        {
+            float verticalDirection = Mathf.Sign(verticalInput);
+
+            // Detect direction change - reset vertical speed for new direction
+            if (verticalDirection != lastVerticalDirection && lastVerticalDirection != 0f)
+            {
+                currentVerticalSpeed = 0f;
+                lastVerticalDirection = verticalDirection;
+            }
+            else if (lastVerticalDirection == 0f)
+            {
+                currentVerticalSpeed = 0f;
+                lastVerticalDirection = verticalDirection;
+            }
+
+            // Gradually ramp up pitch speed (ease-in)
+            currentVerticalSpeed = Mathf.Lerp(currentVerticalSpeed, 1f, verticalAcceleration * Time.fixedDeltaTime);
+
+            // Apply pitch rotation (negative because Unity pitch: positive = nose down)
+            // Up input = nose up = negative X rotation
+            float pitch = -verticalInput * pitchSpeed * currentVerticalSpeed * Time.fixedDeltaTime;
+            Quaternion pitchRotation = Quaternion.Euler(pitch, 0f, 0f);
+            rb.MoveRotation(rb.rotation * pitchRotation);
+        }
+        else
+        {
+            // No vertical input - reset for next pitch
+            currentVerticalSpeed = 0f;
+            lastVerticalDirection = 0f;
         }
     }
 
@@ -908,34 +942,18 @@ public class UFOController : MonoBehaviour
             return;
         }
 
-        // Normal banking and pitch (when not barrel rolling)
+        // Normal banking (when not barrel rolling)
+        // UFO now pitches via HandlePitchRotation(), so visual model only handles banking
         // Calculate target bank angle based on turn input
         float targetBankAngle = -turnInput * bankAmount;
 
         // Smoothly interpolate to target bank angle
         currentBankAngle = Mathf.Lerp(currentBankAngle, targetBankAngle, bankSpeed * Time.deltaTime);
 
-        // Calculate target pitch angle based on vertical input and forward speed
-        float targetPitchAngle = 0f;
-
-        // Only pitch if moving forward at minimum speed
-        float horizontalSpeed = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
-        if (horizontalSpeed >= minSpeedForPitch)
-        {
-            // Ascending = nose up (positive pitch), Descending = nose down (negative pitch)
-            // Use raw verticalInput for visual pitch (visual should match stick position)
-            targetPitchAngle = -verticalInput * visualPitchAmount;
-
-        }
-
-        // Smoothly interpolate to target pitch angle
-        // Use slower speed when returning to level (no vertical input) for gradual transition
-        float pitchLerpSpeed = (Mathf.Abs(verticalInput) > 0.1f) ? visualPitchSpeed : visualPitchSpeed * 0.3f;
-        currentPitchAngle = Mathf.Lerp(currentPitchAngle, targetPitchAngle, pitchLerpSpeed * Time.deltaTime);
-
-        // Apply both banking (Z-axis roll) and pitch (X-axis rotation) to visual model with wobble
+        // Apply banking (Z-axis roll) to visual model with wobble
+        // No visual pitch - UFO parent now handles actual pitch rotation
         visualModel.localRotation = Quaternion.Euler(
-            currentPitchAngle + wobbleOffset.x,
+            wobbleOffset.x,
             wobbleOffset.y,
             currentBankAngle + wobbleOffset.z
         );

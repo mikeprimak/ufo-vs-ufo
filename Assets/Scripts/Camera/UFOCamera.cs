@@ -184,14 +184,12 @@ public class UFOCamera : MonoBehaviour
             targetHealth = target.GetComponent<UFOHealth>();
 
             // IMMEDIATELY position camera behind UFO (no lerp delay)
-            Vector3 initialPosition = target.position - (target.forward * distance) + (Vector3.up * height);
+            // True 3D flight: use UFO's local axes
+            Vector3 initialPosition = target.position - (target.forward * distance) + (target.up * height);
             transform.position = initialPosition;
 
-            // IMMEDIATELY set camera rotation to match UFO
-            Vector3 targetEuler = target.eulerAngles;
-            Quaternion targetYawRotation = Quaternion.Euler(0, targetEuler.y, 0);
-            Vector3 lookDirection = targetYawRotation * Vector3.forward;
-            transform.rotation = Quaternion.LookRotation(lookDirection) * Quaternion.Euler(lookDownAngle, 0, 0);
+            // IMMEDIATELY set camera rotation to match UFO's full orientation
+            transform.rotation = target.rotation * Quaternion.Euler(lookDownAngle, 0, 0);
 
             // Initialize last rotation for turn detection
             lastTargetRotation = target.rotation;
@@ -365,8 +363,9 @@ public class UFOCamera : MonoBehaviour
 
         // === CAMERA COLLISION SYSTEM ===
         // Raycast from target to desired camera position to check for obstructions
+        // True 3D flight: camera follows UFO's local axes (behind and above in UFO space)
         Vector3 targetToCamera = -target.forward * currentDistance;
-        Vector3 desiredCameraOffset = targetToCamera + (Vector3.up * (height + currentVerticalOffset));
+        Vector3 desiredCameraOffset = targetToCamera + (target.up * (height + currentVerticalOffset));
         Vector3 desiredPosition = target.position + desiredCameraOffset;
 
         // Check for obstructions between target and desired camera position
@@ -420,15 +419,12 @@ public class UFOCamera : MonoBehaviour
         transform.position += shakeOffset;
 
         // Camera rotation (normal mode only - death mode handles rotation above)
-        // Camera tracks UFO's physics rotation (not visual banking from UFO_Visual)
-        // Extract only the Y rotation (yaw) from the target to keep horizon level
-        Vector3 targetEuler = target.eulerAngles;
-        Quaternion targetYawRotation = Quaternion.Euler(0, targetEuler.y, 0);
+        // True 3D flight: camera follows UFO's full rotation (pitch, yaw, roll)
+        // Camera looks at UFO from behind, matching its orientation
 
-        // Calculate camera rotation: match UFO's yaw, add downward tilt + vertical movement tilt
-        // This keeps the UFO visible while maintaining aiming direction
-        Vector3 lookDirection = targetYawRotation * Vector3.forward;
-        Quaternion targetRotation = Quaternion.LookRotation(lookDirection) * Quaternion.Euler(lookDownAngle + currentVerticalTilt, 0, 0);
+        // Calculate target rotation: match UFO's full rotation, then add downward tilt
+        // This keeps camera aligned with UFO's orientation (including upside down)
+        Quaternion targetRotation = target.rotation * Quaternion.Euler(lookDownAngle + currentVerticalTilt, 0, 0);
 
         // Tighter rotation tracking for better aiming (higher value = more responsive)
         // Uses higher smoothing multiplier for near-instant rotation response
