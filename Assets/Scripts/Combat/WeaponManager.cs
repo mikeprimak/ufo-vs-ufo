@@ -171,7 +171,7 @@ public class WeaponManager : MonoBehaviour
                 if (burstWeapon != null)
                 {
                     burstWeapon.enabled = true;
-                    burstWeapon.currentAmmo = 24; // Exactly 1 burst (24 shots)
+                    burstWeapon.currentAmmo = 75;
                 }
                 break;
 

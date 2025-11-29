@@ -54,11 +54,23 @@ public class Projectile : MonoBehaviour
     [Tooltip("Auto-create missile shape from primitives")]
     public bool createMissileVisual = true;
 
+    [Tooltip("Create laser bolt visual instead of missile (Star Wars style)")]
+    public bool createLaserVisual = false;
+
     [Tooltip("Color of the entire missile (body, nose, fins)")]
     public Color missileColor = new Color(0.6f, 0.6f, 0.6f); // Uniform grey
 
+    [Tooltip("Color of the laser bolt (for laser visual)")]
+    public Color laserColor = new Color(0.3f, 1f, 0f); // Green laser
+
     [Tooltip("Overall scale of the missile visual")]
     public float missileScale = 2f;
+
+    [Tooltip("Length of the laser bolt")]
+    public float laserLength = 3f;
+
+    [Tooltip("Width of the laser bolt")]
+    public float laserWidth = 0.3f;
 
     [Tooltip("Enable particle trail behind missile")]
     public bool enableParticleTrail = true;
@@ -107,8 +119,12 @@ public class Projectile : MonoBehaviour
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * currentSpeed;
 
-        // Create missile visual from primitives
-        if (createMissileVisual)
+        // Create visual from primitives
+        if (createLaserVisual)
+        {
+            CreateLaserVisual();
+        }
+        else if (createMissileVisual)
         {
             CreateMissileVisual();
         }
@@ -204,6 +220,36 @@ public class Projectile : MonoBehaviour
         {
             CreateParticleTrail(scale);
         }
+    }
+
+    /// <summary>
+    /// Create Star Wars-style laser bolt visual (pew pew pew)
+    /// </summary>
+    void CreateLaserVisual()
+    {
+        // Hide any existing mesh on the root object
+        MeshRenderer existingRenderer = GetComponent<MeshRenderer>();
+        if (existingRenderer != null)
+        {
+            existingRenderer.enabled = false;
+        }
+
+        // Create bright unlit material for laser bolt
+        Material laserMat = new Material(Shader.Find("Unlit/Color"));
+        laserMat.color = laserColor;
+
+        // === MAIN BOLT: Bright elongated capsule ===
+        GameObject bolt = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        bolt.name = "LaserBolt";
+        bolt.transform.SetParent(transform);
+        bolt.transform.localPosition = Vector3.zero;
+        // Rotate to point forward (capsules are vertical by default)
+        bolt.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        // Long and thin laser bolt
+        bolt.transform.localScale = new Vector3(laserWidth, laserLength * 0.5f, laserWidth);
+        Destroy(bolt.GetComponent<Collider>());
+        bolt.GetComponent<Renderer>().material = laserMat;
+        bolt.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     }
 
     void CreateParticleTrail(float scale)

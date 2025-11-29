@@ -29,13 +29,13 @@ public class BurstWeapon : MonoBehaviour
 
     [Header("Ammo Settings")]
     [Tooltip("Current ammo available")]
-    public int currentAmmo = 24;
+    public int currentAmmo = 75;
 
     [Tooltip("Maximum ammo capacity")]
-    public int maxAmmo = 24;
+    public int maxAmmo = 75;
 
     [Tooltip("Starting ammo (only used if component starts enabled)")]
-    public int startingAmmo = 24;
+    public int startingAmmo = 75;
 
     [Header("Audio (Optional)")]
     [Tooltip("Sound played for each shot in burst")]

@@ -660,9 +660,9 @@ public class UFOController : MonoBehaviour
     private float snapToLevelStartTime;
     [Header("Snap to Level")]
     [Tooltip("Duration of snap-to-level animation in seconds")]
-    [SerializeField] private float snapToLevelDuration = 0.5f;
-    private Quaternion snapStartRotation;
-    private Quaternion snapTargetRotation;
+    [SerializeField] private float snapToLevelDuration = 0.9f;
+    private Vector3 snapStartEuler;
+    private float snapCurrentYaw;
     private Vector3 snapStartVelocity;
 
     /// <summary>
@@ -677,12 +677,9 @@ public class UFOController : MonoBehaviour
 
         isSnappingToLevel = true;
         snapToLevelStartTime = Time.time;
-        snapStartRotation = transform.rotation;
+        snapStartEuler = transform.eulerAngles;
+        snapCurrentYaw = snapStartEuler.y;
         snapStartVelocity = rb.velocity;
-
-        // Calculate target: keep yaw (Y rotation), zero out pitch (X) and roll (Z)
-        Vector3 currentEuler = transform.eulerAngles;
-        snapTargetRotation = Quaternion.Euler(0f, currentEuler.y, 0f);
     }
 
     /// <summary>
@@ -700,11 +697,18 @@ public class UFOController : MonoBehaviour
         // Formula: 1 - (1-t)^3
         float eased = 1f - Mathf.Pow(1f - t, 3f);
 
-        // Smoothly rotate to level
-        Quaternion newRotation = Quaternion.Slerp(snapStartRotation, snapTargetRotation, eased);
+        // Apply steering input to yaw (player keeps full turn control during snap)
+        float turn = turnInput * turnSpeed * Time.fixedDeltaTime;
+        snapCurrentYaw += turn;
+
+        // Interpolate pitch and roll toward zero, but use player-controlled yaw
+        float newPitch = Mathf.LerpAngle(snapStartEuler.x, 0f, eased);
+        float newRoll = Mathf.LerpAngle(snapStartEuler.z, 0f, eased);
+
+        Quaternion newRotation = Quaternion.Euler(newPitch, snapCurrentYaw, newRoll);
         rb.MoveRotation(newRotation);
 
-        // Smoothly transition velocity to horizontal
+        // Smoothly transition velocity to horizontal (in current facing direction)
         float speed = snapStartVelocity.magnitude;
         Vector3 targetVelocity;
 
@@ -713,12 +717,14 @@ public class UFOController : MonoBehaviour
 
         if (horizontalVelocity.magnitude > 0.1f)
         {
-            targetVelocity = horizontalVelocity.normalized * speed;
+            // Blend toward current facing direction as we level out
+            Vector3 facingDirection = Quaternion.Euler(0f, snapCurrentYaw, 0f) * Vector3.forward;
+            targetVelocity = facingDirection * speed;
         }
         else
         {
-            // Was going mostly vertical - redirect forward
-            targetVelocity = snapTargetRotation * Vector3.forward * speed;
+            // Was going mostly vertical - redirect to current facing
+            targetVelocity = Quaternion.Euler(0f, snapCurrentYaw, 0f) * Vector3.forward * speed;
         }
 
         rb.velocity = Vector3.Lerp(snapStartVelocity, targetVelocity, eased);
@@ -881,68 +887,18 @@ public class UFOController : MonoBehaviour
 
     /// <summary>
     /// Get the aiming direction for weapon firing
-    /// Combines camera yaw with UFO velocity pitch for natural aiming
+    /// Uses the visual model's orientation (where the UFO is pointing)
     /// </summary>
     public Quaternion GetAimDirection()
     {
-        Vector3 aimDirection;
-
-        // OPTION 1: Hybrid camera + velocity aiming
-        if (aimCamera != null)
+        // Use visual model's forward direction (includes pitch from banking)
+        if (visualModel != null)
         {
-            // Get the UFO's yaw (camera tracks this for left/right aiming)
-            float yaw = transform.eulerAngles.y;
-
-            // Calculate pitch from actual velocity (if moving forward)
-            float pitchAngle = 0f;
-            if (rb != null && rb.velocity.magnitude > 5f)
-            {
-                // Get horizontal and vertical velocity components
-                Vector3 horizontalVelocity = Vector3.ProjectOnPlane(rb.velocity, Vector3.up);
-                float horizontalSpeed = horizontalVelocity.magnitude;
-                float verticalVelocity = rb.velocity.y;
-
-                // ONLY apply pitch if there's significant forward/backward movement
-                // Pure vertical movement (hovering up/down) = shoot horizontal
-                if (horizontalSpeed > 3f)
-                {
-                    // Calculate pitch angle from velocity
-                    pitchAngle = Mathf.Atan2(verticalVelocity, horizontalSpeed) * Mathf.Rad2Deg;
-
-                    // Scale pitch angles for natural aiming feel
-                    if (pitchAngle > 0) // Ascending
-                    {
-                        pitchAngle *= 1.0f; // Full upward angle (100%)
-                    }
-                    else // Descending
-                    {
-                        pitchAngle *= 0.8f; // Downward angle at 80%
-                    }
-                }
-                // else: pure vertical = pitchAngle stays 0 (horizontal shot)
-            }
-
-            // Create aim direction: UFO's yaw + velocity pitch
-            // Negative pitch because Unity's pitch is inverted (positive = down)
-            Quaternion aimRotation = Quaternion.Euler(-pitchAngle, yaw, 0);
-            aimDirection = aimRotation * Vector3.forward;
-
-        }
-        // OPTION 2: Visual model aiming (matches UFO visual tilt)
-        else if (visualModel != null)
-        {
-            // Use visual model's world rotation (includes pitch and yaw)
-            Vector3 visualForward = visualModel.TransformDirection(Vector3.forward);
-            aimDirection = visualForward;
-        }
-        // OPTION 3: Fallback to horizontal forward
-        else
-        {
-            aimDirection = transform.forward;
+            return Quaternion.LookRotation(visualModel.forward);
         }
 
-        // Create rotation from aim direction
-        return Quaternion.LookRotation(aimDirection);
+        // Fallback to UFO's forward direction
+        return Quaternion.LookRotation(transform.forward);
     }
 
     /// <summary>

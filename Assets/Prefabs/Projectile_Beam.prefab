@@ -161,9 +161,13 @@ MonoBehaviour:
   proximityCheckInterval: 0.1
   targetTag: Player
   trail: {fileID: 0}
-  createMissileVisual: 1
+  createMissileVisual: 0
+  createLaserVisual: 1
   missileColor: {r: 0.30233693, g: 1, b: 0, a: 1}
-  missileScale: 3
+  laserColor: {r: 0.23074365, g: 1, b: 0, a: 1}
+  missileScale: 1
+  laserLength: 9
+  laserWidth: 0.6
   enableParticleTrail: 0
   trailColor: {r: 0.9598032, g: 1, b: 0.33490568, a: 0.5}
   showTrajectory: 0
