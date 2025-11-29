@@ -119,9 +119,9 @@ public class WeaponSystem : MonoBehaviour
 
     void Fire()
     {
-        // Get aiming direction from UFO controller (includes visual pitch)
-        UFOController ufoController = GetComponent<UFOController>();
-        Quaternion aimDirection = (ufoController != null) ? ufoController.GetAimDirection() : transform.rotation;
+        // Use UFO's transform.rotation directly - matches aim indicator exactly
+        // No velocity-based calculation - missiles go exactly where green dot shows
+        Quaternion aimDirection = transform.rotation;
 
         // Determine spawn position and rotation
         Vector3 spawnPosition;
