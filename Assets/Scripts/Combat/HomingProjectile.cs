@@ -53,7 +53,43 @@ public class HomingProjectile : MonoBehaviour
     [Tooltip("Optional trail renderer reference")]
     public TrailRenderer trail;
 
+    [Tooltip("Auto-create missile shape from primitives")]
+    public bool createMissileVisual = true;
+
+    [Tooltip("Color of the entire missile (body, nose, fins)")]
+    public Color missileColor = new Color(0.8f, 0.2f, 0.2f); // Red
+
+    [Tooltip("Overall scale of the missile visual")]
+    public float missileScale = 2f;
+
+    [Tooltip("Enable particle trail behind missile")]
+    public bool enableParticleTrail = true;
+
+    [Tooltip("Color of the particle trail")]
+    public Color trailColor = new Color(0.9f, 0.9f, 0.9f, 0.5f); // Light grey, almost white
+
+    [Header("Trajectory Indicator")]
+    [Tooltip("Show dotted line indicating predicted missile path")]
+    public bool showTrajectory = true;
+
+    [Tooltip("Color of trajectory dots")]
+    public Color trajectoryColor = new Color(1f, 0.5f, 0f); // Orange for homing
+
+    [Tooltip("Size of each trajectory dot")]
+    public float dotSize = 0.5f;
+
+    [Tooltip("Spacing between trajectory dots")]
+    public float dotSpacing = 5f;
+
+    [Tooltip("Layers the trajectory raycast can hit")]
+    public LayerMask trajectoryLayers = -1; // Default: all layers
+
+    [Tooltip("Maximum number of dots to show")]
+    public int maxDots = 30;
+
     private Rigidbody rb;
+    private GameObject[] trajectoryDots; // Array of dot objects
+    private Material dotMaterial; // Shared material for all dots
     private float spawnTime;
     private GameObject owner; // Who fired this projectile
     private Transform target; // Current target being tracked
@@ -76,12 +112,266 @@ public class HomingProjectile : MonoBehaviour
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * speed;
 
+        // Create missile visual from primitives
+        if (createMissileVisual)
+        {
+            CreateMissileVisual();
+        }
+
         // Find initial target
         FindNearestTarget();
+
+        // Create trajectory indicator
+        if (showTrajectory)
+        {
+            CreateTrajectoryDots();
+        }
+    }
+
+    void CreateMissileVisual()
+    {
+        // Create single unlit material for entire missile
+        Material missileMat = new Material(Shader.Find("Unlit/Color"));
+        missileMat.color = missileColor;
+
+        float scale = missileScale;
+
+        // === BODY: Long cylinder ===
+        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        body.name = "MissileBody";
+        body.transform.SetParent(transform);
+        body.transform.localPosition = Vector3.zero;
+        // Rotate cylinder to point forward (cylinders are vertical by default)
+        body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        // Long and thin: 3x length for sleek missile look
+        body.transform.localScale = new Vector3(0.3f * scale, 3f * scale, 0.3f * scale);
+        Destroy(body.GetComponent<Collider>()); // No extra colliders
+        body.GetComponent<Renderer>().material = missileMat;
+        body.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === NOSE CONE: Pointed tip using scaled sphere ===
+        GameObject nose = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        nose.name = "MissileNose";
+        nose.transform.SetParent(transform);
+        // Position at front of longer body
+        nose.transform.localPosition = new Vector3(0f, 0f, 3.2f * scale);
+        // Stretched sphere to make a cone shape
+        nose.transform.localScale = new Vector3(0.3f * scale, 0.3f * scale, 0.6f * scale);
+        Destroy(nose.GetComponent<Collider>());
+        nose.GetComponent<Renderer>().material = missileMat;
+        nose.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === FINS: 4 fins at the back ===
+        float finLength = 0.5f * scale;
+        float finWidth = 0.02f * scale;
+        float finHeight = 0.35f * scale;
+        float finBackOffset = -2.8f * scale; // Position at rear of longer body
+        float finOutwardOffset = 0.2f * scale;
+
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject fin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fin.name = "MissileFin" + i;
+            fin.transform.SetParent(transform);
+
+            // Position fins in a cross pattern (up, down, left, right)
+            float angle = i * 90f;
+            Vector3 finOffset = Quaternion.Euler(0f, 0f, angle) * new Vector3(0f, finOutwardOffset, 0f);
+            fin.transform.localPosition = new Vector3(finOffset.x, finOffset.y, finBackOffset);
+
+            // Rotate fin to stick outward
+            fin.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+            // Scale: thin, tall, swept back
+            fin.transform.localScale = new Vector3(finWidth, finHeight, finLength);
+
+            Destroy(fin.GetComponent<Collider>());
+            fin.GetComponent<Renderer>().material = missileMat;
+            fin.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        // === EXHAUST: Small sphere at back (same color as missile) ===
+        GameObject exhaust = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        exhaust.name = "MissileExhaust";
+        exhaust.transform.SetParent(transform);
+        exhaust.transform.localPosition = new Vector3(0f, 0f, -3.1f * scale);
+        exhaust.transform.localScale = new Vector3(0.2f * scale, 0.2f * scale, 0.2f * scale);
+        Destroy(exhaust.GetComponent<Collider>());
+        exhaust.GetComponent<Renderer>().material = missileMat;
+        exhaust.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === PARTICLE TRAIL: Smoke trail behind missile ===
+        if (enableParticleTrail)
+        {
+            CreateParticleTrail(scale);
+        }
+    }
+
+    void CreateParticleTrail(float scale)
+    {
+        GameObject trailObj = new GameObject("MissileTrail");
+        trailObj.transform.SetParent(transform);
+        trailObj.transform.localPosition = new Vector3(0f, 0f, -3.2f * scale); // Behind exhaust
+
+        ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.startLifetime = 0.4f;
+        main.startSpeed = 0f;
+        main.startSize = 0.5f * scale;
+        main.startColor = trailColor;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.maxParticles = 50;
+
+        var emission = ps.emission;
+        emission.rateOverTime = 30f;
+
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Sphere;
+        shape.radius = 0.1f * scale;
+
+        var sizeOverLifetime = ps.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, 0f); // Shrink to nothing
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(trailColor, 0f), new GradientColorKey(trailColor, 1f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(0.8f, 0f), new GradientAlphaKey(0f, 1f) }
+        );
+        colorOverLifetime.color = gradient;
+
+        // Use simple unlit particle material
+        var renderer = trailObj.GetComponent<ParticleSystemRenderer>();
+        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
+        renderer.material.color = trailColor;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
+    }
+
+    void CreateTrajectoryDots()
+    {
+        // Create shared material for all dots
+        dotMaterial = new Material(Shader.Find("Unlit/Color"));
+        dotMaterial.color = trajectoryColor;
+
+        // Create dots array
+        trajectoryDots = new GameObject[maxDots];
+
+        // Create dot objects (initially hidden, will be positioned in Update)
+        for (int i = 0; i < maxDots; i++)
+        {
+            GameObject dot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            dot.name = "HomingTrajectoryDot";
+            dot.transform.localScale = Vector3.one * dotSize;
+
+            // Remove collider
+            Collider dotCollider = dot.GetComponent<Collider>();
+            if (dotCollider != null)
+            {
+                Destroy(dotCollider);
+            }
+
+            // Apply material
+            Renderer dotRenderer = dot.GetComponent<Renderer>();
+            if (dotRenderer != null)
+            {
+                dotRenderer.material = dotMaterial;
+                dotRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                dotRenderer.receiveShadows = false;
+            }
+
+            dot.SetActive(false); // Start hidden
+            trajectoryDots[i] = dot;
+        }
+    }
+
+    void UpdateTrajectoryDots()
+    {
+        // Raycast in current direction to find impact point
+        // Trajectory extends THROUGH UFOs so players can see incoming missiles
+        float maxDistance = currentSpeed * (lifetime - (Time.time - spawnTime));
+        maxDistance = Mathf.Max(maxDistance, 10f); // Minimum distance
+
+        Vector3 endPoint = transform.position + transform.forward * maxDistance;
+
+        // Use RaycastAll to find first non-UFO hit (walls, floor, etc.)
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, transform.forward, maxDistance, trajectoryLayers);
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit hit in hits)
+        {
+            // Skip UFOs - trajectory should pass through them
+            if (hit.collider.transform.root.CompareTag("Player"))
+                continue;
+
+            // Found environment hit
+            endPoint = hit.point;
+            break;
+        }
+
+        // Calculate distance and number of dots needed
+        float totalDistance = Vector3.Distance(transform.position, endPoint);
+        int numDotsNeeded = Mathf.Min(Mathf.FloorToInt(totalDistance / dotSpacing), maxDots);
+
+        // Position active dots along the path
+        for (int i = 0; i < maxDots; i++)
+        {
+            if (trajectoryDots[i] == null)
+                continue;
+
+            if (i < numDotsNeeded)
+            {
+                // Position dot along the line
+                float t = (i + 1) * dotSpacing / totalDistance;
+                Vector3 dotPosition = Vector3.Lerp(transform.position, endPoint, t);
+
+                trajectoryDots[i].transform.position = dotPosition;
+                trajectoryDots[i].SetActive(true);
+            }
+            else
+            {
+                // Hide unused dots
+                trajectoryDots[i].SetActive(false);
+            }
+        }
+    }
+
+    void CleanupTrajectoryDots()
+    {
+        if (trajectoryDots != null)
+        {
+            foreach (GameObject dot in trajectoryDots)
+            {
+                if (dot != null)
+                {
+                    Destroy(dot);
+                }
+            }
+            trajectoryDots = null;
+        }
+
+        if (dotMaterial != null)
+        {
+            Destroy(dotMaterial);
+            dotMaterial = null;
+        }
+    }
+
+    void OnDestroy()
+    {
+        CleanupTrajectoryDots();
     }
 
     void Update()
     {
+        // Update trajectory indicator every frame
+        if (showTrajectory && trajectoryDots != null)
+        {
+            UpdateTrajectoryDots();
+        }
+
         // Explode when lifetime expires
         if (Time.time >= spawnTime + lifetime)
         {

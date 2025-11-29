@@ -13,7 +13,7 @@ public class Projectile : MonoBehaviour
     public float startSpeed = 90f;
 
     [Tooltip("Maximum speed after acceleration")]
-    public float maxSpeed = 200f;
+    public float maxSpeed = 300f;
 
     [Tooltip("How quickly missile accelerates (units/sec²)")]
     public float acceleration = 150f;
@@ -54,14 +54,17 @@ public class Projectile : MonoBehaviour
     [Tooltip("Auto-create missile shape from primitives")]
     public bool createMissileVisual = true;
 
-    [Tooltip("Color of the missile body")]
-    public Color missileColor = new Color(0.3f, 0.3f, 0.35f); // Dark gray metal
-
-    [Tooltip("Color of the missile nose cone")]
-    public Color noseConeColor = new Color(0.8f, 0.2f, 0.1f); // Red-orange tip
+    [Tooltip("Color of the entire missile (body, nose, fins)")]
+    public Color missileColor = new Color(0.6f, 0.6f, 0.6f); // Uniform grey
 
     [Tooltip("Overall scale of the missile visual")]
-    public float missileScale = 1f;
+    public float missileScale = 2f;
+
+    [Tooltip("Enable particle trail behind missile")]
+    public bool enableParticleTrail = true;
+
+    [Tooltip("Color of the particle trail")]
+    public Color trailColor = new Color(0.9f, 0.9f, 0.9f, 0.5f); // Light grey, almost white
 
     [Header("Trajectory Indicator")]
     [Tooltip("Show dotted line indicating missile path")]
@@ -71,10 +74,10 @@ public class Projectile : MonoBehaviour
     public Color trajectoryColor = Color.red;
 
     [Tooltip("Size of each trajectory dot")]
-    public float dotSize = 0.5f;
+    public float dotSize = 0.2f;
 
     [Tooltip("Spacing between trajectory dots")]
-    public float dotSpacing = 5f;
+    public float dotSpacing = 10f;
 
     [Tooltip("Layers the trajectory raycast can hit")]
     public LayerMask trajectoryLayers = -1; // Default: all layers
@@ -119,12 +122,9 @@ public class Projectile : MonoBehaviour
 
     void CreateMissileVisual()
     {
-        // Create unlit materials
-        Material bodyMat = new Material(Shader.Find("Unlit/Color"));
-        bodyMat.color = missileColor;
-
-        Material noseMat = new Material(Shader.Find("Unlit/Color"));
-        noseMat.color = noseConeColor;
+        // Create single unlit material for entire missile
+        Material missileMat = new Material(Shader.Find("Unlit/Color"));
+        missileMat.color = missileColor;
 
         float scale = missileScale;
 
@@ -135,29 +135,29 @@ public class Projectile : MonoBehaviour
         body.transform.localPosition = Vector3.zero;
         // Rotate cylinder to point forward (cylinders are vertical by default)
         body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        // Long and thin: height 2, radius 0.3
-        body.transform.localScale = new Vector3(0.3f * scale, 1f * scale, 0.3f * scale);
+        // Long and thin: 3x length for sleek missile look
+        body.transform.localScale = new Vector3(0.3f * scale, 3f * scale, 0.3f * scale);
         Destroy(body.GetComponent<Collider>()); // No extra colliders
-        body.GetComponent<Renderer>().material = bodyMat;
+        body.GetComponent<Renderer>().material = missileMat;
         body.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
         // === NOSE CONE: Pointed tip using scaled sphere ===
         GameObject nose = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         nose.name = "MissileNose";
         nose.transform.SetParent(transform);
-        // Position at front of body
-        nose.transform.localPosition = new Vector3(0f, 0f, 1.2f * scale);
+        // Position at front of longer body
+        nose.transform.localPosition = new Vector3(0f, 0f, 3.2f * scale);
         // Stretched sphere to make a cone shape
         nose.transform.localScale = new Vector3(0.3f * scale, 0.3f * scale, 0.6f * scale);
         Destroy(nose.GetComponent<Collider>());
-        nose.GetComponent<Renderer>().material = noseMat;
+        nose.GetComponent<Renderer>().material = missileMat;
         nose.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
         // === FINS: 4 fins at the back ===
         float finLength = 0.5f * scale;
         float finWidth = 0.02f * scale;
         float finHeight = 0.35f * scale;
-        float finBackOffset = -0.8f * scale; // Position at rear
+        float finBackOffset = -2.8f * scale; // Position at rear of longer body
         float finOutwardOffset = 0.2f * scale;
 
         for (int i = 0; i < 4; i++)
@@ -178,22 +178,68 @@ public class Projectile : MonoBehaviour
             fin.transform.localScale = new Vector3(finWidth, finHeight, finLength);
 
             Destroy(fin.GetComponent<Collider>());
-            fin.GetComponent<Renderer>().material = bodyMat;
+            fin.GetComponent<Renderer>().material = missileMat;
             fin.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        // === EXHAUST GLOW: Small emissive sphere at back ===
+        // === EXHAUST: Small sphere at back (same color as missile) ===
         GameObject exhaust = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         exhaust.name = "MissileExhaust";
         exhaust.transform.SetParent(transform);
-        exhaust.transform.localPosition = new Vector3(0f, 0f, -1.1f * scale);
+        exhaust.transform.localPosition = new Vector3(0f, 0f, -3.1f * scale);
         exhaust.transform.localScale = new Vector3(0.2f * scale, 0.2f * scale, 0.2f * scale);
         Destroy(exhaust.GetComponent<Collider>());
-        // Bright orange/yellow exhaust
-        Material exhaustMat = new Material(Shader.Find("Unlit/Color"));
-        exhaustMat.color = new Color(1f, 0.6f, 0.1f); // Orange glow
-        exhaust.GetComponent<Renderer>().material = exhaustMat;
+        exhaust.GetComponent<Renderer>().material = missileMat;
         exhaust.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === PARTICLE TRAIL: Smoke/fire trail behind missile ===
+        if (enableParticleTrail)
+        {
+            CreateParticleTrail(scale);
+        }
+    }
+
+    void CreateParticleTrail(float scale)
+    {
+        GameObject trailObj = new GameObject("MissileTrail");
+        trailObj.transform.SetParent(transform);
+        trailObj.transform.localPosition = new Vector3(0f, 0f, -3.2f * scale); // Behind exhaust
+
+        ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.startLifetime = 0.4f;
+        main.startSpeed = 0f;
+        main.startSize = 0.5f * scale;
+        main.startColor = trailColor;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.maxParticles = 50;
+
+        var emission = ps.emission;
+        emission.rateOverTime = 30f;
+
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Sphere;
+        shape.radius = 0.1f * scale;
+
+        var sizeOverLifetime = ps.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, 0f); // Shrink to nothing
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(trailColor, 0f), new GradientColorKey(trailColor, 1f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(0.8f, 0f), new GradientAlphaKey(0f, 1f) }
+        );
+        colorOverLifetime.color = gradient;
+
+        // Use simple unlit particle material
+        var renderer = trailObj.GetComponent<ParticleSystemRenderer>();
+        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
+        renderer.material.color = trailColor;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
     }
 
     void FixedUpdate()
@@ -213,20 +259,26 @@ public class Projectile : MonoBehaviour
     void CreateTrajectoryDots()
     {
         // Raycast to find impact point
+        // Trajectory extends THROUGH UFOs so players can see incoming missiles
         // Use average speed for trajectory estimate (starts at startSpeed, ends at maxSpeed)
         float avgSpeed = (startSpeed + maxSpeed) / 2f;
         float maxDistance = avgSpeed * lifetime; // Maximum possible travel distance
-        RaycastHit hit;
-        Vector3 endPoint;
 
-        if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance, trajectoryLayers))
+        Vector3 endPoint = transform.position + transform.forward * maxDistance;
+
+        // Use RaycastAll to find first non-UFO hit (walls, floor, etc.)
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, transform.forward, maxDistance, trajectoryLayers);
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit hit in hits)
         {
+            // Skip UFOs - trajectory should pass through them
+            if (hit.collider.transform.root.CompareTag("Player"))
+                continue;
+
+            // Found environment hit
             endPoint = hit.point;
-        }
-        else
-        {
-            // No hit - extend to max range
-            endPoint = transform.position + transform.forward * maxDistance;
+            break;
         }
 
         // Calculate distance and number of dots
