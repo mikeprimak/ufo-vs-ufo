@@ -189,6 +189,34 @@ public class Projectile : MonoBehaviour
             lastProximityCheck = Time.time;
             CheckProximity();
         }
+
+        // Remove trajectory dots that missile has passed
+        if (showTrajectory && trajectoryDots != null)
+        {
+            UpdateTrajectoryDots();
+        }
+    }
+
+    void UpdateTrajectoryDots()
+    {
+        for (int i = 0; i < trajectoryDots.Length; i++)
+        {
+            GameObject dot = trajectoryDots[i];
+            if (dot == null)
+                continue;
+
+            // Check if missile has passed this dot
+            // Dot product: positive = ahead, negative = behind
+            Vector3 toDot = dot.transform.position - transform.position;
+            float dotProduct = Vector3.Dot(toDot, transform.forward);
+
+            if (dotProduct < 0)
+            {
+                // Dot is behind missile - destroy it
+                Destroy(dot);
+                trajectoryDots[i] = null;
+            }
+        }
     }
 
     void CheckProximity()
