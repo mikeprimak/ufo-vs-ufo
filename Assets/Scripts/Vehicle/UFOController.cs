@@ -272,7 +272,16 @@ public class UFOController : MonoBehaviour
         }
 
         HandleRotation(); // Always allow rotation, even during countdown
-        HandlePitchRotation(); // Handle vertical aiming (pitch)
+
+        // Handle snap to level (overrides pitch rotation while active)
+        if (isSnappingToLevel)
+        {
+            UpdateSnapToLevel();
+        }
+        else
+        {
+            HandlePitchRotation(); // Handle vertical aiming (pitch)
+        }
 
         // Track input state for next frame
         wasAcceleratingLastFrame = accelerateInput;
@@ -355,8 +364,11 @@ public class UFOController : MonoBehaviour
                 }
             }
 
-            // Boost input (DISABLED - manual boost removed)
-            // bool boostInput = Input.GetKey(KeyCode.JoystickButton4); // LB only
+            // Snap to level input - LB (Button 4) or E key
+            if (Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E))
+            {
+                SnapToLevel();
+            }
             HandleBoost(false); // Manual boost disabled
         }
 
@@ -640,6 +652,78 @@ public class UFOController : MonoBehaviour
             // No vertical input - reset for next pitch
             currentVerticalSpeed = 0f;
             lastVerticalDirection = 0f;
+        }
+    }
+
+    // Snap to level state
+    private bool isSnappingToLevel = false;
+    private float snapToLevelStartTime;
+    private float snapToLevelDuration = 0.3f;
+    private Quaternion snapStartRotation;
+    private Quaternion snapTargetRotation;
+    private Vector3 snapStartVelocity;
+
+    /// <summary>
+    /// Start smooth snap to level flight (pitch = 0)
+    /// Called when player presses snap-to-level button (LB/E)
+    /// </summary>
+    void SnapToLevel()
+    {
+        // Don't restart if already snapping
+        if (isSnappingToLevel)
+            return;
+
+        isSnappingToLevel = true;
+        snapToLevelStartTime = Time.time;
+        snapStartRotation = transform.rotation;
+        snapStartVelocity = rb.velocity;
+
+        // Calculate target: keep yaw (Y rotation), zero out pitch (X) and roll (Z)
+        Vector3 currentEuler = transform.eulerAngles;
+        snapTargetRotation = Quaternion.Euler(0f, currentEuler.y, 0f);
+    }
+
+    /// <summary>
+    /// Update snap to level animation (called from FixedUpdate)
+    /// </summary>
+    void UpdateSnapToLevel()
+    {
+        if (!isSnappingToLevel)
+            return;
+
+        float elapsed = Time.time - snapToLevelStartTime;
+        float t = Mathf.Clamp01(elapsed / snapToLevelDuration);
+
+        // Use smooth step for nice easing
+        t = Mathf.SmoothStep(0f, 1f, t);
+
+        // Smoothly rotate to level
+        Quaternion newRotation = Quaternion.Slerp(snapStartRotation, snapTargetRotation, t);
+        rb.MoveRotation(newRotation);
+
+        // Smoothly transition velocity to horizontal
+        float speed = snapStartVelocity.magnitude;
+        Vector3 targetVelocity;
+
+        Vector3 horizontalVelocity = snapStartVelocity;
+        horizontalVelocity.y = 0f;
+
+        if (horizontalVelocity.magnitude > 0.1f)
+        {
+            targetVelocity = horizontalVelocity.normalized * speed;
+        }
+        else
+        {
+            // Was going mostly vertical - redirect forward
+            targetVelocity = snapTargetRotation * Vector3.forward * speed;
+        }
+
+        rb.velocity = Vector3.Lerp(snapStartVelocity, targetVelocity, t);
+
+        // Check if complete
+        if (t >= 1f)
+        {
+            isSnappingToLevel = false;
         }
     }
 
