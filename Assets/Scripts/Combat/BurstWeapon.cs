@@ -1,23 +1,18 @@
 using UnityEngine;
 
 /// <summary>
-/// Burst-fire weapon that rapidly fires 13 beam projectiles alternating from left/right sides
-/// Each beam fires toward the UFO's current aim direction at time of release
+/// Hold-to-fire weapon that rapidly fires beam projectiles alternating from left/right sides
+/// Each beam fires toward the UFO's current aim direction while fire button is held
+/// Ammo is conserved when button is released
 /// </summary>
 public class BurstWeapon : MonoBehaviour
 {
-    [Header("Burst Settings")]
+    [Header("Fire Settings")]
     [Tooltip("Projectile prefab to spawn (should be beam-shaped)")]
     public GameObject projectilePrefab;
 
-    [Tooltip("Number of shots in the burst")]
-    public int burstCount = 24;
-
-    [Tooltip("Time between each shot in the burst (seconds)")]
-    public float burstDelay = 0.08f;
-
-    [Tooltip("Cooldown after burst completes before can fire again (seconds)")]
-    public float cooldown = 2f;
+    [Tooltip("Time between each shot (seconds)")]
+    public float fireRate = 0.08f;
 
     [Header("Fire Points")]
     [Tooltip("Left side fire point (optional, will create offset if not assigned)")]
@@ -34,26 +29,21 @@ public class BurstWeapon : MonoBehaviour
 
     [Header("Ammo Settings")]
     [Tooltip("Current ammo available")]
-    public int currentAmmo = 240;
+    public int currentAmmo = 24;
 
     [Tooltip("Maximum ammo capacity")]
-    public int maxAmmo = 240;
-
-    [Tooltip("Ammo consumed per burst (all 24 shots)")]
-    public int ammoPerBurst = 24;
+    public int maxAmmo = 24;
 
     [Tooltip("Starting ammo (only used if component starts enabled)")]
-    public int startingAmmo = 240;
+    public int startingAmmo = 24;
 
     [Header("Audio (Optional)")]
     [Tooltip("Sound played for each shot in burst")]
     public AudioClip fireSound;
 
     private AudioSource audioSource;
-    private bool isBursting = false;
-    private int shotsRemaining = 0;
+    private bool isFiring = false; // True while fire button is held
     private float nextShotTime = 0f;
-    private float cooldownEndTime = 0f;
     private bool fireFromLeft = true; // Alternates between left and right
     private UFOController ufoController;
     private bool hasBeenInitialized = false;
@@ -94,66 +84,67 @@ public class BurstWeapon : MonoBehaviour
 
     void Update()
     {
-        // WeaponManager handles fire input, we just handle the burst sequence
-        // Handle burst firing
-        if (isBursting && Time.time >= nextShotTime)
+        // Fire while button is held and we have ammo
+        if (isFiring && currentAmmo > 0 && Time.time >= nextShotTime)
         {
             FireSingleShot();
         }
     }
 
-    public bool TryStartBurst()
+    /// <summary>
+    /// Called each frame by WeaponManager to set whether fire button is held
+    /// </summary>
+    public void SetFireHeld(bool held)
     {
-        // Check if already bursting
-        if (isBursting)
+        if (held && !isFiring && currentAmmo > 0 && projectilePrefab != null)
         {
-            return false;
+            // Start firing
+            isFiring = true;
+            nextShotTime = Time.time; // Fire first shot immediately
+        }
+        else if (!held && isFiring)
+        {
+            // Stop firing
+            isFiring = false;
         }
 
-        // Check cooldown
-        if (Time.time < cooldownEndTime)
+        // Also stop if out of ammo
+        if (currentAmmo <= 0)
         {
-            return false;
+            isFiring = false;
         }
-
-        // Check ammo
-        if (currentAmmo < ammoPerBurst)
-        {
-            // Debug.Log($"[BURST] Not enough ammo! Need {ammoPerBurst}, have {currentAmmo}");
-            return false;
-        }
-
-        // Check if projectile prefab is assigned
-        if (projectilePrefab == null)
-        {
-            Debug.LogError("BurstWeapon: No projectile prefab assigned!");
-            return false;
-        }
-
-        // Start burst
-        StartBurst();
-        return true;
     }
 
-    void StartBurst()
+    /// <summary>
+    /// Legacy method for compatibility - starts firing
+    /// </summary>
+    public bool TryStartBurst()
     {
-        isBursting = true;
-        shotsRemaining = burstCount;
-        nextShotTime = Time.time; // Fire first shot immediately
-        fireFromLeft = true; // Start from left side
+        if (currentAmmo > 0 && projectilePrefab != null)
+        {
+            SetFireHeld(true);
+            return true;
+        }
+        return false;
+    }
 
-        // Consume ammo (KEEP THIS LOG for troubleshooting burst weapon issue)
-        Debug.Log($"[BURST] Starting burst. Ammo before: {currentAmmo}");
-        currentAmmo -= ammoPerBurst;
-        Debug.Log($"[BURST] Burst started! Ammo after consuming {ammoPerBurst}: {currentAmmo}");
+    /// <summary>
+    /// Stop firing (call when button released)
+    /// </summary>
+    public void StopFiring()
+    {
+        isFiring = false;
     }
 
     void FireSingleShot()
     {
+        // Consume 1 ammo
+        currentAmmo--;
+
         // Get current fire point (alternates between left and right)
         Vector3 spawnPosition = GetCurrentFirePoint();
 
-        // Get aiming direction at THIS moment (not when burst started)
+        // Get aiming direction at THIS moment
         Quaternion aimDirection = (ufoController != null) ?
             ufoController.GetAimDirection() : transform.rotation;
 
@@ -187,18 +178,13 @@ public class BurstWeapon : MonoBehaviour
         // Alternate sides for next shot
         fireFromLeft = !fireFromLeft;
 
-        // Decrement remaining shots
-        shotsRemaining--;
+        // Schedule next shot
+        nextShotTime = Time.time + fireRate;
 
-        // Check if burst is complete
-        if (shotsRemaining <= 0)
+        // Stop firing if out of ammo
+        if (currentAmmo <= 0)
         {
-            CompleteBurst();
-        }
-        else
-        {
-            // Schedule next shot
-            nextShotTime = Time.time + burstDelay;
+            isFiring = false;
         }
     }
 
@@ -223,14 +209,6 @@ public class BurstWeapon : MonoBehaviour
         return transform.position + totalOffset;
     }
 
-    void CompleteBurst()
-    {
-        isBursting = false;
-        cooldownEndTime = Time.time + cooldown;
-
-        Debug.Log($"[BURST] Burst complete! Ammo remaining: {currentAmmo}");
-    }
-
     // Public methods for ammo pickups
     public void AddAmmo(int amount)
     {
@@ -243,13 +221,21 @@ public class BurstWeapon : MonoBehaviour
     }
 
     // Public methods for checking state
+    public bool IsFiring()
+    {
+        return isFiring;
+    }
+
+    /// <summary>
+    /// Legacy method for compatibility with WeaponManager
+    /// </summary>
     public bool IsBursting()
     {
-        return isBursting;
+        return isFiring;
     }
 
     public bool CanFire()
     {
-        return !isBursting && Time.time >= cooldownEndTime && currentAmmo >= ammoPerBurst;
+        return currentAmmo > 0;
     }
 }

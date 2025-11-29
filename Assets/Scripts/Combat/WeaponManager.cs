@@ -86,8 +86,20 @@ public class WeaponManager : MonoBehaviour
     {
         // Check for fire input
         bool firePressed = Input.GetButtonDown("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
+        bool fireHeld = Input.GetButton("Fire2") || Input.GetKey(KeyCode.JoystickButton1);
 
-        if (firePressed)
+        // Burst weapon uses hold-to-fire
+        if (currentWeapon == WeaponType.Burst && burstWeapon != null && burstWeapon.enabled)
+        {
+            burstWeapon.SetFireHeld(fireHeld);
+
+            // Check if out of ammo
+            if (burstWeapon.currentAmmo <= 0)
+            {
+                SetWeapon(WeaponType.None);
+            }
+        }
+        else if (firePressed)
         {
             TryFireCurrentWeapon();
         }
@@ -235,16 +247,12 @@ public class WeaponManager : MonoBehaviour
                 break;
 
             case WeaponType.Burst:
+                // Burst weapon uses hold-to-fire, handled in Update()
+                // This case is only reached by AI via TryFireWeaponAI()
                 if (burstWeapon != null && burstWeapon.enabled)
                 {
-                    weaponFired = burstWeapon.TryStartBurst();
-
-                    // Check ammo regardless of whether shot fired
-                    if (burstWeapon.currentAmmo <= 0)
-                    {
-                        // Weapon used, will be removed after burst completes
-                        // Don't remove immediately since burst is still firing
-                    }
+                    burstWeapon.SetFireHeld(true);
+                    weaponFired = true;
                 }
                 break;
 
