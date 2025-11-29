@@ -45,7 +45,24 @@ public class Projectile : MonoBehaviour
     [Tooltip("Optional trail renderer reference")]
     public TrailRenderer trail;
 
+    [Header("Trajectory Indicator")]
+    [Tooltip("Show dotted line indicating missile path")]
+    public bool showTrajectory = true;
+
+    [Tooltip("Color of trajectory dots")]
+    public Color trajectoryColor = Color.red;
+
+    [Tooltip("Size of each trajectory dot")]
+    public float dotSize = 0.5f;
+
+    [Tooltip("Spacing between trajectory dots")]
+    public float dotSpacing = 5f;
+
+    [Tooltip("Layers the trajectory raycast can hit")]
+    public LayerMask trajectoryLayers = -1; // Default: all layers
+
     private Rigidbody rb;
+    private GameObject[] trajectoryDots; // Array of dot objects
     private float spawnTime;
     private GameObject owner; // Who fired this projectile
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
@@ -66,6 +83,96 @@ public class Projectile : MonoBehaviour
 
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * speed;
+
+        // Create trajectory indicator
+        if (showTrajectory)
+        {
+            CreateTrajectoryDots();
+        }
+    }
+
+    void CreateTrajectoryDots()
+    {
+        // Raycast to find impact point
+        float maxDistance = speed * lifetime; // Maximum possible travel distance
+        RaycastHit hit;
+        Vector3 endPoint;
+
+        if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance, trajectoryLayers))
+        {
+            endPoint = hit.point;
+        }
+        else
+        {
+            // No hit - extend to max range
+            endPoint = transform.position + transform.forward * maxDistance;
+        }
+
+        // Calculate distance and number of dots
+        float totalDistance = Vector3.Distance(transform.position, endPoint);
+        int numDots = Mathf.FloorToInt(totalDistance / dotSpacing);
+
+        if (numDots <= 0)
+            return;
+
+        // Create dots array
+        trajectoryDots = new GameObject[numDots];
+
+        // Create unlit material for dots
+        Material dotMaterial = new Material(Shader.Find("Unlit/Color"));
+        dotMaterial.color = trajectoryColor;
+
+        // Spawn dots along the path
+        for (int i = 0; i < numDots; i++)
+        {
+            // Position dot along the line (start from first spacing, not from missile)
+            float t = (i + 1) * dotSpacing / totalDistance;
+            Vector3 dotPosition = Vector3.Lerp(transform.position, endPoint, t);
+
+            // Create dot sphere
+            GameObject dot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            dot.name = "TrajectoryDot";
+            dot.transform.position = dotPosition;
+            dot.transform.localScale = Vector3.one * dotSize;
+
+            // Remove collider (dots shouldn't block anything)
+            Collider dotCollider = dot.GetComponent<Collider>();
+            if (dotCollider != null)
+            {
+                Destroy(dotCollider);
+            }
+
+            // Apply material
+            Renderer dotRenderer = dot.GetComponent<Renderer>();
+            if (dotRenderer != null)
+            {
+                dotRenderer.material = dotMaterial;
+                dotRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                dotRenderer.receiveShadows = false;
+            }
+
+            trajectoryDots[i] = dot;
+        }
+    }
+
+    void CleanupTrajectoryDots()
+    {
+        if (trajectoryDots != null)
+        {
+            foreach (GameObject dot in trajectoryDots)
+            {
+                if (dot != null)
+                {
+                    Destroy(dot);
+                }
+            }
+            trajectoryDots = null;
+        }
+    }
+
+    void OnDestroy()
+    {
+        CleanupTrajectoryDots();
     }
 
     void Update()
