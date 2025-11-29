@@ -9,8 +9,14 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     [Header("Projectile Settings")]
-    [Tooltip("Speed of the projectile")]
-    public float speed = 75f;
+    [Tooltip("Starting speed of the projectile (should match UFO max speed)")]
+    public float startSpeed = 90f;
+
+    [Tooltip("Maximum speed after acceleration")]
+    public float maxSpeed = 200f;
+
+    [Tooltip("How quickly missile accelerates (units/sec²)")]
+    public float acceleration = 150f;
 
     [Tooltip("How long before projectile destroys itself (seconds)")]
     public float lifetime = 5f;
@@ -20,7 +26,7 @@ public class Projectile : MonoBehaviour
 
     [Header("Explosion Settings")]
     [Tooltip("Explosion blast radius (0 = no explosion)")]
-    public float blastRadius = 20f;
+    public float blastRadius = 10f;
 
     [Tooltip("Explosion damage to UFOs in blast radius")]
     public int explosionDamage = 1;
@@ -32,8 +38,8 @@ public class Projectile : MonoBehaviour
     public AudioClip explosionSound;
 
     [Header("Proximity Settings")]
-    [Tooltip("Distance at which missile explodes near enemies (0 = use blastRadius, recommend 50-80)")]
-    public float proximityTriggerDistance = 20f;
+    [Tooltip("Distance at which missile explodes near enemies (0 = use blastRadius)")]
+    public float proximityTriggerDistance = 10f;
 
     [Tooltip("How often to check proximity (seconds, lower = more responsive but higher CPU)")]
     public float proximityCheckInterval = 0.1f;
@@ -44,6 +50,18 @@ public class Projectile : MonoBehaviour
     [Header("Visual Settings")]
     [Tooltip("Optional trail renderer reference")]
     public TrailRenderer trail;
+
+    [Tooltip("Auto-create missile shape from primitives")]
+    public bool createMissileVisual = true;
+
+    [Tooltip("Color of the missile body")]
+    public Color missileColor = new Color(0.3f, 0.3f, 0.35f); // Dark gray metal
+
+    [Tooltip("Color of the missile nose cone")]
+    public Color noseConeColor = new Color(0.8f, 0.2f, 0.1f); // Red-orange tip
+
+    [Tooltip("Overall scale of the missile visual")]
+    public float missileScale = 1f;
 
     [Header("Trajectory Indicator")]
     [Tooltip("Show dotted line indicating missile path")]
@@ -64,6 +82,7 @@ public class Projectile : MonoBehaviour
     private Rigidbody rb;
     private GameObject[] trajectoryDots; // Array of dot objects
     private float spawnTime;
+    private float currentSpeed; // Current speed (accelerates over time)
     private GameObject owner; // Who fired this projectile
     private GameObject directHitTarget = null; // UFO that was directly hit (skip in explosion)
     private bool hasCollided = false; // Prevent multiple collision events
@@ -75,6 +94,7 @@ public class Projectile : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         spawnTime = Time.time;
+        currentSpeed = startSpeed; // Start at UFO speed
 
         // Configure rigidbody for projectile physics
         rb.useGravity = false; // Straight flight, no gravity
@@ -82,7 +102,13 @@ public class Projectile : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // Fast-moving object
 
         // Set initial velocity in forward direction
-        rb.velocity = transform.forward * speed;
+        rb.velocity = transform.forward * currentSpeed;
+
+        // Create missile visual from primitives
+        if (createMissileVisual)
+        {
+            CreateMissileVisual();
+        }
 
         // Create trajectory indicator
         if (showTrajectory)
@@ -91,10 +117,105 @@ public class Projectile : MonoBehaviour
         }
     }
 
+    void CreateMissileVisual()
+    {
+        // Create unlit materials
+        Material bodyMat = new Material(Shader.Find("Unlit/Color"));
+        bodyMat.color = missileColor;
+
+        Material noseMat = new Material(Shader.Find("Unlit/Color"));
+        noseMat.color = noseConeColor;
+
+        float scale = missileScale;
+
+        // === BODY: Long cylinder ===
+        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        body.name = "MissileBody";
+        body.transform.SetParent(transform);
+        body.transform.localPosition = Vector3.zero;
+        // Rotate cylinder to point forward (cylinders are vertical by default)
+        body.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        // Long and thin: height 2, radius 0.3
+        body.transform.localScale = new Vector3(0.3f * scale, 1f * scale, 0.3f * scale);
+        Destroy(body.GetComponent<Collider>()); // No extra colliders
+        body.GetComponent<Renderer>().material = bodyMat;
+        body.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === NOSE CONE: Pointed tip using scaled sphere ===
+        GameObject nose = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        nose.name = "MissileNose";
+        nose.transform.SetParent(transform);
+        // Position at front of body
+        nose.transform.localPosition = new Vector3(0f, 0f, 1.2f * scale);
+        // Stretched sphere to make a cone shape
+        nose.transform.localScale = new Vector3(0.3f * scale, 0.3f * scale, 0.6f * scale);
+        Destroy(nose.GetComponent<Collider>());
+        nose.GetComponent<Renderer>().material = noseMat;
+        nose.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === FINS: 4 fins at the back ===
+        float finLength = 0.5f * scale;
+        float finWidth = 0.02f * scale;
+        float finHeight = 0.35f * scale;
+        float finBackOffset = -0.8f * scale; // Position at rear
+        float finOutwardOffset = 0.2f * scale;
+
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject fin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fin.name = "MissileFin" + i;
+            fin.transform.SetParent(transform);
+
+            // Position fins in a cross pattern (up, down, left, right)
+            float angle = i * 90f;
+            Vector3 finOffset = Quaternion.Euler(0f, 0f, angle) * new Vector3(0f, finOutwardOffset, 0f);
+            fin.transform.localPosition = new Vector3(finOffset.x, finOffset.y, finBackOffset);
+
+            // Rotate fin to stick outward
+            fin.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+            // Scale: thin, tall, swept back
+            fin.transform.localScale = new Vector3(finWidth, finHeight, finLength);
+
+            Destroy(fin.GetComponent<Collider>());
+            fin.GetComponent<Renderer>().material = bodyMat;
+            fin.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        // === EXHAUST GLOW: Small emissive sphere at back ===
+        GameObject exhaust = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        exhaust.name = "MissileExhaust";
+        exhaust.transform.SetParent(transform);
+        exhaust.transform.localPosition = new Vector3(0f, 0f, -1.1f * scale);
+        exhaust.transform.localScale = new Vector3(0.2f * scale, 0.2f * scale, 0.2f * scale);
+        Destroy(exhaust.GetComponent<Collider>());
+        // Bright orange/yellow exhaust
+        Material exhaustMat = new Material(Shader.Find("Unlit/Color"));
+        exhaustMat.color = new Color(1f, 0.6f, 0.1f); // Orange glow
+        exhaust.GetComponent<Renderer>().material = exhaustMat;
+        exhaust.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    void FixedUpdate()
+    {
+        // Accelerate missile up to max speed
+        if (currentSpeed < maxSpeed)
+        {
+            currentSpeed += acceleration * Time.fixedDeltaTime;
+            if (currentSpeed > maxSpeed)
+                currentSpeed = maxSpeed;
+
+            // Update velocity (keep same direction)
+            rb.velocity = transform.forward * currentSpeed;
+        }
+    }
+
     void CreateTrajectoryDots()
     {
         // Raycast to find impact point
-        float maxDistance = speed * lifetime; // Maximum possible travel distance
+        // Use average speed for trajectory estimate (starts at startSpeed, ends at maxSpeed)
+        float avgSpeed = (startSpeed + maxSpeed) / 2f;
+        float maxDistance = avgSpeed * lifetime; // Maximum possible travel distance
         RaycastHit hit;
         Vector3 endPoint;
 
@@ -357,10 +478,13 @@ public class Projectile : MonoBehaviour
             }
         }
 
-        // Spawn explosion visual effect
+        // Spawn explosion visual effect (scaled to match blast radius)
         if (explosionPrefab != null)
         {
             GameObject explosion = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+            // Scale explosion visual to match blast radius (base prefab assumes radius of 20)
+            float scaleFactor = blastRadius / 20f;
+            explosion.transform.localScale *= scaleFactor;
             Destroy(explosion, 5f);
         }
 

@@ -13,6 +13,12 @@ public class WeaponSystem : MonoBehaviour
     [Tooltip("Where projectiles spawn from (use UFO center if not assigned)")]
     public Transform firePoint;
 
+    [Tooltip("Forward offset from UFO center when spawning projectiles")]
+    public float spawnForwardOffset = 15f;
+
+    [Tooltip("Vertical offset from UFO center (negative = below)")]
+    public float spawnVerticalOffset = -1.5f;
+
     [Tooltip("Time between shots (seconds)")]
     public float fireRate = 0.3f;
 
@@ -128,9 +134,11 @@ public class WeaponSystem : MonoBehaviour
         }
         else
         {
-            // Spawn from UFO center, using aim direction
-            // Use larger offset (10 units) to accommodate large projectiles like sticky bombs
-            spawnPosition = transform.position + (aimDirection * Vector3.forward) * 10f;
+            // Spawn from UFO center with configurable offset
+            // Forward offset in aim direction, vertical offset in world space
+            spawnPosition = transform.position
+                + (aimDirection * Vector3.forward) * spawnForwardOffset
+                + Vector3.up * spawnVerticalOffset;
             spawnRotation = aimDirection;
         }
 
