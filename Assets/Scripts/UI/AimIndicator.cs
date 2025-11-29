@@ -151,19 +151,12 @@ public class AimIndicator : MonoBehaviour
                 return;
         }
 
-        // Get aim direction from UFO controller
-        Quaternion aimDirection = ufoController.GetAimDirection();
-        Vector3 aimForward = aimDirection * Vector3.forward;
+        // Use UFO's transform.forward directly - matches camera exactly
+        // No velocity-based calculations - reticle locked to screen center
+        Vector3 targetPosition = transform.position + (transform.forward * reticleDistance);
 
-        // Calculate target position
-        Vector3 targetPosition = transform.position + (aimForward * reticleDistance);
-
-        // Smooth movement to target position
-        reticleObject.transform.position = Vector3.Lerp(
-            reticleObject.transform.position,
-            targetPosition,
-            Time.deltaTime * smoothSpeed
-        );
+        // INSTANT position - no smoothing, reticle locked to aim direction
+        reticleObject.transform.position = targetPosition;
 
         // Face the reticle toward the UFO (so it's always visible)
         reticleObject.transform.rotation = Quaternion.LookRotation(

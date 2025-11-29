@@ -188,8 +188,9 @@ public class UFOCamera : MonoBehaviour
             Vector3 initialPosition = target.position - (target.forward * distance) + (target.up * height);
             transform.position = initialPosition;
 
-            // IMMEDIATELY set camera rotation to match UFO's full orientation
-            transform.rotation = target.rotation * Quaternion.Euler(lookDownAngle, 0, 0);
+            // IMMEDIATELY set camera rotation to match UFO's aim direction exactly
+            // No tilt - screen center = aim point
+            transform.rotation = target.rotation;
 
             // Initialize last rotation for turn detection
             lastTargetRotation = target.rotation;
@@ -364,8 +365,9 @@ public class UFOCamera : MonoBehaviour
         // === CAMERA COLLISION SYSTEM ===
         // Raycast from target to desired camera position to check for obstructions
         // True 3D flight: camera follows UFO's local axes (behind and above in UFO space)
+        // No vertical offset bobbing - stable camera position for fixed aim point
         Vector3 targetToCamera = -target.forward * currentDistance;
-        Vector3 desiredCameraOffset = targetToCamera + (target.up * (height + currentVerticalOffset));
+        Vector3 desiredCameraOffset = targetToCamera + (target.up * height);
         Vector3 desiredPosition = target.position + desiredCameraOffset;
 
         // Check for obstructions between target and desired camera position
@@ -411,25 +413,18 @@ public class UFOCamera : MonoBehaviour
             }
         }
 
-        // Smoothly move camera to desired position (WITHOUT shake - that's applied after)
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+        // INSTANT camera position - no smoothing, locked to UFO for stable aim
+        transform.position = desiredPosition;
 
-        // Apply shake DIRECTLY to final position (instant, not smoothed by lerp)
-        // This ensures shake is visible and not dampened by camera smoothing
+        // Apply shake DIRECTLY to final position
         transform.position += shakeOffset;
 
         // Camera rotation (normal mode only - death mode handles rotation above)
-        // True 3D flight: camera follows UFO's full rotation (pitch, yaw, roll)
-        // Camera looks at UFO from behind, matching its orientation
+        // True 3D flight: camera looks exactly where UFO is aiming
+        // INSTANT rotation - no smoothing, aim point locked to screen center
 
-        // Calculate target rotation: match UFO's full rotation, then add downward tilt
-        // This keeps camera aligned with UFO's orientation (including upside down)
-        Quaternion targetRotation = target.rotation * Quaternion.Euler(lookDownAngle + currentVerticalTilt, 0, 0);
-
-        // Tighter rotation tracking for better aiming (higher value = more responsive)
-        // Uses higher smoothing multiplier for near-instant rotation response
-        float rotationSpeed = rotationSmoothing * 10f * Time.deltaTime;
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed);
+        // Match UFO's rotation exactly (no lerp/slerp - instant response)
+        transform.rotation = target.rotation;
     }
 
     // Helper method to adjust camera settings at runtime
