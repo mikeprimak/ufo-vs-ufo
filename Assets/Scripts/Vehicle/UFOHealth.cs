@@ -73,6 +73,7 @@ public class UFOHealth : MonoBehaviour
     private Rigidbody rb;
     private UFOController controller;
     private UFOCollision collision;
+    private ShieldItem shieldItem;
 
     void Start()
     {
@@ -83,6 +84,7 @@ public class UFOHealth : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         controller = GetComponent<UFOController>();
         collision = GetComponent<UFOCollision>();
+        shieldItem = GetComponent<ShieldItem>();
     }
 
     void Update()
@@ -147,6 +149,12 @@ public class UFOHealth : MonoBehaviour
             return;
         }
 
+        // Check if shield is active (defensive item)
+        if (shieldItem != null && shieldItem.IsShieldActive())
+        {
+            return; // Shield blocks all damage
+        }
+
         // Reduce health
         currentHealth -= damageAmount;
         currentHealth = Mathf.Max(0, currentHealth); // Clamp to 0
@@ -179,6 +187,12 @@ public class UFOHealth : MonoBehaviour
         if (isInvincible)
         {
             return;
+        }
+
+        // Check if shield is active (defensive item)
+        if (shieldItem != null && shieldItem.IsShieldActive())
+        {
+            return; // Shield blocks all damage
         }
 
         // Reduce health

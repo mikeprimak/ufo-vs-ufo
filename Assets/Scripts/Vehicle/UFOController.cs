@@ -82,6 +82,19 @@ public class UFOController : MonoBehaviour
     [Tooltip("Minimum forward speed required for pitch tilt")]
     public float minSpeedForPitch = 5f;
 
+    [Header("Idle Animation")]
+    [Tooltip("How much the UFO bobs up and down")]
+    public float idleBobAmount = 0.15f;
+
+    [Tooltip("Speed of bobbing motion")]
+    public float idleBobSpeed = 1.2f;
+
+    [Tooltip("How much the UFO tilts (degrees)")]
+    public float idleTiltAmount = 2f;
+
+    [Tooltip("Speed of tilt wobble")]
+    public float idleTiltSpeed = 0.8f;
+
     [Header("Barrel Roll Settings")]
     [Tooltip("Lateral dodge distance (in units, ~18 = 3 UFO widths)")]
     public float barrelRollDistance = 18f;
@@ -174,6 +187,10 @@ public class UFOController : MonoBehaviour
     private float currentBankAngle;
     private float currentPitchAngle;
 
+    // Idle animation
+    private float idleAnimationOffset; // Random offset so UFOs don't sync
+    private Vector3 visualModelBasePosition; // Original local position
+
     // Floor bounce control
     private bool disableVerticalControl;
     private float verticalControlReenableTime;
@@ -217,6 +234,13 @@ public class UFOController : MonoBehaviour
         // Enable interpolation to smooth movement between FixedUpdate calls
         // This prevents jittery visuals when camera follows in LateUpdate
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // Initialize idle animation
+        idleAnimationOffset = Random.Range(0f, 100f);
+        if (visualModel != null)
+        {
+            visualModelBasePosition = visualModel.localPosition;
+        }
     }
 
     void Update()
@@ -329,8 +353,8 @@ public class UFOController : MonoBehaviour
             if (Input.GetKey(KeyCode.JoystickButton3)) // Button 3 (Y/Triangle) = Brake/Reverse
                 brakeInput = true;
 
-            // Fire weapon with Button 1 (B/Circle) or Fire3
-            fireInput = Input.GetButton("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
+            // Fire weapon with B button (Button 1)
+            fireInput = Input.GetKey(KeyCode.JoystickButton1);
 
             // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
             turnInput = Input.GetAxis("Horizontal");
@@ -338,8 +362,8 @@ public class UFOController : MonoBehaviour
             // Arrow keys for vertical movement (Up/Down) + Controller Left Stick Y-axis
             verticalInput = Input.GetAxis("Vertical");
 
-            // Barrel roll input - RB only, direction from stick/dpad
-            bool barrelRollPressed = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.Q);
+            // Barrel roll input - Q key only (RB now used for fire)
+            bool barrelRollPressed = Input.GetKeyDown(KeyCode.Q);
 
             if (barrelRollPressed)
             {
@@ -364,7 +388,7 @@ public class UFOController : MonoBehaviour
                 }
             }
 
-            // Snap to level input - LB (Button 4) or E key
+            // Snap to level input - Left Bumper (LB / Button 4) or E key
             if (Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E))
             {
                 SnapToLevel();
@@ -969,6 +993,23 @@ public class UFOController : MonoBehaviour
         UFOHitEffect hitEffect = GetComponent<UFOHitEffect>();
         Vector3 wobbleOffset = (hitEffect != null) ? hitEffect.GetWobbleOffset() : Vector3.zero;
 
+        // Calculate idle animation (always active - makes UFO feel alive)
+        float time = Time.time + idleAnimationOffset;
+
+        // Idle bob (gentle up/down)
+        float idleBob = Mathf.Sin(time * idleBobSpeed) * idleBobAmount;
+        // Add second frequency for organic feel
+        idleBob += Mathf.Sin(time * idleBobSpeed * 1.7f) * idleBobAmount * 0.3f;
+
+        // Idle tilt (gentle pitch and roll wobble)
+        float idlePitch = Mathf.Sin(time * idleTiltSpeed) * idleTiltAmount;
+        float idleRoll = Mathf.Sin(time * idleTiltSpeed * 0.7f) * idleTiltAmount;
+        // Add subtle yaw wobble
+        float idleYaw = Mathf.Sin(time * idleTiltSpeed * 0.5f) * idleTiltAmount * 0.3f;
+
+        // Apply idle bob to position
+        visualModel.localPosition = visualModelBasePosition + Vector3.up * idleBob;
+
         // If barrel rolling, override with barrel roll animation
         if (isBarrelRolling)
         {
@@ -980,8 +1021,12 @@ public class UFOController : MonoBehaviour
             // Negate direction to match visual roll with movement direction
             float rollAngle = progress * 360f * -barrelRollDirection;
 
-            // Apply pure roll animation (Z-axis rotation) with wobble
-            visualModel.localRotation = Quaternion.Euler(wobbleOffset.x, wobbleOffset.y, rollAngle + wobbleOffset.z);
+            // Apply pure roll animation (Z-axis rotation) with wobble + idle
+            visualModel.localRotation = Quaternion.Euler(
+                wobbleOffset.x + idlePitch,
+                wobbleOffset.y + idleYaw,
+                rollAngle + wobbleOffset.z
+            );
             return;
         }
 
@@ -993,12 +1038,12 @@ public class UFOController : MonoBehaviour
         // Smoothly interpolate to target bank angle
         currentBankAngle = Mathf.Lerp(currentBankAngle, targetBankAngle, bankSpeed * Time.deltaTime);
 
-        // Apply banking (Z-axis roll) to visual model with wobble
+        // Apply banking (Z-axis roll) to visual model with wobble + idle
         // No visual pitch - UFO parent now handles actual pitch rotation
         visualModel.localRotation = Quaternion.Euler(
-            wobbleOffset.x,
-            wobbleOffset.y,
-            currentBankAngle + wobbleOffset.z
+            wobbleOffset.x + idlePitch,
+            wobbleOffset.y + idleYaw,
+            currentBankAngle + wobbleOffset.z + idleRoll
         );
     }
 

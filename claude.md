@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
-**Last Updated:** 2025-10-29
-**Update Count:** 57
+**Last Updated:** 2025-11-30
+**Update Count:** 58
 
 ---
 
@@ -54,6 +54,9 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Aim indicator: 3D reticle shows where UFO weapons are currently aimed
 - ✅ Vertical input ramping: Up/down aiming now has ease-in like left/right turning
 - ✅ Increased max pitch: Steeper climbs/dives (ascending 100%, descending 80%)
+- ✅ Defensive item system: Separate slot for defensive items (shield, etc.)
+- ✅ Shield item: Temporary invincibility bubble (5 seconds, blocks all damage)
+- ✅ Controller remapping: B=Fire, LB=Re-level, RB=Deploy defensive item, Q=Barrel roll
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -94,7 +97,10 @@ Assets/
 │   │   ├── LaserWeapon.cs - Laser beam weapon (blue, 200 range, OnDisable cleanup)
 │   │   ├── BurstWeapon.cs - Burst fire weapon
 │   │   ├── StickyBomb.cs - Sticky bomb weapon
-│   │   └── DashWeapon.cs - Dash weapon (3x speed boost, ramming damage, force field)
+│   │   ├── DashWeapon.cs - Dash weapon (3x speed boost, ramming damage, force field)
+│   │   ├── DefensiveItemManager.cs - Defensive item inventory (separate from weapons)
+│   │   ├── DefensiveItemPickup.cs - Defensive item pickup boxes
+│   │   └── ShieldItem.cs - Shield defensive item (temporary invincibility)
 │   ├── GameManager.cs - Match flow, win conditions, stats tracking
 │   ├── PlayerStats.cs - Individual player statistics (kills, deaths, streaks, accuracy)
 │   └── Arena/ (empty - future)
@@ -140,10 +146,14 @@ Assets/
 - AI input support for enemy control
 
 **Controls:**
-- A/D or Buttons 0/1: Accelerate/Brake
+- A/D: Accelerate/Brake (keyboard)
+- Button 0 (A): Accelerate
+- Button 3 (Y): Brake/Reverse
 - Arrows/Left Stick: Turn, Ascend/Descend
-- Q/RB (Button 5): Barrel Roll (direction from stick)
-- LB (Button 4): (UNMAPPED - manual boost removed)
+- Q: Barrel Roll (direction from stick)
+- B button (Button 1): Fire weapon
+- LB (Button 4): Snap to level (re-level flight)
+- RB (Button 5): Deploy defensive item
 
 ### UFOCollision.cs - Bounce System
 **Key Features:**
@@ -442,6 +452,53 @@ Assets/
 - **Respawn**: 15 seconds default
 - **Random weapons**: Enable randomWeapon to give random weapon type
 - **AI reservation system**: Prevents multiple AIs from claiming same pickup
+
+### DefensiveItemManager.cs - Defensive Item System
+**Key Features:**
+- **Separate slot from weapons**: Players can hold 1 weapon AND 1 defensive item
+- **Mirrors WeaponManager structure**: Same inventory/switching pattern
+- **Deploy button**: RB (Button 5) or R key
+- **AI support**: TryUseItemAI() method for AI control
+
+**Current Items:**
+- Shield (see ShieldItem.cs below)
+
+**Setup:**
+- Add DefensiveItemManager component to UFO
+- Add ShieldItem component to UFO
+- Link ShieldItem reference in Inspector
+
+### ShieldItem.cs - Shield Defensive Item
+**Key Features:**
+- **Temporary invincibility**: Blocks ALL damage while active
+- **Duration**: 5 seconds (configurable)
+- **Visual**: Cyan semi-transparent bubble around UFO
+- **Pulse effect**: Gentle breathing animation on shield bubble
+- **Single use**: Item removed from inventory after activation
+
+**Configuration:**
+- `shieldDuration` - 5 seconds (how long shield lasts)
+- `shieldSize` - 5 units (bubble diameter)
+- `shieldColor` - Cyan, 30% opacity
+- `pulseSpeed` - 2.0 (breathing effect speed)
+- `pulseAmount` - 0.15 (pulse intensity)
+
+**Integration:**
+- UFOHealth.cs checks ShieldItem.IsShieldActive() before applying damage
+- Shield blocks damage from all sources (weapons, explosions, collisions)
+
+### DefensiveItemPickup.cs - Defensive Item Pickups
+**Key Features:**
+- **Mirrors WeaponPickup.cs**: Same animation, respawn, and claim system
+- **Item types**: Can be set to specific item or random
+- **Respawn**: 15 seconds default
+- **AI reservation system**: Same as weapon pickups
+
+**Setup:**
+- Create pickup GameObject with mesh and collider
+- Add DefensiveItemPickup component
+- Set itemType or enable randomItem
+- Set respawn settings as needed
 
 ## Scene Setup Notes
 

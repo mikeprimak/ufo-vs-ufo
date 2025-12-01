@@ -84,9 +84,9 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-        // Check for fire input
-        bool firePressed = Input.GetButtonDown("Fire2") || Input.GetKeyDown(KeyCode.JoystickButton1);
-        bool fireHeld = Input.GetButton("Fire2") || Input.GetKey(KeyCode.JoystickButton1);
+        // Check for fire input - B button (Button 1)
+        bool firePressed = Input.GetKeyDown(KeyCode.JoystickButton1);
+        bool fireHeld = Input.GetKey(KeyCode.JoystickButton1);
 
         // Burst weapon uses hold-to-fire
         if (currentWeapon == WeaponType.Burst && burstWeapon != null && burstWeapon.enabled)

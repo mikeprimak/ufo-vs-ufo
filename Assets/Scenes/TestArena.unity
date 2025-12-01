@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 1
+  weaponType: 4
   respawns: 1
   respawnTime: 10
   rotationSpeed: 90
@@ -370,6 +370,133 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 45022862}
   m_CullTransparentMesh: 1
+--- !u!1 &104866503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 104866508}
+  - component: {fileID: 104866507}
+  - component: {fileID: 104866506}
+  - component: {fileID: 104866505}
+  - component: {fileID: 104866504}
+  m_Layer: 0
+  m_Name: ShieldPickup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &104866504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104866503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439df13c04b75f449afa6b5088b3cc4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomItem: 0
+  itemType: 1
+  respawns: 1
+  respawnTime: 15
+  rotationSpeed: 90
+  bobSpeed: 3
+  bobHeight: 0.5
+  visualScale: 1.5
+  triggerSizeMultiplier: 1
+--- !u!65 &104866505
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104866503}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &104866506
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104866503}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &104866507
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104866503}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &104866508
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104866503}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 100, y: 25, z: 100}
+  m_LocalScale: {x: 30, y: 30, z: 30}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &138530923
 GameObject:
   m_ObjectHideFlags: 0
@@ -1330,6 +1457,8 @@ GameObject:
   - component: {fileID: 451632591}
   - component: {fileID: 451632592}
   - component: {fileID: 451632593}
+  - component: {fileID: 451632595}
+  - component: {fileID: 451632594}
   m_Layer: 0
   m_Name: UFO_Player
   m_TagString: Player
@@ -1486,6 +1615,10 @@ MonoBehaviour:
   visualPitchAmount: 25
   visualPitchSpeed: 3
   minSpeedForPitch: 5
+  idleBobAmount: 0.2
+  idleBobSpeed: 1
+  idleTiltAmount: 2
+  idleTiltSpeed: 2
   barrelRollDistance: 18
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
@@ -1506,6 +1639,7 @@ MonoBehaviour:
   aiBarrelRollRight: 0
   aiFire: 0
   aimCamera: {fileID: 961739752}
+  snapToLevelDuration: 0.9
 --- !u!114 &451632578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1575,16 +1709,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 9191723643175361914, guid: efc9c8f5fe6d26041aa96fcaed76a772,
     type: 3}
-  burstCount: 24
-  burstDelay: 0.08
-  cooldown: 2
+  fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
-  forwardOffset: 8
+  forwardOffset: 15
   currentAmmo: 0
   maxAmmo: 24
-  ammoPerBurst: 24
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &451632583
@@ -1824,6 +1955,41 @@ MonoBehaviour:
   hideWhenCantFire: 0
   pulseSpeed: 2
   pulseAmount: 0.2
+--- !u!114 &451632594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451632571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5e5e3f28afbcf45a10d2a9129839fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldDuration: 5
+  shieldSize: 10
+  shieldColor: {r: 0, g: 0.8, b: 1, a: 0.43137255}
+  pulseSpeed: 6
+  pulseAmount: 0.3
+  activateSound: {fileID: 0}
+  deactivateSound: {fileID: 0}
+--- !u!114 &451632595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451632571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7ce2df6e0baa0f44b05178ceaf38d9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldItem: {fileID: 451632594}
+  currentItem: 0
+  shieldIcon: {fileID: 0}
+  allowAIControl: 0
 --- !u!1 &518588617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2612,7 +2778,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 1
+  weaponType: 4
   respawns: 1
   respawnTime: 15
   rotationSpeed: 90
@@ -2733,6 +2899,8 @@ GameObject:
   - component: {fileID: 859948921}
   - component: {fileID: 859948938}
   - component: {fileID: 859948939}
+  - component: {fileID: 859948941}
+  - component: {fileID: 859948940}
   m_Layer: 0
   m_Name: UFO_AI_2
   m_TagString: Player
@@ -2887,16 +3055,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 9191723643175361914, guid: efc9c8f5fe6d26041aa96fcaed76a772,
     type: 3}
-  burstCount: 13
-  burstDelay: 0.08
-  cooldown: 2
+  fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
-  ammoPerBurst: 13
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &859948928
@@ -3012,6 +3177,10 @@ MonoBehaviour:
   visualPitchAmount: 45
   visualPitchSpeed: 3
   minSpeedForPitch: 5
+  idleBobAmount: 0.15
+  idleBobSpeed: 1.2
+  idleTiltAmount: 2
+  idleTiltSpeed: 0.8
   barrelRollDistance: 18
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
@@ -3032,6 +3201,7 @@ MonoBehaviour:
   aiBarrelRollRight: 0
   aiFire: 0
   aimCamera: {fileID: 0}
+  snapToLevelDuration: 0.3
 --- !u!54 &859948933
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3180,6 +3350,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorName: Blue
   displayColor: {r: 0.12259703, g: 0.23867509, b: 0.8962264, a: 1}
+--- !u!114 &859948940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859948920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7ce2df6e0baa0f44b05178ceaf38d9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldItem: {fileID: 859948941}
+  currentItem: 0
+  shieldIcon: {fileID: 0}
+  allowAIControl: 0
+--- !u!114 &859948941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859948920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5e5e3f28afbcf45a10d2a9129839fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldDuration: 5
+  shieldSize: 5
+  shieldColor: {r: 0, g: 0.8, b: 1, a: 0.3}
+  pulseSpeed: 2
+  pulseAmount: 0.15
+  activateSound: {fileID: 0}
+  deactivateSound: {fileID: 0}
 --- !u!1 &867499428
 GameObject:
   m_ObjectHideFlags: 0
@@ -3207,6 +3412,8 @@ GameObject:
   - component: {fileID: 867499429}
   - component: {fileID: 867499446}
   - component: {fileID: 867499447}
+  - component: {fileID: 867499449}
+  - component: {fileID: 867499448}
   m_Layer: 0
   m_Name: UFO_AI_3
   m_TagString: Player
@@ -3361,16 +3568,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 9191723643175361914, guid: efc9c8f5fe6d26041aa96fcaed76a772,
     type: 3}
-  burstCount: 13
-  burstDelay: 0.08
-  cooldown: 2
+  fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
-  ammoPerBurst: 13
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &867499436
@@ -3486,6 +3690,10 @@ MonoBehaviour:
   visualPitchAmount: 45
   visualPitchSpeed: 3
   minSpeedForPitch: 5
+  idleBobAmount: 0.15
+  idleBobSpeed: 1.2
+  idleTiltAmount: 2
+  idleTiltSpeed: 0.8
   barrelRollDistance: 18
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
@@ -3506,6 +3714,7 @@ MonoBehaviour:
   aiBarrelRollRight: 0
   aiFire: 0
   aimCamera: {fileID: 0}
+  snapToLevelDuration: 0.3
 --- !u!54 &867499441
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3654,6 +3863,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorName: Yellow
   displayColor: {r: 0.8962264, g: 0.84783405, b: 0.18178178, a: 1}
+--- !u!114 &867499448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867499428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5e5e3f28afbcf45a10d2a9129839fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldDuration: 5
+  shieldSize: 5
+  shieldColor: {r: 0, g: 0.8, b: 1, a: 0.3}
+  pulseSpeed: 2
+  pulseAmount: 0.15
+  activateSound: {fileID: 0}
+  deactivateSound: {fileID: 0}
+--- !u!114 &867499449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867499428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7ce2df6e0baa0f44b05178ceaf38d9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldItem: {fileID: 867499448}
+  currentItem: 0
+  shieldIcon: {fileID: 0}
+  allowAIControl: 0
 --- !u!1 &874634640
 GameObject:
   m_ObjectHideFlags: 0
@@ -4434,6 +4678,133 @@ MonoBehaviour:
     m_Bits: 4294967295
   collisionPullInSpeed: 10
   collisionRecoverySpeed: 5
+--- !u!1 &974071518
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 974071523}
+  - component: {fileID: 974071522}
+  - component: {fileID: 974071521}
+  - component: {fileID: 974071520}
+  - component: {fileID: 974071519}
+  m_Layer: 0
+  m_Name: ShieldPickup (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &974071519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974071518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439df13c04b75f449afa6b5088b3cc4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomItem: 0
+  itemType: 1
+  respawns: 1
+  respawnTime: 15
+  rotationSpeed: 90
+  bobSpeed: 3
+  bobHeight: 0.5
+  visualScale: 1.5
+  triggerSizeMultiplier: 1
+--- !u!65 &974071520
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974071518}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &974071521
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974071518}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &974071522
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974071518}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &974071523
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974071518}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 100, y: 30, z: 29}
+  m_LocalScale: {x: 30, y: 30, z: 30}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &987598501
 GameObject:
   m_ObjectHideFlags: 0
@@ -5843,6 +6214,133 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1545514970}
   m_CullTransparentMesh: 1
+--- !u!1 &1547262487
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1547262492}
+  - component: {fileID: 1547262491}
+  - component: {fileID: 1547262490}
+  - component: {fileID: 1547262489}
+  - component: {fileID: 1547262488}
+  m_Layer: 0
+  m_Name: ShieldPickup (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1547262488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547262487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439df13c04b75f449afa6b5088b3cc4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  randomItem: 0
+  itemType: 1
+  respawns: 1
+  respawnTime: 15
+  rotationSpeed: 90
+  bobSpeed: 3
+  bobHeight: 0.5
+  visualScale: 1.5
+  triggerSizeMultiplier: 1
+--- !u!65 &1547262489
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547262487}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1547262490
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547262487}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1547262491
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547262487}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1547262492
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547262487}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 100, y: 90, z: 100}
+  m_LocalScale: {x: 30, y: 30, z: 30}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1576578798
 GameObject:
   m_ObjectHideFlags: 0
@@ -5870,6 +6368,8 @@ GameObject:
   - component: {fileID: 1576578799}
   - component: {fileID: 1576578816}
   - component: {fileID: 1576578817}
+  - component: {fileID: 1576578819}
+  - component: {fileID: 1576578818}
   m_Layer: 0
   m_Name: UFO_AI_1
   m_TagString: Player
@@ -6024,16 +6524,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 9191723643175361914, guid: efc9c8f5fe6d26041aa96fcaed76a772,
     type: 3}
-  burstCount: 13
-  burstDelay: 0.08
-  cooldown: 2
+  fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
   firePointOffset: 2
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
-  ammoPerBurst: 13
   startingAmmo: 0
   fireSound: {fileID: 0}
 --- !u!114 &1576578806
@@ -6149,6 +6646,10 @@ MonoBehaviour:
   visualPitchAmount: 45
   visualPitchSpeed: 3
   minSpeedForPitch: 5
+  idleBobAmount: 0.15
+  idleBobSpeed: 1.2
+  idleTiltAmount: 2
+  idleTiltSpeed: 0.8
   barrelRollDistance: 18
   barrelRollDuration: 0.5
   barrelRollCooldown: 0.1
@@ -6169,6 +6670,7 @@ MonoBehaviour:
   aiBarrelRollRight: 0
   aiFire: 0
   aimCamera: {fileID: 0}
+  snapToLevelDuration: 0.3
 --- !u!54 &1576578811
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6317,6 +6819,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorName: Red
   displayColor: {r: 0.8301887, g: 0.11356357, b: 0.11356357, a: 1}
+--- !u!114 &1576578818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576578798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5e5e3f28afbcf45a10d2a9129839fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldDuration: 5
+  shieldSize: 5
+  shieldColor: {r: 0, g: 0.8, b: 1, a: 0.3}
+  pulseSpeed: 2
+  pulseAmount: 0.15
+  activateSound: {fileID: 0}
+  deactivateSound: {fileID: 0}
+--- !u!114 &1576578819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576578798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7ce2df6e0baa0f44b05178ceaf38d9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldItem: {fileID: 1576578818}
+  currentItem: 0
+  shieldIcon: {fileID: 0}
+  allowAIControl: 0
 --- !u!1 &1589016234
 GameObject:
   m_ObjectHideFlags: 0
@@ -8062,3 +8599,6 @@ SceneRoots:
   - {fileID: 1490376432}
   - {fileID: 1660778419}
   - {fileID: 138530927}
+  - {fileID: 104866508}
+  - {fileID: 1547262492}
+  - {fileID: 974071523}
