@@ -483,6 +483,16 @@ public class HomingProjectile : MonoBehaviour
         {
             FindNearestTarget();
         }
+        else
+        {
+            // Check if current target became invisible - lose lock
+            InvisibilityItem targetInvis = target.root.GetComponent<InvisibilityItem>();
+            if (targetInvis != null && targetInvis.IsInvisible())
+            {
+                target = null; // Lose target
+                FindNearestTarget(); // Try to find another
+            }
+        }
 
         // If we have a target, home in on it and cancel any U-turn
         if (target != null)
@@ -622,6 +632,11 @@ public class HomingProjectile : MonoBehaviour
             if (health != null && health.IsDead())
                 continue;
 
+            // Skip invisible UFOs (can't be tracked by homing missiles)
+            InvisibilityItem invisibility = rootTarget.GetComponent<InvisibilityItem>();
+            if (invisibility != null && invisibility.IsInvisible())
+                continue;
+
             float distance = Vector3.Distance(transform.position, potentialTarget.transform.position);
 
             // Use larger detection radius for U-turn decisions
@@ -666,6 +681,11 @@ public class HomingProjectile : MonoBehaviour
 
             // Skip the owner (check both owner and ownerRoot)
             if (rootTarget == owner || rootTarget == ownerRoot)
+                continue;
+
+            // Skip invisible UFOs (can't be tracked by homing missiles)
+            InvisibilityItem invisibility = rootTarget.GetComponent<InvisibilityItem>();
+            if (invisibility != null && invisibility.IsInvisible())
                 continue;
 
             // Check distance

@@ -12,12 +12,24 @@ public class DefensiveItemManager : MonoBehaviour
     [Tooltip("Reference to ShieldItem")]
     public ShieldItem shieldItem;
 
+    [Tooltip("Reference to BoostItem")]
+    public BoostItem boostItem;
+
+    [Tooltip("Reference to InvisibilityItem")]
+    public InvisibilityItem invisibilityItem;
+
     [Header("Current Item")]
     public DefensiveItemType currentItem = DefensiveItemType.None;
 
     [Header("Item Icons")]
     [Tooltip("Icon sprite for Shield item")]
     public Sprite shieldIcon;
+
+    [Tooltip("Icon sprite for Boost item")]
+    public Sprite boostIcon;
+
+    [Tooltip("Icon sprite for Invisibility item")]
+    public Sprite invisibilityIcon;
 
     [Header("AI Control")]
     [Tooltip("If true, AI can trigger item activation via TryUseItemAI()")]
@@ -29,8 +41,9 @@ public class DefensiveItemManager : MonoBehaviour
     public enum DefensiveItemType
     {
         None,
-        Shield
-        // Future: Decoy, Smoke, etc.
+        Shield,
+        Boost,
+        Invisibility
     }
 
     void Start()
@@ -40,6 +53,10 @@ public class DefensiveItemManager : MonoBehaviour
         // Find item components (they should be on same GameObject)
         if (shieldItem == null)
             shieldItem = GetComponent<ShieldItem>();
+        if (boostItem == null)
+            boostItem = GetComponent<BoostItem>();
+        if (invisibilityItem == null)
+            invisibilityItem = GetComponent<InvisibilityItem>();
 
         // Start with no item
         SetItem(DefensiveItemType.None);
@@ -87,9 +104,13 @@ public class DefensiveItemManager : MonoBehaviour
     {
         currentItem = itemType;
 
-        // Disable all items UNLESS they are currently active (e.g., shield is up)
+        // Disable all items UNLESS they are currently active
         if (shieldItem != null && !shieldItem.IsShieldActive())
             shieldItem.enabled = false;
+        if (boostItem != null && !boostItem.IsBoostActive())
+            boostItem.enabled = false;
+        if (invisibilityItem != null && !invisibilityItem.IsInvisible())
+            invisibilityItem.enabled = false;
 
         // Enable the selected item
         switch (itemType)
@@ -98,6 +119,20 @@ public class DefensiveItemManager : MonoBehaviour
                 if (shieldItem != null)
                 {
                     shieldItem.enabled = true;
+                }
+                break;
+
+            case DefensiveItemType.Boost:
+                if (boostItem != null)
+                {
+                    boostItem.enabled = true;
+                }
+                break;
+
+            case DefensiveItemType.Invisibility:
+                if (invisibilityItem != null)
+                {
+                    invisibilityItem.enabled = true;
                 }
                 break;
 
@@ -122,8 +157,31 @@ public class DefensiveItemManager : MonoBehaviour
                     itemUsed = shieldItem.TryActivate();
                     if (itemUsed)
                     {
-                        // Shield is single-use, will auto-disable when duration ends
-                        // Remove from inventory immediately after activation
+                        // Shield is single-use, remove from inventory
+                        SetItem(DefensiveItemType.None);
+                    }
+                }
+                break;
+
+            case DefensiveItemType.Boost:
+                if (boostItem != null && boostItem.enabled)
+                {
+                    itemUsed = boostItem.TryActivate();
+                    if (itemUsed)
+                    {
+                        // Boost is instant single-use, remove from inventory
+                        SetItem(DefensiveItemType.None);
+                    }
+                }
+                break;
+
+            case DefensiveItemType.Invisibility:
+                if (invisibilityItem != null && invisibilityItem.enabled)
+                {
+                    itemUsed = invisibilityItem.TryActivate();
+                    if (itemUsed)
+                    {
+                        // Invisibility is single-use, remove from inventory
                         SetItem(DefensiveItemType.None);
                     }
                 }
@@ -144,6 +202,10 @@ public class DefensiveItemManager : MonoBehaviour
         {
             case DefensiveItemType.Shield:
                 return "Shield";
+            case DefensiveItemType.Boost:
+                return "Boost";
+            case DefensiveItemType.Invisibility:
+                return "Invisibility";
             case DefensiveItemType.None:
                 return "No Item";
             default:
@@ -168,6 +230,10 @@ public class DefensiveItemManager : MonoBehaviour
         {
             case DefensiveItemType.Shield:
                 return shieldIcon;
+            case DefensiveItemType.Boost:
+                return boostIcon;
+            case DefensiveItemType.Invisibility:
+                return invisibilityIcon;
             case DefensiveItemType.None:
             default:
                 return null;
@@ -183,6 +249,12 @@ public class DefensiveItemManager : MonoBehaviour
         {
             case DefensiveItemType.Shield:
                 return shieldItem != null && shieldItem.enabled && shieldItem.CanActivate();
+
+            case DefensiveItemType.Boost:
+                return boostItem != null && boostItem.enabled && boostItem.CanActivate();
+
+            case DefensiveItemType.Invisibility:
+                return invisibilityItem != null && invisibilityItem.enabled && invisibilityItem.CanActivate();
 
             case DefensiveItemType.None:
             default:
