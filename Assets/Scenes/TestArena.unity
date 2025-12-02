@@ -1663,7 +1663,6 @@ MonoBehaviour:
   minHeight: 0.5
   maxReverseSpeed: 60
   dragAmount: 2
-  autoLevelSpeed: 2
   visualModel: {fileID: 755738915}
   bankAmount: 25
   bankSpeed: 3
@@ -1699,7 +1698,9 @@ MonoBehaviour:
   magnetismStrength: 0.3
   magnetismRange: 100
   magnetismTargetTag: Player
-  levelingSpeed: 180
+  autoLevelRoll: 1
+  autoLevelRollSpeed: 120
+  autoLevelSpeedWhileTurning: 40
 --- !u!114 &451632578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1724,15 +1725,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallBounceForce: 20
-  minWallImpactSpeed: 3
-  heavyCrashThreshold: 10
-  lightFloorBounce: 2
-  heavyFloorBounce: 8
-  floorSlideRetention: 0.7
-  floorAngleThreshold: 45
+  bounceForce: 15
+  minImpactSpeed: 2
+  floorUpwardBias: 10
+  reorientSpeed: 360
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.1
 --- !u!114 &451632580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1772,7 +1771,7 @@ MonoBehaviour:
   fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
-  firePointOffset: 2
+  firePointOffset: 3
   forwardOffset: 40
   currentAmmo: 0
   maxAmmo: 24
@@ -3165,7 +3164,7 @@ MonoBehaviour:
   fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
-  firePointOffset: 2
+  firePointOffset: 3
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
@@ -3228,15 +3227,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallBounceForce: 20
-  minWallImpactSpeed: 3
-  heavyCrashThreshold: 10
-  lightFloorBounce: 2
-  heavyFloorBounce: 8
-  floorSlideRetention: 0.7
-  floorAngleThreshold: 45
+  bounceForce: 15
+  minImpactSpeed: 2
+  floorUpwardBias: 10
+  reorientSpeed: 360
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.1
 --- !u!114 &859948931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3278,7 +3275,6 @@ MonoBehaviour:
   minHeight: 0.5
   maxReverseSpeed: 60
   dragAmount: 2
-  autoLevelSpeed: 2
   visualModel: {fileID: 384117775}
   bankAmount: 25
   bankSpeed: 3
@@ -3314,7 +3310,9 @@ MonoBehaviour:
   magnetismStrength: 0.3
   magnetismRange: 100
   magnetismTargetTag: Player
-  levelingSpeed: 180
+  autoLevelRoll: 1
+  autoLevelRollSpeed: 120
+  autoLevelSpeedWhileTurning: 40
 --- !u!54 &859948933
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3422,12 +3420,12 @@ Transform:
   m_GameObject: {fileID: 859948920}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -400, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -1000, y: 10, z: 200}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 384117775}
-  m_Father: {fileID: 1576578815}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &859948938
 MonoBehaviour:
@@ -3731,7 +3729,7 @@ MonoBehaviour:
   fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
-  firePointOffset: 2
+  firePointOffset: 3
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
@@ -3794,15 +3792,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallBounceForce: 20
-  minWallImpactSpeed: 3
-  heavyCrashThreshold: 10
-  lightFloorBounce: 2
-  heavyFloorBounce: 8
-  floorSlideRetention: 0.7
-  floorAngleThreshold: 45
+  bounceForce: 15
+  minImpactSpeed: 2
+  floorUpwardBias: 10
+  reorientSpeed: 360
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.1
 --- !u!114 &867499439
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3844,7 +3840,6 @@ MonoBehaviour:
   minHeight: 0.5
   maxReverseSpeed: 60
   dragAmount: 2
-  autoLevelSpeed: 2
   visualModel: {fileID: 999856865}
   bankAmount: 25
   bankSpeed: 3
@@ -3880,7 +3875,9 @@ MonoBehaviour:
   magnetismStrength: 0.3
   magnetismRange: 100
   magnetismTargetTag: Player
-  levelingSpeed: 180
+  autoLevelRoll: 1
+  autoLevelRollSpeed: 120
+  autoLevelSpeedWhileTurning: 40
 --- !u!54 &867499441
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3989,7 +3986,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -200, y: 10, z: -200}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 999856865}
@@ -6742,7 +6739,7 @@ MonoBehaviour:
   fireRate: 0.08
   leftFirePoint: {fileID: 0}
   rightFirePoint: {fileID: 0}
-  firePointOffset: 2
+  firePointOffset: 3
   forwardOffset: 8
   currentAmmo: 0
   maxAmmo: 13
@@ -6805,15 +6802,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c0cf44ff8e5c040b8ee99b115e328b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallBounceForce: 20
-  minWallImpactSpeed: 3
-  heavyCrashThreshold: 10
-  lightFloorBounce: 2
-  heavyFloorBounce: 8
-  floorSlideRetention: 0.7
-  floorAngleThreshold: 45
+  bounceForce: 15
+  minImpactSpeed: 2
+  floorUpwardBias: 10
+  reorientSpeed: 360
   ufoRenderer: {fileID: 0}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.1
 --- !u!114 &1576578809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6855,7 +6850,6 @@ MonoBehaviour:
   minHeight: 0.5
   maxReverseSpeed: 60
   dragAmount: 2
-  autoLevelSpeed: 2
   visualModel: {fileID: 1867461010}
   bankAmount: 25
   bankSpeed: 3
@@ -6891,7 +6885,9 @@ MonoBehaviour:
   magnetismStrength: 0.3
   magnetismRange: 100
   magnetismTargetTag: Player
-  levelingSpeed: 180
+  autoLevelRoll: 1
+  autoLevelRollSpeed: 120
+  autoLevelSpeedWhileTurning: 40
 --- !u!54 &1576578811
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -7000,11 +6996,10 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 200, y: 10, z: 200}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1867461010}
-  - {fileID: 859948937}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1576578816
@@ -7154,7 +7149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   randomWeapon: 0
-  weaponType: 2
+  weaponType: 1
   respawns: 1
   respawnTime: 3
   rotationSpeed: 90
@@ -8983,6 +8978,7 @@ SceneRoots:
   - {fileID: 1177274877}
   - {fileID: 791663135}
   - {fileID: 451632576}
+  - {fileID: 859948937}
   - {fileID: 1576578815}
   - {fileID: 867499445}
   - {fileID: 1124075658}

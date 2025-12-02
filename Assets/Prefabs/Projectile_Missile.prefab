@@ -146,23 +146,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e67ab4d63c76c84980a35ea24fb7eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 180
+  speed: 220
   lifetime: 8
   damage: 1
   blastRadius: 10
-  proximityTriggerDistance: 2
+  proximityTriggerDistance: 3
   proximityCheckInterval: 0.1
-  proximityArmingDelay: 0.2
+  proximityArmingDelay: 0.3
   explosionDamage: 1
   explosionPrefab: {fileID: 0}
   explosionSound: {fileID: 0}
-  turnRate: 90
-  acceleration: 100
+  turnRate: 100
+  acceleration: 120
   maxSpeed: 200
   detectionRadius: 200
   targetTag: Player
-  homingDelay: 0.2
-  enableUTurn: 1
+  homingDelay: 0
+  enableUTurn: 0
   uTurnMinSpeed: 40
   uTurnDeceleration: 120
   uTurnTurnMultiplier: 8
