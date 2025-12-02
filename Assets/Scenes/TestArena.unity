@@ -868,8 +868,8 @@ Transform:
   m_GameObject: {fileID: 311456979}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.44, z: 0}
-  m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 755738915}
@@ -1026,7 +1026,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 1, z: 3}
+  m_LocalScale: {x: 5, y: 2, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 755738915}
@@ -2079,8 +2079,15 @@ MonoBehaviour:
   boostDuration: 3
   speedMultiplier: 2
   boostAcceleration: 200
-  boostTrailColor: {r: 1, g: 0.6, b: 0, a: 0.6}
-  trailSize: 2
+  blueTrailColor: {r: 0.3, g: 0.6, b: 1, a: 0.8}
+  blueTrailSize: 0.2
+  blueParticleLifetime: 0.15
+  redTrailColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
+  redTrailSize: 0.2
+  redParticleLifetime: 0.15
+  lateralOffset: 2.4
+  forwardOffset: -1
+  verticalOffset: -0.5
   boostSound: {fileID: 0}
 --- !u!1 &518588617
 GameObject:
@@ -3514,8 +3521,15 @@ MonoBehaviour:
   boostDuration: 0.5
   speedMultiplier: 2
   boostAcceleration: 200
-  boostTrailColor: {r: 1, g: 0.6, b: 0, a: 0.6}
-  trailSize: 2
+  blueTrailColor: {r: 0.3, g: 0.6, b: 1, a: 0.8}
+  blueTrailSize: 0.2
+  blueParticleLifetime: 0.15
+  redTrailColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
+  redTrailSize: 0.2
+  redParticleLifetime: 0.15
+  lateralOffset: 2.4
+  forwardOffset: -1
+  verticalOffset: -0.5
   boostSound: {fileID: 0}
 --- !u!1 &867499428
 GameObject:
@@ -4051,8 +4065,15 @@ MonoBehaviour:
   boostDuration: 0.5
   speedMultiplier: 2
   boostAcceleration: 200
-  boostTrailColor: {r: 1, g: 0.6, b: 0, a: 0.6}
-  trailSize: 2
+  blueTrailColor: {r: 0.3, g: 0.6, b: 1, a: 0.8}
+  blueTrailSize: 0.2
+  blueParticleLifetime: 0.15
+  redTrailColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
+  redTrailSize: 0.2
+  redParticleLifetime: 0.15
+  lateralOffset: 2.4
+  forwardOffset: -1
+  verticalOffset: -0.5
   boostSound: {fileID: 0}
 --- !u!114 &867499451
 MonoBehaviour:
@@ -7065,8 +7086,15 @@ MonoBehaviour:
   boostDuration: 0.5
   speedMultiplier: 2
   boostAcceleration: 200
-  boostTrailColor: {r: 1, g: 0.6, b: 0, a: 0.6}
-  trailSize: 2
+  blueTrailColor: {r: 0.3, g: 0.6, b: 1, a: 0.8}
+  blueTrailSize: 0.2
+  blueParticleLifetime: 0.15
+  redTrailColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
+  redTrailSize: 0.2
+  redParticleLifetime: 0.15
+  lateralOffset: 2.4
+  forwardOffset: -1
+  verticalOffset: -0.5
   boostSound: {fileID: 0}
 --- !u!1 &1589016234
 GameObject:

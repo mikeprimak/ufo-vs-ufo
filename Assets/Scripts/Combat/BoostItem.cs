@@ -16,12 +16,35 @@ public class BoostItem : MonoBehaviour
     [Tooltip("Extra forward acceleration during boost")]
     public float boostAcceleration = 200f;
 
-    [Header("Visual Settings")]
-    [Tooltip("Color of boost trail effect")]
-    public Color boostTrailColor = new Color(1f, 0.6f, 0f, 0.6f); // Orange
+    [Header("Visual Settings - Blue Trails")]
+    [Tooltip("Color of blue boost trail")]
+    public Color blueTrailColor = new Color(0.3f, 0.6f, 1f, 0.8f); // Blue
 
-    [Tooltip("Size of boost trail")]
-    public float trailSize = 2f;
+    [Tooltip("Size of blue boost trail")]
+    public float blueTrailSize = 0.2f;
+
+    [Tooltip("How long blue particles live (seconds)")]
+    public float blueParticleLifetime = 0.15f;
+
+    [Header("Visual Settings - Red Trails")]
+    [Tooltip("Color of red boost trail")]
+    public Color redTrailColor = new Color(1f, 0.3f, 0.2f, 0.8f); // Red
+
+    [Tooltip("Size of red boost trail")]
+    public float redTrailSize = 0.2f;
+
+    [Tooltip("How long red particles live (seconds)")]
+    public float redParticleLifetime = 0.15f;
+
+    [Header("Trail Positions (match regular trails)")]
+    [Tooltip("Left/right distance from UFO center")]
+    public float lateralOffset = 2.4f;
+
+    [Tooltip("Forward/back offset from UFO center")]
+    public float forwardOffset = -1f;
+
+    [Tooltip("Up/down offset from UFO center")]
+    public float verticalOffset = -0.5f;
 
     [Header("Audio")]
     [Tooltip("Sound to play when boost activates")]
@@ -34,7 +57,12 @@ public class BoostItem : MonoBehaviour
     private UFOController ufoController;
     private float originalMaxSpeed;
     private float originalDrag;
-    private GameObject boostTrailEffect;
+    private GameObject leftBlueTrail;
+    private GameObject rightBlueTrail;
+    private GameObject centerBlueTrail;
+    private GameObject leftRedTrail;
+    private GameObject rightRedTrail;
+    private GameObject centerRedTrail;
 
     void Start()
     {
@@ -111,8 +139,8 @@ public class BoostItem : MonoBehaviour
             rb.drag = originalDrag * 0.3f; // 70% less drag
         }
 
-        // Create boost trail effect
-        CreateBoostTrail();
+        // Create boost trail effects
+        CreateBoostTrails();
 
         // Play boost sound
         if (boostSound != null)
@@ -142,40 +170,61 @@ public class BoostItem : MonoBehaviour
             rb.drag = originalDrag;
         }
 
-        // Destroy trail effect
-        if (boostTrailEffect != null)
-        {
-            Destroy(boostTrailEffect);
-            boostTrailEffect = null;
-        }
+        // Destroy blue trail effects
+        if (leftBlueTrail != null) { Destroy(leftBlueTrail); leftBlueTrail = null; }
+        if (rightBlueTrail != null) { Destroy(rightBlueTrail); rightBlueTrail = null; }
+        if (centerBlueTrail != null) { Destroy(centerBlueTrail); centerBlueTrail = null; }
+
+        // Destroy red trail effects
+        if (leftRedTrail != null) { Destroy(leftRedTrail); leftRedTrail = null; }
+        if (rightRedTrail != null) { Destroy(rightRedTrail); rightRedTrail = null; }
+        if (centerRedTrail != null) { Destroy(centerRedTrail); centerRedTrail = null; }
     }
 
     /// <summary>
-    /// Create a particle trail effect behind UFO during boost
+    /// Create six particle trail effects behind UFO during boost (3 blue + 3 red at same positions)
     /// </summary>
-    void CreateBoostTrail()
+    void CreateBoostTrails()
     {
-        boostTrailEffect = new GameObject("BoostTrail");
-        boostTrailEffect.transform.SetParent(transform);
-        boostTrailEffect.transform.localPosition = new Vector3(0f, 0f, -2f); // Behind UFO
+        Vector3 leftPos = new Vector3(-lateralOffset, verticalOffset, forwardOffset);
+        Vector3 rightPos = new Vector3(lateralOffset, verticalOffset, forwardOffset);
+        Vector3 centerPos = new Vector3(0f, verticalOffset, forwardOffset - 2.5f);
 
-        ParticleSystem ps = boostTrailEffect.AddComponent<ParticleSystem>();
+        // Blue trails
+        leftBlueTrail = CreateSingleBoostTrail("BoostTrail_Blue_Left", leftPos, blueTrailColor, blueTrailSize, blueParticleLifetime);
+        rightBlueTrail = CreateSingleBoostTrail("BoostTrail_Blue_Right", rightPos, blueTrailColor, blueTrailSize, blueParticleLifetime);
+        centerBlueTrail = CreateSingleBoostTrail("BoostTrail_Blue_Center", centerPos, blueTrailColor, blueTrailSize, blueParticleLifetime);
+
+        // Red trails
+        leftRedTrail = CreateSingleBoostTrail("BoostTrail_Red_Left", leftPos, redTrailColor, redTrailSize, redParticleLifetime);
+        rightRedTrail = CreateSingleBoostTrail("BoostTrail_Red_Right", rightPos, redTrailColor, redTrailSize, redParticleLifetime);
+        centerRedTrail = CreateSingleBoostTrail("BoostTrail_Red_Center", centerPos, redTrailColor, redTrailSize, redParticleLifetime);
+    }
+
+    /// <summary>
+    /// Create a single boost trail particle system
+    /// </summary>
+    GameObject CreateSingleBoostTrail(string name, Vector3 localPosition, Color color, float size, float lifetime)
+    {
+        GameObject trailObj = new GameObject(name);
+        trailObj.transform.SetParent(transform);
+        trailObj.transform.localPosition = localPosition;
+
+        ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
         var main = ps.main;
-        main.startLifetime = 0.5f;
-        main.startSpeed = 5f;
-        main.startSize = trailSize;
-        main.startColor = boostTrailColor;
+        main.startLifetime = lifetime;
+        main.startSpeed = 3f;
+        main.startSize = size;
+        main.startColor = color;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
-        main.maxParticles = 100;
+        main.maxParticles = 30;
 
         var emission = ps.emission;
-        emission.rateOverTime = 50f;
+        emission.rateOverTime = 25f;
 
         var shape = ps.shape;
-        shape.shapeType = ParticleSystemShapeType.Cone;
-        shape.angle = 15f;
-        shape.radius = 0.5f;
-        shape.rotation = new Vector3(0f, 180f, 0f); // Point backward
+        shape.shapeType = ParticleSystemShapeType.Sphere;
+        shape.radius = 0.2f;
 
         var sizeOverLifetime = ps.sizeOverLifetime;
         sizeOverLifetime.enabled = true;
@@ -186,8 +235,8 @@ public class BoostItem : MonoBehaviour
         Gradient gradient = new Gradient();
         gradient.SetKeys(
             new GradientColorKey[] {
-                new GradientColorKey(boostTrailColor, 0f),
-                new GradientColorKey(new Color(1f, 0.3f, 0f), 1f)
+                new GradientColorKey(color, 0f),
+                new GradientColorKey(color * 0.5f, 1f) // Fade to darker version
             },
             new GradientAlphaKey[] {
                 new GradientAlphaKey(0.8f, 0f),
@@ -197,15 +246,17 @@ public class BoostItem : MonoBehaviour
         colorOverLifetime.color = gradient;
 
         // Use simple particle material
-        var renderer = boostTrailEffect.GetComponent<ParticleSystemRenderer>();
+        var renderer = trailObj.GetComponent<ParticleSystemRenderer>();
         Material trailMat = new Material(Shader.Find("Particles/Standard Unlit"));
         if (trailMat != null)
         {
-            trailMat.color = boostTrailColor;
+            trailMat.color = color;
             renderer.material = trailMat;
         }
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
+
+        return trailObj;
     }
 
     /// <summary>

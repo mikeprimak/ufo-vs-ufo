@@ -37,6 +37,13 @@ public class Projectile : MonoBehaviour
     [Tooltip("Explosion sound (optional)")]
     public AudioClip explosionSound;
 
+    [Header("Light Homing Settings")]
+    [Tooltip("Homing turn rate in degrees/sec (0 = no homing, 30-60 = light, 180+ = strong)")]
+    public float homingStrength = 0f;
+
+    [Tooltip("Detection range for homing targets")]
+    public float homingRange = 50f;
+
     [Header("Proximity Settings")]
     [Tooltip("Distance at which missile explodes near enemies (0 = use blastRadius)")]
     public float proximityTriggerDistance = 10f;
@@ -104,6 +111,7 @@ public class Projectile : MonoBehaviour
     private float lastProximityCheck = 0f; // Time of last proximity check
     private string weaponName = "Proximity Missile"; // Weapon name for combat log
     private string explosionWeaponName = "Proximity Missile"; // Explosion name for combat log (same as weapon name)
+    private Transform homingTarget = null; // Current homing target
 
     void Start()
     {
@@ -303,10 +311,51 @@ public class Projectile : MonoBehaviour
             currentSpeed += acceleration * Time.fixedDeltaTime;
             if (currentSpeed > maxSpeed)
                 currentSpeed = maxSpeed;
-
-            // Update velocity (keep same direction)
-            rb.velocity = transform.forward * currentSpeed;
         }
+
+        // Light homing behavior
+        if (homingStrength > 0f)
+        {
+            UpdateHomingTarget();
+            if (homingTarget != null)
+            {
+                // Calculate direction to target
+                Vector3 targetDir = (homingTarget.position - transform.position).normalized;
+
+                // Rotate toward target at homingStrength degrees per second
+                Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, homingStrength * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
+                transform.rotation = Quaternion.LookRotation(newDir);
+            }
+        }
+
+        // Update velocity in current forward direction
+        rb.velocity = transform.forward * currentSpeed;
+    }
+
+    void UpdateHomingTarget()
+    {
+        // Find nearest valid target in range
+        GameObject[] potentialTargets = GameObject.FindGameObjectsWithTag(targetTag);
+        float closestDist = homingRange;
+        Transform closest = null;
+
+        foreach (GameObject target in potentialTargets)
+        {
+            GameObject rootTarget = target.transform.root.gameObject;
+
+            // Skip owner
+            if (rootTarget == owner || rootTarget == owner?.transform.root.gameObject)
+                continue;
+
+            float dist = Vector3.Distance(transform.position, rootTarget.transform.position);
+            if (dist < closestDist)
+            {
+                closestDist = dist;
+                closest = rootTarget.transform;
+            }
+        }
+
+        homingTarget = closest;
     }
 
     void CreateTrajectoryDots()
