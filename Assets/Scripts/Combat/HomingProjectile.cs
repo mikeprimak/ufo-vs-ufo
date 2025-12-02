@@ -79,20 +79,39 @@ public class HomingProjectile : MonoBehaviour
     [Tooltip("Optional trail renderer reference")]
     public TrailRenderer trail;
 
-    [Tooltip("Auto-create missile shape from primitives")]
+    [Tooltip("Auto-create visual from primitives")]
     public bool createMissileVisual = true;
 
-    [Tooltip("Color of the entire missile (body, nose, fins)")]
-    public Color missileColor = new Color(0.8f, 0.2f, 0.2f); // Red
+    [Tooltip("Use photon torpedo style (red pulsing orb) instead of missile shape")]
+    public bool usePhotonTorpedoStyle = true;
 
-    [Tooltip("Overall scale of the missile visual")]
+    [Tooltip("Color of the missile/torpedo")]
+    public Color missileColor = new Color(1f, 0.3f, 0.1f); // Red-orange for photon torpedo
+
+    [Tooltip("Overall scale of the visual")]
     public float missileScale = 2f;
 
     [Tooltip("Enable particle trail behind missile")]
     public bool enableParticleTrail = true;
 
     [Tooltip("Color of the particle trail")]
-    public Color trailColor = new Color(0.9f, 0.9f, 0.9f, 0.5f); // Light grey, almost white
+    public Color trailColor = new Color(1f, 0.4f, 0.1f, 0.6f); // Orange-red trail for torpedo
+
+    [Header("Photon Torpedo Settings")]
+    [Tooltip("Pulse speed (oscillations per second)")]
+    public float pulseSpeed = 3f;
+
+    [Tooltip("How much the torpedo pulses (0-1)")]
+    public float pulseAmount = 0.3f;
+
+    [Tooltip("Inner glow intensity")]
+    public float glowIntensity = 2f;
+
+    // Photon torpedo visual references
+    private GameObject torpedoOrb;
+    private GameObject torpedoGlow;
+    private Material torpedoMaterial;
+    private float baseTorpedoScale;
 
     [Header("Trajectory Indicator")]
     [Tooltip("Show dotted line indicating predicted missile path")]
@@ -147,10 +166,17 @@ public class HomingProjectile : MonoBehaviour
         // Set initial velocity in forward direction
         rb.velocity = transform.forward * speed;
 
-        // Create missile visual from primitives
+        // Create visual from primitives
         if (createMissileVisual)
         {
-            CreateMissileVisual();
+            if (usePhotonTorpedoStyle)
+            {
+                CreatePhotonTorpedoVisual();
+            }
+            else
+            {
+                CreateMissileVisual();
+            }
         }
 
         // Find initial target
@@ -292,6 +318,129 @@ public class HomingProjectile : MonoBehaviour
         renderer.receiveShadows = false;
     }
 
+    /// <summary>
+    /// Create Star Trek TNG-style photon torpedo visual (red pulsing orb of light)
+    /// </summary>
+    void CreatePhotonTorpedoVisual()
+    {
+        // Hide any existing mesh on the root object
+        MeshRenderer existingRenderer = GetComponent<MeshRenderer>();
+        if (existingRenderer != null)
+        {
+            existingRenderer.enabled = false;
+        }
+
+        float scale = missileScale;
+        baseTorpedoScale = scale;
+
+        // === OUTER GLOW: Larger, semi-transparent sphere (render first/behind) ===
+        torpedoGlow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        torpedoGlow.name = "TorpedoGlow";
+        torpedoGlow.transform.SetParent(transform);
+        torpedoGlow.transform.localPosition = Vector3.zero;
+        torpedoGlow.transform.localScale = Vector3.one * scale * 2.5f; // Larger than core
+        Destroy(torpedoGlow.GetComponent<Collider>());
+
+        // Use Sprites/Default shader which supports transparency in URP
+        Material glowMat = new Material(Shader.Find("Sprites/Default"));
+        Color glowColor = new Color(1f, 0.2f, 0f, 0.25f); // Red-orange, semi-transparent
+        glowMat.color = glowColor;
+        glowMat.renderQueue = 3000; // Transparent queue
+        torpedoGlow.GetComponent<Renderer>().material = glowMat;
+        torpedoGlow.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === MAIN ORB: Bright red-orange sphere ===
+        torpedoOrb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        torpedoOrb.name = "TorpedoOrb";
+        torpedoOrb.transform.SetParent(transform);
+        torpedoOrb.transform.localPosition = Vector3.zero;
+        torpedoOrb.transform.localScale = Vector3.one * scale;
+        Destroy(torpedoOrb.GetComponent<Collider>());
+
+        // Create bright unlit material for the core - use Sprites/Default for color
+        torpedoMaterial = new Material(Shader.Find("Sprites/Default"));
+        torpedoMaterial.color = missileColor; // Red-orange
+        torpedoMaterial.renderQueue = 3001; // Render on top of glow
+        torpedoOrb.GetComponent<Renderer>().material = torpedoMaterial;
+        torpedoOrb.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === INNER CORE: Smaller, brighter hot center ===
+        GameObject innerCore = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        innerCore.name = "TorpedoCore";
+        innerCore.transform.SetParent(transform);
+        innerCore.transform.localPosition = Vector3.zero;
+        innerCore.transform.localScale = Vector3.one * scale * 0.4f; // Smaller than main orb
+        Destroy(innerCore.GetComponent<Collider>());
+
+        // Bright yellow-white core
+        Material coreMat = new Material(Shader.Find("Sprites/Default"));
+        coreMat.color = new Color(1f, 0.95f, 0.8f); // Yellow-white hot center
+        coreMat.renderQueue = 3002; // Render on top
+        innerCore.GetComponent<Renderer>().material = coreMat;
+        innerCore.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // === PARTICLE TRAIL: Red-orange energy trail ===
+        if (enableParticleTrail)
+        {
+            CreateTorpedoTrail(scale);
+        }
+    }
+
+    /// <summary>
+    /// Create energy trail for photon torpedo (different from missile smoke trail)
+    /// </summary>
+    void CreateTorpedoTrail(float scale)
+    {
+        GameObject trailObj = new GameObject("TorpedoTrail");
+        trailObj.transform.SetParent(transform);
+        trailObj.transform.localPosition = new Vector3(0f, 0f, -0.5f * scale); // Slightly behind center
+
+        ParticleSystem ps = trailObj.AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.startLifetime = 0.5f;
+        main.startSpeed = 0f;
+        main.startSize = 0.8f * scale;
+        main.startColor = trailColor;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.maxParticles = 60;
+
+        var emission = ps.emission;
+        emission.rateOverTime = 40f;
+
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Sphere;
+        shape.radius = 0.3f * scale;
+
+        var sizeOverLifetime = ps.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, 0f);
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        // Bright red-orange at start, fade to dark red
+        gradient.SetKeys(
+            new GradientColorKey[] {
+                new GradientColorKey(trailColor, 0f),
+                new GradientColorKey(new Color(0.8f, 0.1f, 0f), 0.5f),
+                new GradientColorKey(new Color(0.3f, 0f, 0f), 1f)
+            },
+            new GradientAlphaKey[] {
+                new GradientAlphaKey(0.9f, 0f),
+                new GradientAlphaKey(0.5f, 0.5f),
+                new GradientAlphaKey(0f, 1f)
+            }
+        );
+        colorOverLifetime.color = gradient;
+
+        // Particle material
+        var renderer = trailObj.GetComponent<ParticleSystemRenderer>();
+        renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
+        renderer.material.color = trailColor;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
+    }
+
     void CreateTrajectoryDots()
     {
         // Create shared material for all dots
@@ -414,6 +563,12 @@ public class HomingProjectile : MonoBehaviour
             UpdateTrajectoryDots();
         }
 
+        // Animate photon torpedo pulsing
+        if (usePhotonTorpedoStyle && torpedoOrb != null)
+        {
+            UpdateTorpedoPulse();
+        }
+
         // Explode when lifetime expires
         if (Time.time >= spawnTime + lifetime)
         {
@@ -431,6 +586,41 @@ public class HomingProjectile : MonoBehaviour
         {
             lastProximityCheck = Time.time;
             CheckProximity();
+        }
+    }
+
+    /// <summary>
+    /// Animate the photon torpedo pulsing effect
+    /// </summary>
+    void UpdateTorpedoPulse()
+    {
+        // Calculate pulse using sine wave
+        float pulse = Mathf.Sin(Time.time * pulseSpeed * Mathf.PI * 2f);
+        float scaleMod = 1f + (pulse * pulseAmount);
+
+        // Pulse the main orb scale
+        if (torpedoOrb != null)
+        {
+            torpedoOrb.transform.localScale = Vector3.one * baseTorpedoScale * scaleMod;
+        }
+
+        // Pulse the glow with opposite phase (expands when core shrinks)
+        if (torpedoGlow != null)
+        {
+            float glowScaleMod = 1f + (-pulse * pulseAmount * 0.5f);
+            torpedoGlow.transform.localScale = Vector3.one * baseTorpedoScale * 1.8f * glowScaleMod;
+        }
+
+        // Pulse the color brightness
+        if (torpedoMaterial != null)
+        {
+            float brightness = 1f + (pulse * 0.3f);
+            Color pulsedColor = new Color(
+                Mathf.Clamp01(missileColor.r * brightness),
+                Mathf.Clamp01(missileColor.g * brightness),
+                Mathf.Clamp01(missileColor.b * brightness)
+            );
+            torpedoMaterial.color = pulsedColor;
         }
     }
 
