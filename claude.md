@@ -1,7 +1,7 @@
 # UFO vs UFO - Project Context
 
-**Last Updated:** 2025-11-30
-**Update Count:** 58
+**Last Updated:** 2025-12-01
+**Update Count:** 59
 
 ---
 
@@ -56,7 +56,9 @@ N64 Mario Kart Battle Mode-style aerial combat game in Unity 2022.3 LTS (URP tem
 - ✅ Increased max pitch: Steeper climbs/dives (ascending 100%, descending 80%)
 - ✅ Defensive item system: Separate slot for defensive items (shield, etc.)
 - ✅ Shield item: Temporary invincibility bubble (5 seconds, blocks all damage)
-- ✅ Controller remapping: B=Fire, LB=Re-level, RB=Deploy defensive item, Q=Barrel roll
+- ✅ Controller remapping: A=Fire (SNES B), X=Deploy item (SNES Y), Q=Barrel roll
+- ✅ Easier targeting: Light homing on missiles, generous hitboxes (4x), aim magnetism
+- ✅ Auto-level roll: UFO automatically stays level (Z-axis only), no button needed
 
 ## Next Session
 **TODO:** Test and tune AI behavior
@@ -144,16 +146,25 @@ Assets/
   - Only combo boost from barrel rolls remains
 - Fast vertical movement (3x speed when moving only up/down)
 - AI input support for enemy control
+- **Aim magnetism**: Subtle auto-aim assist for easier targeting
+  - When crosshair is within 15° of enemy, aim pulls slightly toward them
+  - Closer to target = stronger pull (up to 30% blend)
+  - Range: 100 units, only affects player (not AI)
+  - Configurable: `enableAimMagnetism`, `magnetismAngle`, `magnetismStrength`, `magnetismRange`
+- **Auto-level roll**: UFO automatically stays level (arcade style, beginner-friendly)
+  - Only affects roll (Z-axis) - pitch (up/down) stays free for 3D flight
+  - Faster leveling when not turning (120°/sec), slower during turns (40°/sec)
+  - Self-corrects after collisions, explosions, barrel rolls
+  - Configurable: `autoLevelRoll`, `autoLevelRollSpeed`, `autoLevelSpeedWhileTurning`
 
 **Controls:**
-- A/D: Accelerate/Brake (keyboard)
-- Button 0 (A): Accelerate
-- Button 3 (Y): Brake/Reverse
+- Auto-accelerate (always moving forward)
+- D key / RB (Button 5): Brake (also enables sharp turns)
 - Arrows/Left Stick: Turn, Ascend/Descend
 - Q: Barrel Roll (direction from stick)
-- B button (Button 1): Fire weapon
-- LB (Button 4): Snap to level (re-level flight)
-- RB (Button 5): Deploy defensive item
+- A button (Button 0): Fire weapon (SNES "B" - bottom button)
+- X button (Button 2): Deploy defensive item (SNES "Y" - left button)
+- LB (Button 4): Currently unused (available for future feature)
 
 ### UFOCollision.cs - Bounce System
 **Key Features:**
@@ -389,15 +400,18 @@ Assets/
 
 ### Projectile.cs - Proximity Missile
 **Key Features:**
-- **Proximity detonation**: Auto-explodes when within 20 units of enemy UFOs
-- **Proximity trigger distance**: 20 units (check interval: 0.1s)
-- **Blast radius**: 20 units (damage + knockback)
+- **Proximity detonation**: Auto-explodes when within 10 units of enemy UFOs
+- **Light homing**: 45°/sec turn rate toward nearest enemy within 60 units
+  - Much weaker than full homing missile (180°/sec)
+  - Helps correct small aiming errors without guaranteeing hits
+- **Blast radius**: 10 units (damage + knockback)
 - **Damage**: 1 HP direct hit, 1 HP blast damage
-- Flies straight, no homing behavior
 - Owner exclusion (never damages shooter)
 - Duplicate damage prevention (one UFO can't be hit multiple times by same blast)
 
-**IMPORTANT**: Proximity trigger distance must equal blast radius for reliable damage!
+**Configuration (Projectile_Bullet.prefab):**
+- `homingStrength`: 45 (degrees/sec, 0 = no homing)
+- `homingRange`: 60 (detection range for targets)
 
 ### HomingProjectile.cs - Homing Missile
 **Key Features:**
@@ -515,6 +529,7 @@ UFO_Player (Rigidbody + Sphere Collider + UFOColorIdentity)
 - **Body**: Flattened sphere primitive (Scale: 3, 1, 3) with team color (Red/Blue/Green/Yellow)
 - **Dome**: Sphere primitive (Scale: 1.2, 1.2, 1.2, Y-offset: 0.44) with UFO_Dome_Glass material
 - **No colliders on children** - only parent has physics collider
+- **Generous hitbox**: SphereCollider radius 2.0 (4x original 0.5), diameter ~4 units vs 3-unit visual width
 
 **Physics Materials:**
 - UFO_Bouncy: Friction 0, Bounce 0.5 (UFO + walls)

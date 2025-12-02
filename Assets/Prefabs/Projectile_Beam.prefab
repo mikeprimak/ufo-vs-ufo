@@ -151,15 +151,15 @@ MonoBehaviour:
   startSpeed: 500
   maxSpeed: 500
   acceleration: 150
-  lifetime: 5
+  lifetime: 7
   damage: 1
   blastRadius: 1
   explosionDamage: 1
   explosionPrefab: {fileID: 0}
   explosionSound: {fileID: 0}
-  homingStrength: 70
-  homingRange: 50
-  proximityTriggerDistance: 1
+  homingStrength: 50
+  homingRange: 150
+  proximityTriggerDistance: 2
   proximityCheckInterval: 0.1
   targetTag: Player
   trail: {fileID: 0}
@@ -169,7 +169,7 @@ MonoBehaviour:
   laserColor: {r: 0.23074365, g: 1, b: 0, a: 1}
   missileScale: 1
   laserLength: 30
-  laserWidth: 1
+  laserWidth: 1.5
   enableParticleTrail: 0
   trailColor: {r: 0.9598032, g: 1, b: 0.33490568, a: 0.5}
   showTrajectory: 0

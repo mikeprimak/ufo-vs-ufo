@@ -84,9 +84,13 @@ public class WeaponManager : MonoBehaviour
 
     void Update()
     {
-        // Check for fire input - B button (Button 1)
-        bool firePressed = Input.GetKeyDown(KeyCode.JoystickButton1);
-        bool fireHeld = Input.GetKey(KeyCode.JoystickButton1);
+        // Skip input if AI controlled
+        if (ufoController != null && ufoController.useAIInput)
+            return;
+
+        // Check for fire input - Button 0 (Logitech X button)
+        bool firePressed = Input.GetKeyDown(KeyCode.JoystickButton0);
+        bool fireHeld = Input.GetKey(KeyCode.JoystickButton0);
 
         // Burst weapon uses hold-to-fire
         if (currentWeapon == WeaponType.Burst && burstWeapon != null && burstWeapon.enabled)

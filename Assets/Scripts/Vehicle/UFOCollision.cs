@@ -46,7 +46,6 @@ public class UFOCollision : MonoBehaviour
     private Material ufoMaterial;
     private bool isBouncing;
     private float bounceEndTime;
-    private Quaternion lockedRotation;
     private UFOCamera ufoCamera; // For triggering camera shake
 
     void Start()
@@ -81,12 +80,9 @@ public class UFOCollision : MonoBehaviour
                 ufoMaterial.color = originalColor;
         }
 
-        // Lock rotation during bounce
+        // Bounce state tracking (rotation now handled by UFOController.HandleAllRotation)
         if (isBouncing)
         {
-            // Force UFO to stay at locked rotation (can't turn during bounce)
-            transform.rotation = lockedRotation;
-
             // Check if bounce is done (velocity near zero)
             if (rb.velocity.magnitude < 0.5f || Time.time >= bounceEndTime)
             {
@@ -121,8 +117,7 @@ public class UFOCollision : MonoBehaviour
         // Wall collision: use reflection bounce
         if (impactSpeed >= minWallImpactSpeed)
         {
-            // Lock current rotation (UFO will stay facing this direction during bounce)
-            lockedRotation = transform.rotation;
+            // Mark as bouncing (rotation handled by UFOController.HandleAllRotation)
             isBouncing = true;
             bounceEndTime = Time.time + 1f; // Max 1 second bounce duration
 
@@ -136,7 +131,7 @@ public class UFOCollision : MonoBehaviour
 
             // Stop current velocity
             rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero; // Stop any rotation
+            // Angular velocity cleared by HandleAllRotation every frame
 
             // Apply bounce force in reflected direction
             rb.AddForce(bounceDirection * wallBounceForce, ForceMode.VelocityChange);
@@ -192,8 +187,7 @@ public class UFOCollision : MonoBehaviour
                 rb.AddForce(Vector3.up * heavyFloorBounce, ForceMode.VelocityChange);
                 StartFlash();
 
-                // Lock rotation briefly
-                lockedRotation = transform.rotation;
+                // Mark as bouncing (rotation handled by UFOController.HandleAllRotation)
                 isBouncing = true;
                 bounceEndTime = Time.time + 0.5f;
 

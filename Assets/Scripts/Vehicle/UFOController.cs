@@ -63,9 +63,6 @@ public class UFOController : MonoBehaviour
     [Tooltip("Natural momentum drag (higher = stops faster, lower = more gliding)")]
     public float dragAmount = 2f;
 
-    [Tooltip("How quickly the UFO levels out when not pitching")]
-    public float autoLevelSpeed = 2f;
-
     [Header("Visual Feedback")]
     [Tooltip("UFO model to tilt (leave empty to tilt whole object)")]
     public Transform visualModel;
@@ -167,6 +164,22 @@ public class UFOController : MonoBehaviour
     [Tooltip("Camera for aiming direction (if not assigned, uses velocity-based aiming)")]
     public Camera aimCamera;
 
+    [Header("Aim Magnetism")]
+    [Tooltip("Enable aim magnetism (subtle pull toward nearby enemies)")]
+    public bool enableAimMagnetism = true;
+
+    [Tooltip("Maximum angle from crosshair to trigger magnetism (degrees)")]
+    public float magnetismAngle = 15f;
+
+    [Tooltip("How strongly aim pulls toward target (0-1, higher = stronger pull)")]
+    public float magnetismStrength = 0.3f;
+
+    [Tooltip("Maximum range for aim magnetism")]
+    public float magnetismRange = 100f;
+
+    [Tooltip("Tag to search for magnetism targets")]
+    public string magnetismTargetTag = "Player";
+
     // Input values
     private bool accelerateInput;
     private bool brakeInput;
@@ -229,7 +242,11 @@ public class UFOController : MonoBehaviour
         rb.drag = dragAmount;
         rb.angularDrag = 3f;
         rb.useGravity = false; // UFO hovers, no gravity
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        // No rotation constraints - all handled by HandleAllRotation():
+        // - Yaw (Y): player turn input
+        // - Pitch (X): player up/down input
+        // - Roll (Z): auto-levels toward 0
+        rb.constraints = RigidbodyConstraints.None;
 
         // Use Continuous collision detection to prevent phasing through walls at high speed
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
@@ -298,17 +315,8 @@ public class UFOController : MonoBehaviour
             HandleBarrelRoll(); // Barrel roll physics
         }
 
-        HandleRotation(); // Always allow rotation, even during countdown
-
-        // Handle snap to level (overrides pitch rotation while active)
-        if (isSnappingToLevel)
-        {
-            UpdateSnapToLevel();
-        }
-        else
-        {
-            HandlePitchRotation(); // Handle vertical aiming (pitch)
-        }
+        // UNIFIED rotation: yaw + pitch + auto-level roll in ONE operation
+        HandleAllRotation();
 
         // Track input state for next frame
         wasAcceleratingLastFrame = accelerateInput;
@@ -347,9 +355,9 @@ public class UFOController : MonoBehaviour
             // Hard brake with RB (Button 5) or D key - also enables sharp turns
             brakeInput = Input.GetKey(KeyCode.JoystickButton5) || Input.GetKey(KeyCode.D);
 
-            // Fire weapon with B button (Button 1)
-            fireInput = Input.GetKey(KeyCode.JoystickButton1);
-            // Y button (Button 3) now handled by DefensiveItemManager for defensive items
+            // Fire weapon with Button 0 (Logitech X button)
+            fireInput = Input.GetKey(KeyCode.JoystickButton0);
+            // Button 2 (Logitech A button) - handled by DefensiveItemManager
 
             // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
             turnInput = Input.GetAxis("Horizontal");
@@ -383,11 +391,7 @@ public class UFOController : MonoBehaviour
                 }
             }
 
-            // Snap to level input - Left Bumper (LB / Button 4) or E key
-            if (Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.E))
-            {
-                SnapToLevel();
-            }
+            // LB button now free (auto-level roll handles leveling automatically)
         }
 
         // Process barrel rolls (shared logic for both AI and player)
@@ -608,8 +612,37 @@ public class UFOController : MonoBehaviour
         }
     }
 
-    void HandleRotation()
+    // Auto-level roll settings
+    [Header("Auto-Level Roll")]
+    [Tooltip("Automatically keep UFO level (roll toward 0) - arcade style, no button needed")]
+    [SerializeField] private bool autoLevelRoll = true;
+    [Tooltip("How fast the UFO auto-levels when not turning (degrees/sec)")]
+    [SerializeField] private float autoLevelRollSpeed = 120f;
+    [Tooltip("Reduced auto-level speed while actively turning (allows banking during turns)")]
+    [SerializeField] private float autoLevelSpeedWhileTurning = 40f;
+
+    /// <summary>
+    /// UNIFIED rotation system - handles yaw, pitch, and roll in ONE operation
+    /// This prevents multiple MoveRotation calls from fighting each other
+    /// </summary>
+    void HandleAllRotation()
     {
+        // Clear angular velocity - prevents physics spin from fighting our rotation control
+        // This is key to preventing "stuck" behavior after collisions
+        rb.angularVelocity = Vector3.zero;
+
+        // Get current rotation as euler angles
+        Vector3 currentEuler = transform.eulerAngles;
+
+        // Normalize to -180 to 180 range for proper math
+        float currentPitch = currentEuler.x;
+        if (currentPitch > 180f) currentPitch -= 360f;
+        float currentYaw = currentEuler.y;
+        float currentRoll = currentEuler.z;
+        if (currentRoll > 180f) currentRoll -= 360f;
+
+        // === YAW (turning left/right) ===
+        float yawDelta = 0f;
         if (Mathf.Abs(turnInput) > 0.1f)
         {
             float turnDirection = Mathf.Sign(turnInput);
@@ -622,20 +655,15 @@ public class UFOController : MonoBehaviour
             }
 
             // Gradually ramp up turn speed (ease-in)
-            // Starts slow for precision, reaches full speed after brief hold
             currentTurnSpeed = Mathf.Lerp(currentTurnSpeed, 1f, turnAcceleration * Time.fixedDeltaTime);
 
-            // Apply turn with ramped speed
-            // Sharp turns when braking (brakeTurnMultiplier)
+            // Calculate yaw delta
             float effectiveTurnSpeed = turnSpeed;
             if (brakeInput)
             {
                 effectiveTurnSpeed *= brakeTurnMultiplier;
             }
-
-            float turn = turnInput * effectiveTurnSpeed * currentTurnSpeed * Time.fixedDeltaTime;
-            Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
-            rb.MoveRotation(rb.rotation * turnRotation);
+            yawDelta = turnInput * effectiveTurnSpeed * currentTurnSpeed * Time.fixedDeltaTime;
         }
         else
         {
@@ -643,122 +671,77 @@ public class UFOController : MonoBehaviour
             currentTurnSpeed = 0f;
             lastTurnDirection = 0f;
         }
-    }
 
-    void HandlePitchRotation()
-    {
+        // === PITCH (aiming up/down) ===
+        float pitchDelta = 0f;
         if (Mathf.Abs(verticalInput) > 0.1f)
         {
             float verticalDirection = Mathf.Sign(verticalInput);
 
-            // Detect direction change - reset vertical speed for new direction
+            // Detect direction change - reset vertical speed
             if (verticalDirection != lastVerticalDirection && lastVerticalDirection != 0f)
             {
                 currentVerticalSpeed = 0f;
-                lastVerticalDirection = verticalDirection;
             }
-            else if (lastVerticalDirection == 0f)
-            {
-                currentVerticalSpeed = 0f;
-                lastVerticalDirection = verticalDirection;
-            }
+            lastVerticalDirection = verticalDirection;
 
             // Gradually ramp up pitch speed (ease-in)
             currentVerticalSpeed = Mathf.Lerp(currentVerticalSpeed, 1f, verticalAcceleration * Time.fixedDeltaTime);
 
-            // Apply pitch rotation (negative because Unity pitch: positive = nose down)
-            // Up input = nose up = negative X rotation
-            float pitch = -verticalInput * pitchSpeed * currentVerticalSpeed * Time.fixedDeltaTime;
-            Quaternion pitchRotation = Quaternion.Euler(pitch, 0f, 0f);
-            rb.MoveRotation(rb.rotation * pitchRotation);
+            // Calculate pitch delta (negative because Unity: positive X = nose down)
+            float effectivePitchSpeed = pitchSpeed;
+            if (brakeInput)
+            {
+                effectivePitchSpeed *= brakeTurnMultiplier;
+            }
+            pitchDelta = -verticalInput * effectivePitchSpeed * currentVerticalSpeed * Time.fixedDeltaTime;
         }
         else
         {
-            // No vertical input - reset for next pitch
+            // No vertical input - reset
             currentVerticalSpeed = 0f;
             lastVerticalDirection = 0f;
         }
-    }
 
-    // Snap to level state
-    private bool isSnappingToLevel = false;
-    private float snapToLevelStartTime;
-    [Header("Snap to Level")]
-    [Tooltip("Duration of snap-to-level animation in seconds")]
-    [SerializeField] private float snapToLevelDuration = 0.9f;
-    private Vector3 snapStartEuler;
-    private float snapCurrentYaw;
-    private Vector3 snapStartVelocity;
+        // === PITCH CLAMPING & AUTO-LEVEL ===
+        float targetPitch = currentPitch + pitchDelta;
 
-    /// <summary>
-    /// Start smooth snap to level flight (pitch = 0)
-    /// Called when player presses snap-to-level button (LB/E)
-    /// </summary>
-    void SnapToLevel()
-    {
-        // Don't restart if already snapping
-        if (isSnappingToLevel)
-            return;
+        // Clamp pitch to prevent gimbal lock (±80 degrees max)
+        // Beyond this, yaw stops working properly
+        const float maxPitch = 80f;
+        targetPitch = Mathf.Clamp(targetPitch, -maxPitch, maxPitch);
 
-        isSnappingToLevel = true;
-        snapToLevelStartTime = Time.time;
-        snapStartEuler = transform.eulerAngles;
-        snapCurrentYaw = snapStartEuler.y;
-        snapStartVelocity = rb.velocity;
-    }
-
-    /// <summary>
-    /// Update snap to level animation (called from FixedUpdate)
-    /// </summary>
-    void UpdateSnapToLevel()
-    {
-        if (!isSnappingToLevel)
-            return;
-
-        float elapsed = Time.time - snapToLevelStartTime;
-        float t = Mathf.Clamp01(elapsed / snapToLevelDuration);
-
-        // Use ease-out-cubic for smooth deceleration (starts fast, ends slow)
-        // Formula: 1 - (1-t)^3
-        float eased = 1f - Mathf.Pow(1f - t, 3f);
-
-        // Apply steering input to yaw (player keeps full turn control during snap)
-        float turn = turnInput * turnSpeed * Time.fixedDeltaTime;
-        snapCurrentYaw += turn;
-
-        // Interpolate pitch and roll toward zero, but use player-controlled yaw
-        float newPitch = Mathf.LerpAngle(snapStartEuler.x, 0f, eased);
-        float newRoll = Mathf.LerpAngle(snapStartEuler.z, 0f, eased);
-
-        Quaternion newRotation = Quaternion.Euler(newPitch, snapCurrentYaw, newRoll);
-        rb.MoveRotation(newRotation);
-
-        // Smoothly transition velocity to horizontal (in current facing direction)
-        float speed = snapStartVelocity.magnitude;
-        Vector3 targetVelocity;
-
-        Vector3 horizontalVelocity = snapStartVelocity;
-        horizontalVelocity.y = 0f;
-
-        if (horizontalVelocity.magnitude > 0.1f)
+        // Auto-level pitch when at extreme angles and no input
+        // This helps recover from collision-induced extreme pitch
+        if (Mathf.Abs(verticalInput) < 0.1f && Mathf.Abs(targetPitch) > 45f)
         {
-            // Blend toward current facing direction as we level out
-            Vector3 facingDirection = Quaternion.Euler(0f, snapCurrentYaw, 0f) * Vector3.forward;
-            targetVelocity = facingDirection * speed;
-        }
-        else
-        {
-            // Was going mostly vertical - redirect to current facing
-            targetVelocity = Quaternion.Euler(0f, snapCurrentYaw, 0f) * Vector3.forward * speed;
+            // Gently push pitch back toward 0 when at extreme angles
+            float pitchLevelSpeed = 60f * Time.fixedDeltaTime; // degrees per second
+            targetPitch = Mathf.MoveTowards(targetPitch, 0f, pitchLevelSpeed);
         }
 
-        rb.velocity = Vector3.Lerp(snapStartVelocity, targetVelocity, eased);
-
-        // Check if complete
-        if (t >= 1f)
+        // === ROLL (auto-level toward 0) ===
+        float targetRoll = currentRoll;
+        if (autoLevelRoll)
         {
-            isSnappingToLevel = false;
+            // Determine leveling speed (slower while turning to allow banking)
+            bool isTurning = Mathf.Abs(turnInput) > 0.1f;
+            float levelSpeed = isTurning ? autoLevelSpeedWhileTurning : autoLevelRollSpeed;
+
+            // Smoothly lerp toward zero roll
+            float lerpFactor = levelSpeed * 0.1f * Time.fixedDeltaTime;
+            targetRoll = Mathf.Lerp(currentRoll, 0f, lerpFactor);
+
+            // Snap to zero when very close to prevent micro-jitter
+            if (Mathf.Abs(targetRoll) < 0.1f)
+            {
+                targetRoll = 0f;
+            }
         }
+
+        // === APPLY ALL ROTATION AT ONCE ===
+        Quaternion finalRotation = Quaternion.Euler(targetPitch, currentYaw + yawDelta, targetRoll);
+        rb.MoveRotation(finalRotation);
     }
 
     void HandleVerticalMovement()
@@ -913,17 +896,83 @@ public class UFOController : MonoBehaviour
     /// <summary>
     /// Get the aiming direction for weapon firing
     /// Uses the visual model's orientation (where the UFO is pointing)
+    /// Includes aim magnetism to subtly pull toward nearby enemies
     /// </summary>
     public Quaternion GetAimDirection()
     {
-        // Use visual model's forward direction (includes pitch from banking)
+        // Get base aim direction
+        Vector3 aimForward;
         if (visualModel != null)
         {
-            return Quaternion.LookRotation(visualModel.forward);
+            aimForward = visualModel.forward;
+        }
+        else
+        {
+            aimForward = transform.forward;
         }
 
-        // Fallback to UFO's forward direction
-        return Quaternion.LookRotation(transform.forward);
+        // Apply aim magnetism if enabled
+        if (enableAimMagnetism)
+        {
+            aimForward = ApplyAimMagnetism(aimForward);
+        }
+
+        return Quaternion.LookRotation(aimForward);
+    }
+
+    /// <summary>
+    /// Apply aim magnetism - subtly pull aim toward nearby enemies within angle threshold
+    /// </summary>
+    private Vector3 ApplyAimMagnetism(Vector3 aimDirection)
+    {
+        // Find all potential targets
+        GameObject[] targets = GameObject.FindGameObjectsWithTag(magnetismTargetTag);
+
+        Transform bestTarget = null;
+        float bestAngle = magnetismAngle; // Only consider targets within magnetism angle
+
+        foreach (GameObject target in targets)
+        {
+            // Get root object (in case tag is on child)
+            GameObject rootTarget = target.transform.root.gameObject;
+
+            // Skip self
+            if (rootTarget == gameObject || rootTarget == transform.root.gameObject)
+                continue;
+
+            // Check range
+            float distance = Vector3.Distance(transform.position, rootTarget.transform.position);
+            if (distance > magnetismRange)
+                continue;
+
+            // Check angle from current aim
+            Vector3 toTarget = (rootTarget.transform.position - transform.position).normalized;
+            float angle = Vector3.Angle(aimDirection, toTarget);
+
+            // Find closest target within angle threshold
+            if (angle < bestAngle)
+            {
+                bestAngle = angle;
+                bestTarget = rootTarget.transform;
+            }
+        }
+
+        // If we found a valid target, blend aim toward it
+        if (bestTarget != null)
+        {
+            Vector3 toTarget = (bestTarget.position - transform.position).normalized;
+
+            // Calculate blend factor based on angle (closer = stronger pull)
+            // At edge of magnetism angle: minimal pull
+            // Near center: stronger pull
+            float angleFactor = 1f - (bestAngle / magnetismAngle);
+            float blendAmount = magnetismStrength * angleFactor;
+
+            // Smoothly blend between current aim and target direction
+            return Vector3.Slerp(aimDirection, toTarget, blendAmount).normalized;
+        }
+
+        return aimDirection;
     }
 
     /// <summary>
@@ -1032,7 +1081,7 @@ public class UFOController : MonoBehaviour
         }
 
         // Normal banking (when not barrel rolling)
-        // UFO now pitches via HandlePitchRotation(), so visual model only handles banking
+        // UFO pitches via HandleAllRotation(), so visual model only handles banking
         // Calculate target bank angle based on turn input
         float targetBankAngle = -turnInput * bankAmount;
 
@@ -1048,24 +1097,6 @@ public class UFOController : MonoBehaviour
         );
     }
 
-    void AutoLevel()
-    {
-        // Force the UFO to stay perfectly level (X and Z rotation = 0)
-        // This corrects any tilting from impacts while preserving turning
-        Vector3 currentEuler = transform.eulerAngles;
-
-        // Normalize angles to -180 to 180 range for better checking
-        float xRot = currentEuler.x > 180 ? currentEuler.x - 360 : currentEuler.x;
-        float zRot = currentEuler.z > 180 ? currentEuler.z - 360 : currentEuler.z;
-
-        // Only correct if there's significant tilt (more than 1 degree)
-        if (Mathf.Abs(xRot) > 1f || Mathf.Abs(zRot) > 1f)
-        {
-            // Keep Y rotation (turning), force X and Z to 0
-            Quaternion levelRotation = Quaternion.Euler(0, currentEuler.y, 0);
-            transform.rotation = Quaternion.Slerp(transform.rotation, levelRotation, autoLevelSpeed * Time.fixedDeltaTime);
-        }
-    }
 
     void StartBarrelRoll(float direction)
     {

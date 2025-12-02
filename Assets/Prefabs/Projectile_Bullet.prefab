@@ -167,6 +167,8 @@ MonoBehaviour:
   enableParticleTrail: 1
   trailColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.8}
   showTrajectory: 1
+  homingStrength: 45
+  homingRange: 60
   trajectoryColor: {r: 1, g: 0, b: 0, a: 1}
   dotSize: 0.2
   dotSpacing: 10
