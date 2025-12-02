@@ -68,8 +68,8 @@ public class DefensiveItemManager : MonoBehaviour
         if (ufoController != null && ufoController.useAIInput)
             return;
 
-        // Check for deploy input - Right Bumper (RB / Button 5)
-        bool deployPressed = Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.R);
+        // Check for deploy input - Y button (Button 3) or R key
+        bool deployPressed = Input.GetKeyDown(KeyCode.JoystickButton3) || Input.GetKeyDown(KeyCode.R);
 
         if (deployPressed)
         {

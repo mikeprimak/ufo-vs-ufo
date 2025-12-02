@@ -24,6 +24,9 @@ public class UFOController : MonoBehaviour
     [Tooltip("How fast the UFO turns left/right")]
     public float turnSpeed = 180f;
 
+    [Tooltip("Turn speed multiplier when hard braking (sharper turns)")]
+    public float brakeTurnMultiplier = 2f;
+
     [Tooltip("How quickly turn speed ramps up when you start turning (higher = faster ramp)")]
     public float turnAcceleration = 3f;
 
@@ -337,24 +340,16 @@ public class UFOController : MonoBehaviour
         }
         else
         {
-            // Player input (original code)
-            // Keyboard controls:
-            // A = Accelerate forward
-            // D = Brake/Reverse
-            accelerateInput = Input.GetKey(KeyCode.A);
-            brakeInput = Input.GetKey(KeyCode.D);
+            // Player input
+            // Auto accelerate - always moving forward
+            accelerateInput = true;
 
-            // Controller face buttons:
-            // Button 0 (A/Cross) = Accelerate
-            // Button 1 (B/Circle) = Weapon Fire (reserved for future)
-            // Button 3 (Y/Triangle) = Brake/Reverse
-            if (Input.GetButton("Fire1")) // Button 0 (A/Cross) = Accelerate
-                accelerateInput = true;
-            if (Input.GetKey(KeyCode.JoystickButton3)) // Button 3 (Y/Triangle) = Brake/Reverse
-                brakeInput = true;
+            // Hard brake with RB (Button 5) or D key - also enables sharp turns
+            brakeInput = Input.GetKey(KeyCode.JoystickButton5) || Input.GetKey(KeyCode.D);
 
             // Fire weapon with B button (Button 1)
             fireInput = Input.GetKey(KeyCode.JoystickButton1);
+            // Y button (Button 3) now handled by DefensiveItemManager for defensive items
 
             // Arrow keys for turning (Left/Right) + Controller Left Stick X-axis
             turnInput = Input.GetAxis("Horizontal");
@@ -393,7 +388,6 @@ public class UFOController : MonoBehaviour
             {
                 SnapToLevel();
             }
-            HandleBoost(false); // Manual boost disabled
         }
 
         // Process barrel rolls (shared logic for both AI and player)
@@ -632,7 +626,14 @@ public class UFOController : MonoBehaviour
             currentTurnSpeed = Mathf.Lerp(currentTurnSpeed, 1f, turnAcceleration * Time.fixedDeltaTime);
 
             // Apply turn with ramped speed
-            float turn = turnInput * turnSpeed * currentTurnSpeed * Time.fixedDeltaTime;
+            // Sharp turns when braking (brakeTurnMultiplier)
+            float effectiveTurnSpeed = turnSpeed;
+            if (brakeInput)
+            {
+                effectiveTurnSpeed *= brakeTurnMultiplier;
+            }
+
+            float turn = turnInput * effectiveTurnSpeed * currentTurnSpeed * Time.fixedDeltaTime;
             Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
             rb.MoveRotation(rb.rotation * turnRotation);
         }

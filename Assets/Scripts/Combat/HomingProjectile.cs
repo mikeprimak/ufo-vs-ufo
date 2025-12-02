@@ -9,7 +9,7 @@ public class HomingProjectile : MonoBehaviour
 {
     [Header("Projectile Settings")]
     [Tooltip("Initial speed of the missile")]
-    public float speed = 120f;
+    public float speed = 180f;
 
     [Tooltip("How long before missile destroys itself (seconds)")]
     public float lifetime = 8f;
@@ -45,10 +45,10 @@ public class HomingProjectile : MonoBehaviour
     public float turnRate = 90f;
 
     [Tooltip("How quickly missile accelerates toward max speed")]
-    public float acceleration = 60f;
+    public float acceleration = 100f;
 
     [Tooltip("Maximum speed the missile can reach")]
-    public float maxSpeed = 120f;
+    public float maxSpeed = 200f;
 
     [Tooltip("Detection radius to find targets")]
     public float detectionRadius = 100f;

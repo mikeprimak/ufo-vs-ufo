@@ -146,38 +146,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e67ab4d63c76c84980a35ea24fb7eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 120
+  speed: 180
   lifetime: 8
   damage: 1
   blastRadius: 10
   proximityTriggerDistance: 2
   proximityCheckInterval: 0.1
+  proximityArmingDelay: 0.2
   explosionDamage: 1
-  explosionPrefab: {fileID: 2677883429208286301, guid: 7a9c3f2e5d4b6a1c8e7f9d2b4c6a8e3f,
-    type: 3}
+  explosionPrefab: {fileID: 0}
   explosionSound: {fileID: 0}
   turnRate: 90
-  acceleration: 60
-  maxSpeed: 120
-  detectionRadius: 400
+  acceleration: 100
+  maxSpeed: 200
+  detectionRadius: 200
   targetTag: Player
-  homingDelay: 0.05
+  homingDelay: 0.2
   enableUTurn: 1
-  uTurnMinSpeed: 10
-  uTurnDeceleration: 60
-  uTurnTurnMultiplier: 2
+  uTurnMinSpeed: 40
+  uTurnDeceleration: 120
+  uTurnTurnMultiplier: 8
   uTurnCompleteAngle: 30
   trail: {fileID: 0}
   createMissileVisual: 1
-  missileColor: {r: 0.27180687, g: 0.1782218, b: 0.8396226, a: 1}
+  missileColor: {r: 0.8, g: 0.2, b: 0.2, a: 1}
   missileScale: 2
   enableParticleTrail: 1
-  trailColor: {r: 0.7169939, g: 0.6650944, b: 1, a: 0.5}
+  trailColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.5}
   showTrajectory: 1
-  trajectoryColor: {r: 0.764151, g: 0.06127627, b: 0.26542765, a: 1}
-  dotSize: 0.2
-  dotSpacing: 10
+  trajectoryColor: {r: 1, g: 0.5, b: 0, a: 1}
+  dotSize: 0.5
+  dotSpacing: 5
   trajectoryLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  maxDots: 90
+  maxDots: 30
