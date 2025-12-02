@@ -1,35 +1,24 @@
 using UnityEngine;
 
 /// <summary>
-/// Handles Mario Kart-style collision bounces
-/// UFO bounces off walls and gets briefly stunned
+/// Simple arcade-style collision: bounce off surfaces and keep flying
+/// On collision: reflect velocity, smoothly reorient to face new direction, continue
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class UFOCollision : MonoBehaviour
 {
-    [Header("Wall Collision Settings")]
-    [Tooltip("How much force to bounce back from walls")]
-    public float wallBounceForce = 20f;
+    [Header("Bounce Settings")]
+    [Tooltip("Bounce force multiplier")]
+    public float bounceForce = 15f;
 
-    [Tooltip("Minimum impact speed to trigger wall bounce")]
-    public float minWallImpactSpeed = 3f;
+    [Tooltip("Minimum impact speed to trigger bounce")]
+    public float minImpactSpeed = 2f;
 
-    [Header("Floor Collision Settings")]
-    [Tooltip("Speed threshold for light vs heavy floor crash")]
-    public float heavyCrashThreshold = 10f;
+    [Tooltip("Upward bias for floor bounces (keeps UFO airborne)")]
+    public float floorUpwardBias = 10f;
 
-    [Tooltip("Bounce force for light floor touch")]
-    public float lightFloorBounce = 2f;
-
-    [Tooltip("Bounce force for heavy floor crash")]
-    public float heavyFloorBounce = 8f;
-
-    [Tooltip("How much horizontal momentum to keep when sliding on floor")]
-    [Range(0f, 1f)]
-    public float floorSlideRetention = 0.7f;
-
-    [Tooltip("Minimum angle (from vertical) to be considered floor (degrees)")]
-    public float floorAngleThreshold = 45f;
+    [Tooltip("How fast to reorient after collision (degrees per second)")]
+    public float reorientSpeed = 360f;
 
     [Header("Visual Feedback")]
     [Tooltip("Flash the UFO on impact (optional)")]
@@ -38,20 +27,30 @@ public class UFOCollision : MonoBehaviour
     [Tooltip("Color to flash on impact")]
     public Color flashColor = Color.red;
 
+    [Tooltip("Flash duration in seconds")]
+    public float flashDuration = 0.1f;
+
     private Rigidbody rb;
-    private UFOController controller;
-    private float stunEndTime;
-    private bool isStunned;
     private Color originalColor;
     private Material ufoMaterial;
-    private bool isBouncing;
-    private float bounceEndTime;
-    private UFOCamera ufoCamera; // For triggering camera shake
+    private float flashEndTime;
+    private bool isFlashing;
+    private UFOCamera ufoCamera;
+
+    // Smooth reorientation
+    private bool isReorienting;
+    private float targetYaw;
+    private float reorientEndTime;
+
+    /// <summary>
+    /// Returns true if UFO is currently reorienting after a collision.
+    /// Used by UFOController to avoid fighting over rotation control.
+    /// </summary>
+    public bool IsReorienting => isReorienting;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        controller = GetComponent<UFOController>();
 
         // Get material for flashing
         if (ufoRenderer != null)
@@ -60,208 +59,129 @@ public class UFOCollision : MonoBehaviour
             originalColor = ufoMaterial.color;
         }
 
-        // Find UFOCamera in the scene (usually on Main Camera)
+        // Find UFOCamera for shake
         ufoCamera = FindObjectOfType<UFOCamera>();
-        if (ufoCamera == null)
-        {
-            Debug.LogWarning("UFOCollision: No UFOCamera found in scene. Camera shake will not work.");
-        }
     }
 
     void Update()
     {
-        // Flash effect recovery
-        if (isStunned && Time.time >= stunEndTime)
+        // Flash recovery
+        if (isFlashing && Time.time >= flashEndTime)
         {
-            isStunned = false;
-
-            // Reset color
+            isFlashing = false;
             if (ufoMaterial != null)
                 ufoMaterial.color = originalColor;
         }
 
-        // Bounce state tracking (rotation now handled by UFOController.HandleAllRotation)
-        if (isBouncing)
+        // Smooth reorientation after collision
+        if (isReorienting)
         {
-            // Check if bounce is done (velocity near zero)
-            if (rb.velocity.magnitude < 0.5f || Time.time >= bounceEndTime)
+            float currentYaw = transform.eulerAngles.y;
+
+            // Calculate shortest rotation direction
+            float yawDiff = Mathf.DeltaAngle(currentYaw, targetYaw);
+
+            // Rotate toward target
+            float maxRotation = reorientSpeed * Time.deltaTime;
+            float newYaw;
+
+            if (Mathf.Abs(yawDiff) <= maxRotation)
             {
-                isBouncing = false;
+                // Close enough - snap to target and stop
+                newYaw = targetYaw;
+                isReorienting = false;
+            }
+            else
+            {
+                // Rotate toward target
+                newYaw = currentYaw + Mathf.Sign(yawDiff) * maxRotation;
+            }
+
+            // Apply rotation (keep current pitch, set roll to 0 for auto-level)
+            float currentPitch = transform.eulerAngles.x;
+            if (currentPitch > 180f) currentPitch -= 360f;
+            currentPitch = Mathf.Clamp(currentPitch, -80f, 80f); // Prevent gimbal lock
+
+            transform.rotation = Quaternion.Euler(currentPitch, newYaw, 0f);
+
+            // Timeout safety - don't reorient forever
+            if (Time.time > reorientEndTime)
+            {
+                isReorienting = false;
             }
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // Get collision info
         float impactSpeed = collision.relativeVelocity.magnitude;
-        Vector3 collisionNormal = collision.contacts[0].normal;
+        if (impactSpeed < minImpactSpeed)
+            return;
 
-        // Determine if this is floor or wall based on normal direction
-        // Floor has normal pointing mostly upward (Y component close to 1)
-        float normalAngleFromUp = Vector3.Angle(collisionNormal, Vector3.up);
-        bool isFloor = normalAngleFromUp < floorAngleThreshold;
+        Vector3 normal = collision.contacts[0].normal;
 
+        // Determine if floor (normal pointing mostly up) or wall
+        bool isFloor = Vector3.Dot(normal, Vector3.up) > 0.5f;
+
+        // Calculate bounce direction
+        Vector3 currentVel = rb.velocity;
+        if (currentVel.magnitude < 0.1f)
+        {
+            // If nearly stopped, bounce directly away from surface
+            currentVel = -normal * 5f;
+        }
+
+        Vector3 bounceDir;
         if (isFloor)
         {
-            HandleFloorCollision(collision, collisionNormal, impactSpeed);
+            // Floor: reflect with strong upward bias to stay airborne
+            bounceDir = Vector3.Reflect(currentVel.normalized, normal);
+            bounceDir.y = Mathf.Max(bounceDir.y, 0.5f); // Ensure upward component
+            bounceDir = (bounceDir.normalized + Vector3.up * 0.5f).normalized;
         }
         else
         {
-            HandleWallCollision(collision, collisionNormal, impactSpeed);
-        }
-    }
-
-    void HandleWallCollision(Collision collision, Vector3 collisionNormal, float impactSpeed)
-    {
-        // Wall collision: use reflection bounce
-        if (impactSpeed >= minWallImpactSpeed)
-        {
-            // Mark as bouncing (rotation handled by UFOController.HandleAllRotation)
-            isBouncing = true;
-            bounceEndTime = Time.time + 1f; // Max 1 second bounce duration
-
-            // Get current velocity
-            Vector3 currentVelocity = rb.velocity;
-            currentVelocity.y = 0; // Keep horizontal only for flat bounces
-
-            // Calculate reflection using physics: V' = V - 2(V·N)N
-            // This creates natural deflection along walls at shallow angles
-            Vector3 bounceDirection = Vector3.Reflect(currentVelocity.normalized, collisionNormal);
-
-            // Stop current velocity
-            rb.velocity = Vector3.zero;
-            // Angular velocity cleared by HandleAllRotation every frame
-
-            // Apply bounce force in reflected direction
-            rb.AddForce(bounceDirection * wallBounceForce, ForceMode.VelocityChange);
-
-            // Visual feedback - flash briefly
-            StartFlash();
-
-            // Camera shake based on impact speed
-            if (ufoCamera != null)
-            {
-                ufoCamera.TriggerShakeFromImpact(impactSpeed);
-            }
-        }
-    }
-
-    void HandleFloorCollision(Collision collision, Vector3 collisionNormal, float impactSpeed)
-    {
-        // Get velocity components
-        Vector3 currentVelocity = rb.velocity;
-        float verticalSpeed = Mathf.Abs(currentVelocity.y); // How fast we're falling
-        Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
-        float horizontalSpeed = horizontalVelocity.magnitude;
-
-        // Calculate impact angle (0° = straight down, 90° = horizontal scrape)
-        Vector3 impactDirection = -currentVelocity.normalized;
-        float impactAngle = Vector3.Angle(impactDirection, Vector3.up);
-
-        // Determine if this is a light touch or heavy crash
-        bool isHeavyCrash = verticalSpeed >= heavyCrashThreshold;
-
-        // Stop angular velocity
-        rb.angularVelocity = Vector3.zero;
-
-        // Disable vertical input temporarily to prevent fighting the bounce
-        if (controller != null)
-        {
-            controller.DisableVerticalControl(0.3f);
+            // Wall: simple reflection
+            bounceDir = Vector3.Reflect(currentVel.normalized, normal);
         }
 
-        // Angle-based behavior
-        if (impactAngle < 30f)
+        // Apply bounce velocity
+        float speed = Mathf.Max(impactSpeed * 0.7f, bounceForce);
+        rb.velocity = bounceDir * speed;
+
+        // Add extra upward force for floor hits
+        if (isFloor)
         {
-            // STEEP DESCENT (nearly straight down)
-            // Check if there's any horizontal movement
-            bool hasHorizontalMovement = horizontalSpeed > 0.5f;
-
-            // Stop all velocity
-            rb.velocity = Vector3.zero;
-
-            if (isHeavyCrash && hasHorizontalMovement)
-            {
-                // Heavy crash with movement: bounce up with force
-                rb.AddForce(Vector3.up * heavyFloorBounce, ForceMode.VelocityChange);
-                StartFlash();
-
-                // Mark as bouncing (rotation handled by UFOController.HandleAllRotation)
-                isBouncing = true;
-                bounceEndTime = Time.time + 0.5f;
-
-                // Strong camera shake for heavy crash
-                if (ufoCamera != null)
-                {
-                    ufoCamera.TriggerShake(1.0f); // Full intensity
-                }
-            }
-            else if (hasHorizontalMovement)
-            {
-                // Light touch with movement: small bounce to prevent sticking
-                rb.AddForce(Vector3.up * lightFloorBounce, ForceMode.VelocityChange);
-            }
-            // else: Pure vertical landing with no horizontal movement = no bounce (dead stop)
+            rb.AddForce(Vector3.up * floorUpwardBias, ForceMode.VelocityChange);
         }
-        else if (impactAngle >= 30f && impactAngle < 60f)
+
+        // Start smooth reorientation to face bounce direction
+        Vector3 flatBounceDir = new Vector3(bounceDir.x, 0, bounceDir.z);
+        if (flatBounceDir.magnitude > 0.1f)
         {
-            // MEDIUM ANGLE (angled descent)
-            // Bounce at an angle to keep flying away
-
-            // Keep some horizontal momentum
-            Vector3 slideDirection = horizontalVelocity.normalized;
-            float retainedSpeed = horizontalSpeed * floorSlideRetention;
-
-            // Add upward bounce
-            float upwardBounce = isHeavyCrash ? heavyFloorBounce : lightFloorBounce;
-
-            // Clear velocity and apply new bounce
-            rb.velocity = Vector3.zero;
-            rb.AddForce(slideDirection * retainedSpeed + Vector3.up * upwardBounce, ForceMode.VelocityChange);
-
-            if (isHeavyCrash)
-            {
-                StartFlash();
-
-                // Medium camera shake for angled heavy crash
-                if (ufoCamera != null)
-                {
-                    ufoCamera.TriggerShake(0.7f); // Medium intensity
-                }
-            }
+            targetYaw = Mathf.Atan2(flatBounceDir.x, flatBounceDir.z) * Mathf.Rad2Deg;
+            isReorienting = true;
+            reorientEndTime = Time.time + 1f; // Max 1 second to reorient
         }
-        else
+
+        // Visual feedback
+        StartFlash();
+
+        // Camera shake proportional to impact
+        if (ufoCamera != null)
         {
-            // SHALLOW ANGLE (scraping along floor)
-            // Slide along floor with minimal vertical bounce
-
-            // Keep most horizontal momentum
-            Vector3 slideDirection = horizontalVelocity.normalized;
-            float retainedSpeed = horizontalSpeed * 0.9f; // Keep 90% when scraping
-
-            // Tiny upward bounce to prevent getting stuck
-            rb.velocity = Vector3.zero;
-            rb.AddForce(slideDirection * retainedSpeed + Vector3.up * lightFloorBounce, ForceMode.VelocityChange);
-
-            // No flash for shallow scrapes
+            float shakeIntensity = Mathf.Clamp01(impactSpeed / 20f);
+            ufoCamera.TriggerShake(shakeIntensity);
         }
     }
 
     void StartFlash()
     {
-        isStunned = true; // Reusing this as "isFlashing"
-        stunEndTime = Time.time + 0.1f; // Flash for 100ms
-
-        // Flash color
         if (ufoMaterial != null)
         {
             ufoMaterial.color = flashColor;
+            isFlashing = true;
+            flashEndTime = Time.time + flashDuration;
         }
-    }
-
-    public bool IsStunned()
-    {
-        return isStunned;
     }
 }

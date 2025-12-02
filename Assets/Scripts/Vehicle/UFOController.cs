@@ -621,12 +621,26 @@ public class UFOController : MonoBehaviour
     [Tooltip("Reduced auto-level speed while actively turning (allows banking during turns)")]
     [SerializeField] private float autoLevelSpeedWhileTurning = 40f;
 
+    // Cached reference to collision handler
+    private UFOCollision ufoCollision;
+
     /// <summary>
     /// UNIFIED rotation system - handles yaw, pitch, and roll in ONE operation
     /// This prevents multiple MoveRotation calls from fighting each other
     /// </summary>
     void HandleAllRotation()
     {
+        // Cache collision reference
+        if (ufoCollision == null)
+            ufoCollision = GetComponent<UFOCollision>();
+
+        // If collision system is reorienting the UFO, don't fight it
+        if (ufoCollision != null && ufoCollision.IsReorienting)
+        {
+            rb.angularVelocity = Vector3.zero; // Still clear angular velocity
+            return; // Let collision handle rotation
+        }
+
         // Clear angular velocity - prevents physics spin from fighting our rotation control
         // This is key to preventing "stuck" behavior after collisions
         rb.angularVelocity = Vector3.zero;
