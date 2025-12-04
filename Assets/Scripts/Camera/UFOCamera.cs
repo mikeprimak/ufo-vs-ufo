@@ -84,7 +84,7 @@ public class UFOCamera : MonoBehaviour
 
     [Header("Camera Shake (Game Feel)")]
     [Tooltip("Enable camera shake on impacts")]
-    public bool enableCameraShake = true;
+    public bool enableCameraShake = false;
 
     [Tooltip("How long shake lasts (seconds)")]
     public float shakeDuration = 0.3f;
@@ -116,7 +116,7 @@ public class UFOCamera : MonoBehaviour
 
     [Header("Camera Collision Settings")]
     [Tooltip("Enable camera collision detection to prevent clipping through walls")]
-    public bool enableCameraCollision = true;
+    public bool enableCameraCollision = false;  // Disabled to test vibration
 
     [Tooltip("Radius of camera collision sphere (larger = more padding from walls)")]
     public float cameraCollisionRadius = 0.5f;
@@ -445,6 +445,9 @@ public class UFOCamera : MonoBehaviour
     /// <param name="intensity">Shake strength (0-1), 1.0 = full shakeIntensity</param>
     public void TriggerShake(float intensity = 1.0f)
     {
+        // DISABLED - all shake disabled to eliminate vibration
+        return;
+
         if (!enableCameraShake)
             return;
 
@@ -460,6 +463,9 @@ public class UFOCamera : MonoBehaviour
     /// <param name="maxSpeed">Maximum expected impact speed for normalization</param>
     public void TriggerShakeFromImpact(float impactSpeed, float maxSpeed = 30f)
     {
+        // DISABLED - all shake disabled to eliminate vibration
+        return;
+
         if (!enableCameraShake)
             return;
 

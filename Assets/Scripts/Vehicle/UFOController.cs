@@ -84,13 +84,13 @@ public class UFOController : MonoBehaviour
 
     [Header("Idle Animation")]
     [Tooltip("How much the UFO bobs up and down")]
-    public float idleBobAmount = 0.15f;
+    public float idleBobAmount = 0f;  // Disabled to eliminate vibration
 
     [Tooltip("Speed of bobbing motion")]
     public float idleBobSpeed = 1.2f;
 
     [Tooltip("How much the UFO tilts (degrees)")]
-    public float idleTiltAmount = 2f;
+    public float idleTiltAmount = 0f;  // Disabled to eliminate vibration
 
     [Tooltip("Speed of tilt wobble")]
     public float idleTiltSpeed = 0.8f;
@@ -655,6 +655,10 @@ public class UFOController : MonoBehaviour
         float currentRoll = currentEuler.z;
         if (currentRoll > 180f) currentRoll -= 360f;
 
+        // Snap tiny angles to zero to prevent floating-point jitter
+        if (Mathf.Abs(currentPitch) < 0.01f) currentPitch = 0f;
+        if (Mathf.Abs(currentRoll) < 0.01f) currentRoll = 0f;
+
         // === YAW (turning left/right) ===
         float yawDelta = 0f;
         if (Mathf.Abs(turnInput) > 0.1f)
@@ -1096,8 +1100,9 @@ public class UFOController : MonoBehaviour
 
         // Normal banking (when not barrel rolling)
         // UFO pitches via HandleAllRotation(), so visual model only handles banking
-        // Calculate target bank angle based on turn input
-        float targetBankAngle = -turnInput * bankAmount;
+        // Calculate target bank angle based on turn input (with dead zone to prevent joystick drift vibration)
+        float effectiveTurnInput = Mathf.Abs(turnInput) > 0.1f ? turnInput : 0f;
+        float targetBankAngle = -effectiveTurnInput * bankAmount;
 
         // Smoothly interpolate to target bank angle
         currentBankAngle = Mathf.Lerp(currentBankAngle, targetBankAngle, bankSpeed * Time.deltaTime);

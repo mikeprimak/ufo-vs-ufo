@@ -8,7 +8,7 @@ public class UFOHitEffect : MonoBehaviour
 {
     [Header("Wobble Settings")]
     [Tooltip("How much the UFO wobbles when hit (degrees)")]
-    public float wobbleAmount = 45f;
+    public float wobbleAmount = 0f;  // Disabled to eliminate vibration
 
     [Tooltip("How long the wobble lasts (seconds)")]
     public float wobbleDuration = 1.2f;
